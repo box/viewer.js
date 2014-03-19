@@ -1,0 +1,127 @@
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+.thumbnails {
+    z-index: 1;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    width: 400px;
+    box-shadow: inset -3px 0 3px -2px rgba(0,0,0,0.4);
+}
+.main {
+    position: absolute;
+    bottom: 0;
+    left: 400px;
+    right: 0;
+    top: 0;
+    background: #f2f2f2;
+    border-left: 1px solid #eee;
+}
+.presentation {
+    width: 100%;
+    height: 100%;
+}
+.presentation .crocodoc-viewport {
+    overflow: visible;
+}
+
+.controls-container {
+    position: absolute;
+    bottom: 10px;
+    width: 0;
+    left: 50%;
+    overflow: visible;
+    height: 26px;
+    z-index: 1;
+}
+.controls-wrapper {
+    position: absolute;
+}
+.controls {
+    background: black;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-family: Calibri,Arial,sans-serif;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 4px;
+    margin-left: -50%;
+    width: 100%;
+}
+.crocodoc-page-inner {
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+}
+.crocodoc-page-visible.crocodoc-page-loading .crocodoc-page-inner {
+    background: #fff url('../../src/images/spinner.gif') center center no-repeat;
+}
+
+.thumbnails .crocodoc-page {
+    padding: 50px;
+}
+.thumbnails .crocodoc-page .crocodoc-page-svg {
+    opacity: 0.8;
+}
+.thumbnails .current-thumbnail .crocodoc-page-svg {
+    opacity: 1;
+}
+.thumbnails .crocodoc-page-inner {
+    box-shadow: 0 0 2px rgba(0,0,0,0.6);
+}
+.thumbnails .crocodoc-page:hover .crocodoc-page-inner {
+    box-shadow: 0 0 4px 2px rgb(60, 130, 200);
+}
+.thumbnails .current-thumbnail .crocodoc-page-inner {
+    box-shadow: 0 0 4px 2px rgb(253, 165, 20) !important;
+}
+
+.thumbnails .crocodoc-page-inner .thumbnail-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 10%;
+}
+
+.presentation .crocodoc-page {
+    -webkit-transition: opacity 0.2s, -webkit-transform 0.4s;
+    -moz-transition: opacity 0.2s, -moz-transform 0.4s;
+    transition: opacity 0.2s, transform 0.4s;
+    visibility: visible;
+}
+.presentation .crocodoc-current-page {
+    -webkit-transform: none;
+    -moz-transform: none;
+    -ms-transform: none;
+    transform: none;
+    -webkit-transition-delay: 0s, 0s;
+    -moz-transition-delay: 0s, 0s;
+    transition-delay: 0s, 0s;
+    opacity: 1;
+}
+.presentation .crocodoc-page-before {
+    -webkit-transform: translateX(-100%);
+    -moz-transform: translateX(-100%);
+    -ms-transform: translateX(-100%);
+    transform: translateX(-100%);
+    -webkit-transition-delay: 0.2s, 0s;
+    -moz-transition-delay: 0.2s, 0s;
+    transition-delay: 0.2s, 0s;
+    opacity: 0;
+}
+.presentation .crocodoc-page-after {
+    -webkit-transform: translateX(100%);
+    -moz-transform: translateX(100%);
+    -ms-transform: translateX(100%);
+    transform: translateX(100%);
+    -webkit-transition-delay: 0.2s, 0s;
+    -moz-transition-delay: 0.2s, 0s;
+    transition-delay: 0.2s, 0s;
+    opacity: 0;
+}

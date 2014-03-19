@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" media="screen" href="../../dist/crocodoc.viewer.css" />
+    <script src="../../test/framework/jquery.js"></script>
+    <script src="../../dist/crocodoc.viewer.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #fafafa;
+        }
+        .viewer {
+            height: 100%;
+        }
+        .crocodoc-page-inner {
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer"></div>
+    <script>
+
+        // determines the current page from the url
+        function getPageFromURL() {
+            if (location.hash) {
+                return location.hash && location.hash.substr(1) || 1;
+            }
+            var page = /\/(\d+)$/.exec(window.location);
+            if (page && page[1]) {
+                return parseInt(page[1], 10);
+            }
+            return 1;
+        }
+
+        // updates the url with the given page
+        function updateURL(page) {
+            if ('replaceState' in window.history) {
+                if (!window.history.state) {
+                    window.history.pushState({page: page }, null);
+                } else {
+                    window.history.replaceState({ page: page }, null, page);
+                }
+            } else {
+                window.location.replace('#' + page);
+            }
+        }
+
+        var url = 'https://view-api.box.com/1/sessions/a7b7e41df3894924bee97fb1435ab3f7/assets';
+        var viewer = Crocodoc.createViewer('.viewer', {
+            page: getPageFromURL(),
+            url: url,
+            layout: Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN
+        });
+        viewer.load();
+        viewer.on('ready', function () {
+            // on pagefocus, update the URL to the current page
+            viewer.on('pagefocus', function (ev) {
+                updateURL(ev.data.page);
+            });
+
+            // scroll to the correct page on popstate and hashchange events
+            window.addEventListener('popstate', function (event) {
+                viewer.scrollTo(event.state && event.state.page || 1);
+            });
+
+            // @NOTE: some older browsers don't support hashchange, so this
+            // example won't work properly without a hashchange event polyfill/shim
+            window.addEventListener('hashchange', function () {
+                viewer.scrollTo(getPageFromURL());
+            });
+        });
+
+    </script>
+</body>
+</html>

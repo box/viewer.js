@@ -1,0 +1,20 @@
+{
+  "globals": {
+    "$": false,
+    "Crocodoc": false
+  },
+  "browser": true,
+  "camelcase": true,
+  "curly": true,
+  "eqeqeq": true,
+  "eqnull": true,
+  "evil": true,
+  "newcap": true,
+  "quotmark": "single",
+  "regexdash": true,
+  "sub": true,
+  "trailing": true,
+  "undef": true,
+  "unused": true,
+  "wsh": true
+}

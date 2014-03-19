@@ -1,0 +1,57 @@
+/***** "PRESENTATION MODE" PAGE TRANSITIONS *****/
+
+.crocodoc-presentation .crocodoc-page {
+    -webkit-transition: visibility 0s, opacity 0.3s, -webkit-transform 0.25s;
+    transition: visibility 0s, opacity 0.3s, transform 0.25s;
+}
+.crocodoc-presentation .crocodoc-page-next {
+    visibility: visible !important;
+}
+.crocodoc-presentation .crocodoc-current-page {
+    -webkit-transform: none;
+    transform: none;
+    opacity: 1;
+}
+.crocodoc-presentation .crocodoc-page-before,
+.crocodoc-presentation .crocodoc-page-before-buffer {
+    -webkit-transform: rotate(-3deg) translate(-12%, -12%);
+    transform: rotate(-3deg) translate(-12%, -12%);
+    -webkit-transition-delay: 0.3s, 0s, 0s;
+    transition-delay: 0.3s, 0s, 0s;
+    opacity: 0;
+}
+.crocodoc-presentation .crocodoc-page-after,
+.crocodoc-presentation .crocodoc-page-after-buffer {
+    -webkit-transition-delay: 0s;
+    transition-delay: 0s;
+    visibility: hidden;
+    opacity: 0;
+}
+
+/***** "PRESENTATION-SLIDE MODE" PAGE TRANSITIONS *****/
+.crocodoc-presentation-slide .crocodoc-page {
+    -webkit-transition: opacity 0.2s, -webkit-transform 0.4s;
+    transition: opacity 0.2s, transform 0.4s;
+    visibility: visible;
+}
+.crocodoc-presentation-slide .crocodoc-current-page {
+    -webkit-transform: none;
+    transform: none;
+    -webkit-transition-delay: 0s, 0s;
+    transition-delay: 0s, 0s;
+    opacity: 1;
+}
+.crocodoc-presentation-slide .crocodoc-page-before {
+    -webkit-transform: translateX(-100%);
+    transform: translateX(-100%);
+    -webkit-transition-delay: 0.2s, 0s;
+    transition-delay: 0.2s, 0s;
+    opacity: 0;
+}
+.crocodoc-presentation-slide .crocodoc-page-after {
+    -webkit-transform: translateX(100%);
+    transform: translateX(100%);
+    -webkit-transition-delay: 0.2s, 0s;
+    transition-delay: 0.2s, 0s;
+    opacity: 0;
+}

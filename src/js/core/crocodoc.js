@@ -1,0 +1,159 @@
+/**
+ * @fileoverview Base namespaces for Crocodoc JavaScript.
+ * @author clakenen
+ */
+
+/*global Crocodoc:true*/
+
+/**
+ * The one global object for Crocodoc JavaScript.
+ * @namespace
+ */
+var Crocodoc = (function () {
+
+    'use strict';
+
+    var components = {},
+        utilities = {};
+
+    /**
+     * Find circular dependencies in component mixins
+     * @param   {string} componentName   The component name that is being added
+     * @param   {Array} dependencies  Array of component mixin dependencies
+     * @param   {void} path           String used to keep track of depencency graph
+     * @returns {void}
+     */
+    function findCircularDependencies(componentName, dependencies, path) {
+        var i;
+        path = path || componentName;
+        for (i = 0; i < dependencies.length; ++i) {
+            if (componentName === dependencies[i]) {
+                throw new Error('Circular dependency detected: ' + path + '->' + dependencies[i]);
+            } else if (components[dependencies[i]]) {
+                findCircularDependencies(componentName, components[dependencies[i]].mixins, path + '->' + dependencies[i]);
+            }
+        }
+    }
+
+    return {
+        // Zoom, scroll, page status, layout constants
+        ZOOM_FIT_WIDTH:                 'fitwidth',
+        ZOOM_FIT_HEIGHT:                'fitheight',
+        ZOOM_AUTO:                      'auto',
+        ZOOM_IN:                        'in',
+        ZOOM_OUT:                       'out',
+
+        SCROLL_PREVIOUS:                'previous',
+        SCROLL_NEXT:                    'next',
+
+        LAYOUT_VERTICAL:                'vertical',
+        LAYOUT_VERTICAL_SINGLE_COLUMN:  'vertical-single-column',
+        LAYOUT_HORIZONTAL:              'horizontal',
+        LAYOUT_PRESENTATION:            'presentation',
+        LAYOUT_PRESENTATION_TWO_PAGE:   'presentation-two-page',
+
+        PAGE_STATUS_CONVERTING:         'converting',
+        PAGE_STATUS_NOT_LOADED:         'not loaded',
+        PAGE_STATUS_LOADING:            'loading',
+        PAGE_STATUS_LOADED:             'loaded',
+        PAGE_STATUS_ERROR:              'error',
+
+        // exposed for testing purposes only
+        // should not be accessed directly otherwise
+        components: components,
+        utilities: utilities,
+
+        /**
+         * Create and return a viewer instance initialized with the given parameters
+         * @param {string|Element|jQuery} el The element to bind the viewer to
+         * @param {Object} config            The viewer configuration parameters
+         * @returns {Object}                 The viewer instance
+         */
+        createViewer: function (el, config) {
+            return new Crocodoc.Viewer(el, config);
+        },
+
+        /**
+         * Register a new component
+         * @param  {string} name      The (unique) name of the component
+         * @param  {Array} mixins     Array of component names to instantiate and pass as mixinable objects to the creator method
+         * @param  {Function} creator Factory function used to create an instance of the component
+         * @returns {void}
+         */
+        addComponent: function (name, mixins, creator) {
+            if (mixins instanceof Function) {
+                creator = mixins;
+                mixins = [];
+            }
+            // make sure this component won't cause a circular mixin dependency
+            findCircularDependencies(name, mixins);
+            components[name] = {
+                mixins: mixins,
+                creator: creator
+            };
+        },
+
+        /**
+         * Create and return an instance of the named component
+         * @param  {string} name The name of the component to create
+         * @param  {Crocodoc.Scope} scope The scope object to create the component on
+         * @returns {?Object}     The component instance or null if the component doesn't exist
+         */
+        createComponent: function (name, scope) {
+            var component = components[name];
+
+            if (component) {
+                var args = [];
+                for (var i = 0; i < component.mixins.length; ++i) {
+                    args.push(this.createComponent(component.mixins[i], scope));
+                }
+                args.unshift(scope);
+                return component.creator.apply(component.creator, args);
+            }
+
+            return null;
+        },
+
+        /**
+         * Register a new Crocodoc plugin
+         * @param  {string} name      The (unique) name of the plugin
+         * @param  {Function} creator Factory function used to create an instance of the plugin
+         * @returns {void}
+         */
+        addPlugin: function (name, creator) {
+            this.addComponent('plugin-' + name, creator);
+        },
+
+        /**
+         * Register a new utility
+         * @param  {string} name    The (unique) name of the utility
+         * @param  {Function} creator Factory function used to create an instance of the utility
+         * @returns {void}
+         */
+        addUtility: function (name, creator) {
+            utilities[name] = {
+                creator: creator,
+                instance: null
+            };
+        },
+
+        /**
+         * Retrieve the named utility
+         * @param {string} name The name of the utility to retrieve
+         * @returns {?Object}    The utility or null if the utility doesn't exist
+         */
+        getUtility: function (name) {
+            var utility = utilities[name];
+
+            if (utility) {
+                if (!utility.instance) {
+                    utility.instance = utility.creator(this);
+                }
+
+                return utility.instance;
+            }
+
+            return null;
+        }
+    };
+})();

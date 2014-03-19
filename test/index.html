@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>QUnit</title>
+    <link rel="stylesheet" href="framework/qunit.css">
+    <style>
+        .blanket { font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+
+    <script src="framework/jquery.js"></script>
+    <script src="framework/qunit.js"></script>
+    <script src="framework/qunit-parameterize.js"></script>
+    <script src="framework/sinon.js"></script>
+    <script src="framework/sinon-qunit.js"></script>
+    <script src="framework/blanket.js"></script>
+
+
+    <script src="../src/js/core/crocodoc.js"></script>
+    <script src="framework/crocodoc-qunit.js"></script>
+
+
+    <!-- Crocodoc Source Files -->
+    <script src="../src/js/core/event-target.js" data-cover></script>
+    <script src="../src/js/core/scope.js" data-cover></script>
+    <script src="../src/js/core/viewer.js" data-cover></script>
+
+    <script src="../src/js/components/layout-base.js" data-cover></script>
+    <script src="../src/js/components/layout-horizontal.js" data-cover></script>
+    <script src="../src/js/components/layout-presentation.js" data-cover></script>
+    <script src="../src/js/components/layout-presentation-two-page.js" data-cover></script>
+    <script src="../src/js/components/layout-vertical.js" data-cover></script>
+    <script src="../src/js/components/layout-vertical-single-column.js" data-cover></script>
+    <script src="../src/js/components/lazy-loader.js" data-cover></script>
+    <script src="../src/js/components/page.js" data-cover></script>
+    <script src="../src/js/components/page-img.js" data-cover></script>
+    <script src="../src/js/components/page-links.js" data-cover></script>
+    <script src="../src/js/components/page-svg.js" data-cover></script>
+    <script src="../src/js/components/page-text.js" data-cover></script>
+    <script src="../src/js/components/resizer.js" data-cover></script>
+    <script src="../src/js/components/scroller.js" data-cover></script>
+    <script src="../src/js/components/viewer-base.js" data-cover></script>
+
+    <script src="../src/js/utilities/browser.js"></script>
+    <script src="../src/js/utilities/subpx.js"></script>
+    <script src="../src/js/utilities/support.js"></script>
+    <script src="../src/js/utilities/common.js" data-cover></script>
+
+
+    <!-- Test Files -->
+    <script src="js/core/crocodoc-test.js"></script>
+    <script src="js/core/scope-test.js"></script>
+    <script src="js/core/event-target-test.js"></script>
+    <script src="js/core/viewer-test.js"></script>
+
+    <script src="js/components/resizer-test.js"></script>
+    <script src="js/components/scroller-test.js"></script>
+    <script src="js/components/lazy-loader-test.js"></script>
+    <script src="js/components/page-test.js"></script>
+    <script src="js/components/layout-base-test.js"></script>
+    <script src="js/components/viewer-base-test.js"></script>
+    <script src="js/components/page-svg-test.js"></script>
+    <script src="js/components/page-img-test.js"></script>
+    <script src="js/components/page-text-test.js"></script>
+    <script src="js/components/page-links-test.js"></script>
+    <script src="js/components/layout-vertical-test.js"></script>
+    <script src="js/components/layout-vertical-single-column-test.js"></script>
+    <script src="js/components/layout-horizontal-test.js"></script>
+    <script src="js/components/layout-presentation-test.js"></script>
+    <script src="js/components/layout-presentation-two-page-test.js"></script>
+
+    <script src="js/utilities/common-test.js"></script>
+</body>
+</html>

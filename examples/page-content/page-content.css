@@ -1,0 +1,44 @@
+.page-content {
+    font-family: Calibri,Arial,sans-serif;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    text-align: left;
+}
+.page-content .page-number {
+    background: white;
+    border: 5px solid #aaa;
+    margin-left: -5%;
+    margin-top: 2%;
+    min-width: 15%;
+    font-size: 100px;
+    display: inline-block;
+    text-align: center;
+}
+.page-content button {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    font-size: 100px;
+    margin: 0;
+    display: block;
+}
+.page-content .remove-page-btn {
+    display: none;
+}
+.crocodoc-page.page-content-added .add-page-btn {
+    display: none;
+}
+.crocodoc-page.page-content-added .remove-page-btn {
+    display: block;
+}
+.thumbnails .crocodoc-page {
+    padding: 40px 0 40px 100px;
+}
+/* align the thumbnail pages to the left instead of center */
+.thumbnails .crocodoc-pages {
+    text-align: left;
+}

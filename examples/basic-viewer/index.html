@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" media="screen" href="../../dist/crocodoc.viewer.css" />
+    <script src="../../test/framework/jquery.js"></script>
+    <script src="../../dist/crocodoc.viewer.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #c8c8c8;
+        }
+        .viewer {
+            height: 100%;
+        }
+        .crocodoc-page-inner {
+            border: 1px solid #ccc;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer"></div>
+    <script>
+        var url = 'https://view-api.box.com/1/sessions/198bae170fbf4507b9a0aea009eab29f/assets';
+        var viewer = Crocodoc.createViewer('.viewer', {
+            url: url
+        });
+        viewer.load();
+    </script>
+</body>
+</html>
