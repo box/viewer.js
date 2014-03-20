@@ -127,7 +127,8 @@ module.exports = function (grunt) {
             files: ['Gruntfile.js', 'src/js/**/*.js', 'test/js/**/*.js', 'test/plugins/**/*.js']
         },
         qunit: {
-            files: ['test/index.html', 'test/plugins/index.html']
+            viewer: ['test/index.html'],
+            plugins: ['test/plugins/index.html']
         },
         jsdoc : {
             dist : {

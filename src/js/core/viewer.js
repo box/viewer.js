@@ -28,8 +28,6 @@
         var util = Crocodoc.getUtility('common');
         var layout,
             $el = $(el),
-            ready = false,
-            messageQueue = [],
             config = util.extend(true, {}, Crocodoc.Viewer.defaults, options),
             scope = new Crocodoc.Scope(config),
             viewerBase = scope.createComponent('viewer-base');
@@ -43,42 +41,6 @@
         config.api = this;
         config.$el = $el;
         viewerBase.init();
-
-        /**
-         * Broadcast a message or queue it until the viewer is ready
-         * @param   {string} name The name of the message
-         * @param   {*} data The message data
-         * @returns {void}
-         */
-        function broadcastMessageWhenReady(name, data) {
-            if (ready) {
-                scope.broadcast(name, data);
-            } else {
-                messageQueue.push({ name: name, data: data });
-            }
-        }
-
-        /**
-         * Broadcasts any (pageavailable) messages that were queued up
-         * before the viewer was ready
-         * @returns {void}
-         */
-        function broadcastQueuedMessages() {
-            var message;
-            while (messageQueue.length) {
-                message = messageQueue.shift();
-                scope.broadcast(message.name, message.data);
-            }
-        }
-
-        /**
-         * Handle ready message from the viewer
-         * @returns {void}
-         */
-        function handleReadyMessage() {
-            ready = true;
-            broadcastQueuedMessages();
-        }
 
         //--------------------------------------------------------------------------
         // Public
@@ -238,42 +200,6 @@
                 layout.setZoom();
             }
         };
-
-        /**
-         * Notify the viewer that a page is available (ie., it's finished converting)
-         * @param  {int} page The page that's available
-         * @returns {void}
-         * @TODO(clakenen): maybe come up with a better name for this?
-         * @TODO(clakenen): if this is called before the viewer has recieved document metadata
-         * it will be ignored; perhaps we should cache these messages in that condition?
-         */
-        this.setPageAvailable = function (page) {
-            broadcastMessageWhenReady('pageavailable',  { page: page });
-        };
-
-        /**
-         * Notify the viewer that all pages up to a given page are available
-         * @param  {int} page The page that is (and all pages up to are) available
-         * @returns {void}
-         * @TODO(clakenen): see TODOs on setPageAvailable
-         */
-        this.setPagesAvailableUpTo = function (page) {
-            broadcastMessageWhenReady('pageavailable',  { upto: page });
-        };
-
-        /**
-         * Notify the viewer that all pages are available
-         * @returns {void}
-         */
-        this.setAllPagesAvailable = function () {
-            if (!ready) {
-                config.conversionIsComplete = true;
-            } else {
-                scope.broadcast('pageavailable', { upto: config.numPages });
-            }
-        };
-
-        this.one('ready', handleReadyMessage);
     };
 
     Crocodoc.Viewer.prototype = new Crocodoc.EventTarget();
