@@ -50,6 +50,7 @@ Crocodoc.addComponent('resizer', function (scope) {
      * @private
      */
     function loop() {
+        support.cancelAnimationFrame(resizeFrameID);
         checkResize();
         resizeFrameID = support.requestAnimationFrame(loop, element);
     }
@@ -75,21 +76,6 @@ Crocodoc.addComponent('resizer', function (scope) {
     }
 
     return {
-        messages: ['ready'],
-
-        /**
-         * Handle framework messages
-         * @param {string} name The name of the message
-         * @param {Object} data The related data for the message
-         * @returns {void}
-         */
-        onmessage: function (name) {
-            if (name === 'ready') {
-                // broadcast initial resize event
-                loop();
-            }
-        },
-
         /**
          * Initialize the Resizer component with an element to watch
          * @param  {HTMLElement} el The element to watch
@@ -98,6 +84,7 @@ Crocodoc.addComponent('resizer', function (scope) {
         init: function (el) {
             element = $(el).get(0);
            $(document).on(FULLSCREENCHANGE_EVENT, broadcast);
+            loop();
         },
 
         /**

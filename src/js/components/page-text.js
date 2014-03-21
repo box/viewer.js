@@ -28,7 +28,6 @@ Crocodoc.addComponent('page-text', function (scope) {
         request,
         $loadTextLayerHTMLPromise,
         textSrc,
-        pageConfig,
         viewerConfig = scope.getConfig();
 
     /**
@@ -154,8 +153,7 @@ Crocodoc.addComponent('page-text', function (scope) {
          */
         init: function ($el, config) {
             $textLayer = $el;
-            pageConfig = config;
-            textSrc = pageConfig.textSrc + pageConfig.queryString;
+            textSrc = config.textSrc + config.queryString;
         },
 
         /**

@@ -22,7 +22,6 @@ module('Component - resizer', {
 
 test('destroy() should call support.cancelAnimationFrame when called', function () {
     this.component.init($('<div>'));
-    this.component.onmessage('ready');
 
     this.mock(this.utilities.support)
         .expects('cancelAnimationFrame')
@@ -31,7 +30,7 @@ test('destroy() should call support.cancelAnimationFrame when called', function 
 });
 
 
-test('module should fire "resize" event with the proper data when onmessage is called with ready message', function () {
+test('module should fire "resize" event with the proper data when initialized', function () {
     var w = 100, h = 200,
         data = {
             width: w,
@@ -42,7 +41,6 @@ test('module should fire "resize" event with the proper data when onmessage is c
         .expects('broadcast')
         .withArgs('resize', sinon.match(data));
     this.component.init($el);
-    this.component.onmessage('ready');
 });
 
 test('module should fire "resize" event with the proper data when element is resized', function () {
@@ -58,7 +56,6 @@ test('module should fire "resize" event with the proper data when element is res
         }).appendTo(document.body);
 
     module.init($el);
-    this.component.onmessage('ready');
     this.mock(this.scope)
         .expects('broadcast')
         .withArgs('resize', sinon.match(data));

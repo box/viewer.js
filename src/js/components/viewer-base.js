@@ -17,7 +17,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         CSS_CLASS_DOC            = CSS_CLASS_PREFIX + 'doc',
         CSS_CLASS_PAGES          = CSS_CLASS_PREFIX + 'pages',
         CSS_CLASS_VIEWPORT       = CSS_CLASS_PREFIX + 'viewport',
-        CSS_CLASS_LOADING        = CSS_CLASS_PREFIX + 'loading',
         CSS_CLASS_DRAGGABLE      = CSS_CLASS_PREFIX + 'draggable',
         CSS_CLASS_DRAGGING       = CSS_CLASS_PREFIX + 'dragging',
         CSS_CLASS_TEXT_SELECTED  = CSS_CLASS_PREFIX + 'text-selected',
@@ -225,8 +224,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         if (!config.enableLinks || browser.ielt9) {
             api.disableLinks();
         }
-
-        $el.removeClass(CSS_CLASS_LOADING);
 
         // set the initial layout
         api.setLayout(config.layout);

@@ -112,7 +112,6 @@
             }
 
             viewerBase.loadAssets();
-            this.one('ready', handleReadyMessage);
         };
 
         /**
@@ -273,6 +272,8 @@
                 scope.broadcast('pageavailable', { upto: config.numPages });
             }
         };
+
+        this.one('ready', handleReadyMessage);
     };
 
     Crocodoc.Viewer.prototype = new Crocodoc.EventTarget();
