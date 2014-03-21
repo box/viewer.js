@@ -14,7 +14,9 @@ Crocodoc.addComponent('page-svg', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var MAX_DATA_URLS = 100,
+    // @NOTE: MAX_DATA_URLS is the maximum allowed number of data-urls in svg
+    // content before we give up and stop rendering them
+    var MAX_DATA_URLS = 1000,
         SVG_MIME_TYPE = 'image/svg+xml',
         HTML_TEMPLATE = '<style>html, body { width:100%; height: 100%; margin: 0; overflow: hidden; }</style>',
         PROXY_SCRIPT_TEMPLATE = '<script type="text/javascript" src="data:text/javascript;base64,{{encodedScript}}"></script>',
