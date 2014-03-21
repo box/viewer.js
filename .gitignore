@@ -1,9 +1,3 @@
-testing
-TODO
 .DS_Store
 node_modules
-lib
-converted-docs
 dist
-_build
-doc
