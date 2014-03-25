@@ -13,6 +13,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-connect-rewrite');
     grunt.loadNpmTasks('grunt-jsdoc');
+    grunt.loadNpmTasks('grunt-image-embed');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -97,6 +98,15 @@ module.exports = function (grunt) {
                 src: [
                     'src/css/viewer.css',
                     'src/css/presentation.css',
+                    'src/css/theme.css',
+                    'src/css/logo.css'
+                ],
+                dest: 'dist/crocodoc.viewer.css'
+            },
+            'css-no-logo': {
+                src: [
+                    'src/css/viewer.css',
+                    'src/css/presentation.css',
                     'src/css/theme.css'
                 ],
                 dest: 'dist/crocodoc.viewer.css'
@@ -119,11 +129,30 @@ module.exports = function (grunt) {
                     configure: 'jsdoc-conf.json'
                 }
             }
+        },
+        imageEmbed: {
+            dist: {
+                src: ['dist/crocodoc.viewer.css'],
+                dest: 'dist/crocodoc.viewer.css',
+                options: {
+                    deleteAfterEncoding: false,
+                    baseDir: './'
+                }
+            }
         }
     });
+
+    var useLogo = !grunt.option('no-logo');
+    var defaultTasks = ['test', 'concat:js'];
+    if (useLogo) {
+        defaultTasks.push('concat:css', 'imageEmbed');
+    } else {
+        defaultTasks.push('concat:css-no-logo');
+    }
+
     grunt.registerTask('test', ['jshint', 'qunit']);
     grunt.registerTask('doc', ['test', 'jsdoc']);
-    grunt.registerTask('default', ['test', 'concat']);
+    grunt.registerTask('default', defaultTasks);
     grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'connect:development']);
 };

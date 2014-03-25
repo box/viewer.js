@@ -17,6 +17,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         CSS_CLASS_DOC            = CSS_CLASS_PREFIX + 'doc',
         CSS_CLASS_PAGES          = CSS_CLASS_PREFIX + 'pages',
         CSS_CLASS_VIEWPORT       = CSS_CLASS_PREFIX + 'viewport',
+        CSS_CLASS_LOGO           = CSS_CLASS_PREFIX + 'viewer-logo',
         CSS_CLASS_DRAGGABLE      = CSS_CLASS_PREFIX + 'draggable',
         CSS_CLASS_DRAGGING       = CSS_CLASS_PREFIX + 'dragging',
         CSS_CLASS_TEXT_SELECTED  = CSS_CLASS_PREFIX + 'text-selected',
@@ -31,6 +32,15 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         CSS_CLASS_PAGE_LINKS     = CSS_CLASS_PAGE + '-links',
         CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE + '-autoscale',
         CSS_CLASS_PAGE_LOADING   = CSS_CLASS_PAGE + '-loading';
+
+    var VIEWER_HTML_TEMPLATE =
+        '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
+            '<div class="' + CSS_CLASS_DOC + '">' +
+                '<div class="' + CSS_CLASS_PAGES + '">' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="' + CSS_CLASS_LOGO + '"></div>';
 
     var PAGE_HTML_TEMPLATE =
         '<div class="' + CSS_CLASS_PAGE + ' ' + CSS_CLASS_PAGE_LOADING + '" ' +
@@ -117,13 +127,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function initViewerHTML() {
         // create viewer HTML
-        config.$viewport = $('<div tabindex="-1">').addClass(CSS_CLASS_VIEWPORT);
-        config.$doc = $('<div>').addClass(CSS_CLASS_DOC);
-        config.$pagesWrapper = $('<div>').addClass(CSS_CLASS_PAGES);
-
-        config.$doc.append(config.$pagesWrapper);
-        config.$viewport.append(config.$doc);
-        $el.html(config.$viewport);
+        $el.html(VIEWER_HTML_TEMPLATE);
+        config.$viewport = $el.find('.'+CSS_CLASS_VIEWPORT);
+        config.$doc = $el.find('.'+CSS_CLASS_DOC);
+        config.$pagesWrapper = $el.find('.'+CSS_CLASS_PAGES);
     }
 
     /**
