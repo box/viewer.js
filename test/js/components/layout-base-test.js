@@ -391,7 +391,7 @@ QUnit.cases([
 
 test('setZoom() should append the appropriate CSS rule to the stylesheet when called', function () {
     var zoom = 1.576,
-        selector = '.' + this.config.namespace + ' .crocodoc-page-overlay',
+        selector = '.' + this.config.namespace + ' .crocodoc-page-autoscale',
         scale = ''+ (zoom * this.config.pageScale);
 
     this.stub(this.component, 'updatePageStates');

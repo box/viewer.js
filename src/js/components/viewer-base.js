@@ -25,20 +25,23 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         CSS_CLASS_SUPPORTS_SVG   = CSS_CLASS_PREFIX + 'supports-svg',
         CSS_CLASS_PAGE           = CSS_CLASS_PREFIX + 'page',
         CSS_CLASS_PAGE_INNER     = CSS_CLASS_PAGE + '-inner',
+        CSS_CLASS_PAGE_CONTENT   = CSS_CLASS_PAGE + '-content',
         CSS_CLASS_PAGE_SVG       = CSS_CLASS_PAGE + '-svg',
         CSS_CLASS_PAGE_TEXT      = CSS_CLASS_PAGE + '-text',
         CSS_CLASS_PAGE_LINKS     = CSS_CLASS_PAGE + '-links',
-        CSS_CLASS_PAGE_OVERLAY   = CSS_CLASS_PAGE + '-overlay',
+        CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE + '-autoscale',
         CSS_CLASS_PAGE_LOADING   = CSS_CLASS_PAGE + '-loading';
 
     var PAGE_HTML_TEMPLATE =
         '<div class="' + CSS_CLASS_PAGE + ' ' + CSS_CLASS_PAGE_LOADING + '" ' +
             'style="width:{{w}}px; height:{{h}}px;" data-width="{{w}}" data-height="{{h}}">' +
             '<div class="' + CSS_CLASS_PAGE_INNER + '">' +
-                '<div class="' + CSS_CLASS_PAGE_SVG + '"></div>' +
-                '<div class="' + CSS_CLASS_PAGE_OVERLAY + '">' +
-                    '<div class="' + CSS_CLASS_PAGE_TEXT + '"></div>' +
-                    '<div class="' + CSS_CLASS_PAGE_LINKS + '"></div>' +
+                '<div class="' + CSS_CLASS_PAGE_CONTENT + '">' +
+                    '<div class="' + CSS_CLASS_PAGE_SVG + '"></div>' +
+                    '<div class="' + CSS_CLASS_PAGE_AUTOSCALE + '">' +
+                        '<div class="' + CSS_CLASS_PAGE_TEXT + '"></div>' +
+                        '<div class="' + CSS_CLASS_PAGE_LINKS + '"></div>' +
+                    '</div>' +
                 '</div>' +
             '</div>' +
         '</div>';

@@ -83,7 +83,12 @@
     height: 100%;
     margin: 0 !important;
     padding: 0 !important;
-    zoom: 1;
+}
+
+.crocodoc-page-content {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     background-color: #fff;
     background-repeat: no-repeat;
     background-position: center center;
@@ -111,7 +116,7 @@
     position: absolute;
 }
 
-.crocodoc-page-overlay {
+.crocodoc-page-autoscale {
     display: block;
     position: absolute;
     top: 0;
@@ -125,7 +130,7 @@
 }
 
 
-.crocodoc-page-overlay > div {
+.crocodoc-page-autoscale > div {
     display: block;
     position: absolute;
 }

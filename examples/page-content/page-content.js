@@ -20,7 +20,7 @@ Crocodoc.addPlugin('page-content', function (scope) {
 
     // render the template and insert it into the given page
     function insertContent(pageNum) {
-        var $pageOverlay = $pages.eq(pageNum - 1).find('.crocodoc-page-overlay');
+        var $pageOverlay = $pages.eq(pageNum - 1).find('.crocodoc-page-autoscale');
         var $content = $(util.template(config.template, {
             pageNum: pageNum
         }));

@@ -18,7 +18,7 @@ Crocodoc.addComponent('layout-base', function (scope) {
         CSS_CLASS_CURRENT_PAGE = 'crocodoc-current-page',
         CSS_CLASS_PAGE_PREFIX = 'crocodoc-page-',
         CSS_CLASS_PAGE_VISIBLE = CSS_CLASS_PAGE_PREFIX + 'visible',
-        CSS_CLASS_PAGE_OVERLAY = CSS_CLASS_PAGE_PREFIX + 'overlay',
+        CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE_PREFIX + 'autoscale',
         STYLE_PADDING_PREFIX = 'padding-',
         STYLE_PADDING_TOP = STYLE_PADDING_PREFIX + 'top',
         STYLE_PADDING_RIGHT = STYLE_PADDING_PREFIX + 'right',
@@ -39,12 +39,13 @@ Crocodoc.addComponent('layout-base', function (scope) {
         // manually resize pages width/height
         var i, len, pageState, cssRule,
             state = layout.state,
-            selector = '.' + layout.config.namespace + ' .' + CSS_CLASS_PAGE_OVERLAY,
+            selector = '.' + layout.config.namespace + ' .' + CSS_CLASS_PAGE_AUTOSCALE,
             stylesheet = layout.config.stylesheet,
             pages = state.pages,
             scale = zoom * layout.config.pageScale,
             percent = 100 / scale;
 
+        // apply css transform or zoom to autoscale layer (eg., text, links, user content)
         if (support.csstransform) {
             cssRule = support.csstransform + ':scale(' + scale + ');' +
                 'width:' + percent + '%;' +
@@ -60,11 +61,10 @@ Crocodoc.addComponent('layout-base', function (scope) {
         if (state.previousStyleIndex) {
             util.deleteCSSRule(stylesheet, state.previousStyleIndex);
         }
-        // create a new rule for the overlay
+        // create a new rule for the autoscale layer
         state.previousStyleIndex = util.appendCSSRule(stylesheet, selector, cssRule);
 
         // update width/height/padding on all pages
-        // @TODO:
         for (i = 0, len = pages.length; i < len; ++i) {
             pageState = pages[i];
             layout.$pages.eq(i).css({

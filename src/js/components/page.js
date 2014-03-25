@@ -15,7 +15,6 @@ Crocodoc.addComponent('page', function (scope) {
     //--------------------------------------------------------------------------
 
     var CSS_CLASS_PAGE_PREFIX = 'crocodoc-page-',
-        CSS_CLASS_PAGE_INNER = CSS_CLASS_PAGE_PREFIX + 'inner',
         CSS_CLASS_PAGE_LOADING = CSS_CLASS_PAGE_PREFIX + 'loading',
         CSS_CLASS_PAGE_ERROR = CSS_CLASS_PAGE_PREFIX + 'error',
         CSS_CLASS_PAGE_TEXT = CSS_CLASS_PAGE_PREFIX + 'text',
@@ -73,12 +72,11 @@ Crocodoc.addComponent('page', function (scope) {
          * @returns {void}
          */
         init: function ($pageEl, config) {
-            var $text, $svg, $inner, $links;
+            var $text, $svg, $links;
             $el = $pageEl;
-            $inner = $el.find('.' + CSS_CLASS_PAGE_INNER);
-            $svg = $inner.find('.' + CSS_CLASS_PAGE_SVG);
-            $text = $inner.find('.' + CSS_CLASS_PAGE_TEXT);
-            $links = $inner.find('.' + CSS_CLASS_PAGE_LINKS);
+            $svg = $pageEl.find('.' + CSS_CLASS_PAGE_SVG);
+            $text = $pageEl.find('.' + CSS_CLASS_PAGE_TEXT);
+            $links = $pageEl.find('.' + CSS_CLASS_PAGE_LINKS);
 
             config.url = config.url || '';
             pageText = scope.createComponent('page-text');
