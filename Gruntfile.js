@@ -23,7 +23,8 @@ module.exports = function (grunt) {
             options: {
                 hostname: '*',
                 port: 9000,
-                keepalive: true
+                keepalive: true,
+                open: true
             },
             rules: [
                 {from: '^/examples/remember-page/(.*)$', to: '/examples/remember-page/index.html'}
