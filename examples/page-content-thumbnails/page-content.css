@@ -42,3 +42,6 @@
 .thumbnails .crocodoc-pages {
     text-align: left;
 }
+.thumbnails .crocodoc-viewer-logo {
+    display: none;
+}

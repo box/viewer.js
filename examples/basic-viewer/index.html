@@ -1,18 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" media="screen" href="../../dist/crocodoc.viewer.css" />
+    <link rel="stylesheet" href="../../dist/crocodoc.viewer.css" />
     <script src="../../test/framework/jquery.js"></script>
     <script src="../../dist/crocodoc.viewer.js"></script>
     <style>
         html, body {
             margin: 0;
             height: 100%;
-            overflow: hidden;
-            background: #c8c8c8;
-        }
-        .viewer {
-            height: 100%;
+            background: #fafafa;
         }
         .crocodoc-page-inner {
             border: 1px solid #ccc;
@@ -21,11 +17,9 @@
     </style>
 </head>
 <body>
-    <div class="viewer"></div>
     <script>
-        var url = 'https://view-api.box.com/1/sessions/a7b7e41df3894924bee97fb1435ab3f7/assets';
-        var viewer = Crocodoc.createViewer('.viewer', {
-            url: url
+        var viewer = Crocodoc.createViewer('body', {
+            url: 'https://view-api.box.com/1/sessions/a7b7e41df3894924bee97fb1435ab3f7/assets'
         });
         viewer.load();
     </script>

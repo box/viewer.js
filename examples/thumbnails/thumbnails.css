@@ -63,7 +63,7 @@ html, body {
 }
 
 .thumbnails .crocodoc-page {
-    padding: 50px;
+    padding: 40px 0 40px 100px;
 }
 .thumbnails .crocodoc-page .crocodoc-page-svg {
     opacity: 0.8;
@@ -87,6 +87,14 @@ html, body {
     left: 0;
     width: 100%;
     height: 10%;
+}
+
+/* align the thumbnail pages to the left instead of center */
+.thumbnails .crocodoc-pages {
+    text-align: left;
+}
+.thumbnails .crocodoc-viewer-logo {
+    display: none;
 }
 
 .presentation .crocodoc-page {

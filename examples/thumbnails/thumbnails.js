@@ -4,7 +4,7 @@ var thumbnails = Crocodoc.createViewer('.thumbnails', {
     url: url,
     enableTextSelection: false,
     enableLinks: false,
-    minZoom: 0.05,
+    minZoom: 0.17,
     zoom: 0.17,
     layout: Crocodoc.LAYOUT_VERTICAL
 });
