@@ -44,7 +44,7 @@ Example
 
 ## Logos
 
-As per section 2.6 of our agreement of our [API terms](http://developers.box.com/box-view-terms/), we require that all apps using Box View with the Standard tier conspicuously display a Box logo when displaying Box View documents. An [approved logo](src/images/logo.png) is included within this repository. If you are using a paid tier of the View API or you are not using Viewer.js with View API documents, see [Logo Options](#logo-options) for instructions on how to build the viewer without the Box logo or with a custom logo.
+As per section 2.6 of our agreement of our [API terms](http://developers.box.com/box-view-terms/), we require that all apps using Box View with the Standard tier conspicuously display a Box logo when displaying Box View documents. An [approved logo](src/images/logo.png) is included within this repository. If your Box View plan permits custom branding of the viewer, please refer to [Logo Options](#logo-options) for instructions on how to build the viewer without the Box logo or with a custom logo.
 
 
 ## Documentation
