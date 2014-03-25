@@ -2,15 +2,36 @@
 
 A viewer for documents converted with the [Box View API](http://developers.box.com/view/).
 
+## Contents
+* [Quick Start](#quick-start)
+    - [Loading a Simple Viewer](#loading-a-simple-viewer)
+* [Logos](#logos)
+* [Documentation](#documentation)
+    - [Library Methods](#library-methods)
+    - [Viewer Config](#viewer-config)
+    - [Viewer Methods](#viewer-methods)
+    - [Event Handling](#event-handling)
+    - [Setting the Layout Mode](#setting-the-layout-mode)
+    - [Plugins](#plugins)
+* [Browser Support](#browser-support)
+* [Contributing](#contributing)
+* [Getting Started with the Code](#getting-started-with-the-code)
+    - [Grunt](#grunt)
+    - [Logo Options](#logo-options)
+* [Change Log](#change-log)
+* [Copyright and License](#copyright-and-license)
 
 ## Quick Start
 
-### Loading a simple viewer
+### Loading a Simple Viewer
 
 `Crocodoc.createViewer(element, config)`
 
 Example
 ```html
+<link rel="stylesheet" href="crocodoc.viewer.min.css">
+<script type="text/javascript" src="jquery.min.js">
+<script type="text/javascript" src="crocodoc.viewer.min.js">
 <div class="viewer" style="height: 100%"></div>
 <script type="text/javascript">
     var viewer = Crocodoc.createViewer('.viewer', {
@@ -20,6 +41,13 @@ Example
 </script>
 ```
 
+
+## Logos
+
+As per section 2.6 of our agreement of our [API terms](http://developers.box.com/box-view-terms/), we require that all apps using Box View with the Standard tier conspicuously display a Box logo when displaying Box View documents. An [approved logo](src/images/logo.png) is included within this repository. If you are using a paid tier of the View API or you are not using Viewer.js with View API documents, see [Logo Options](#logo-options) for instructions on how to build the viewer without the Box logo or with a custom logo.
+
+
+## Documentation
 
 ### Library Methods
 
@@ -36,7 +64,7 @@ Create and return a viewer instance initialized with the given parameters.
 
 **Crocodoc.addPlugin(pluginName, creatorFn)**
 
-Register a new plugin with the framework. See [plugins](#plugins) for more details.
+Register a new plugin with the framework. See [Plugins](#plugins) for more details.
 
 * `pluginName` the name of the plugin
 * `creatorFn` a function that creates and returns an instance of the plugin (which should be an object) when called
@@ -86,7 +114,7 @@ If true, click-and-drag scrolling will be enabled for this document. Default: `f
 
 **plugins**
 
-Specify a map of plugin names to their configs. Plugin names specified in this object will be loaded when the viewer is initialized. See [plugins](#plugins) for more details.
+Specify a map of plugin names to their configs. Plugin names specified in this object will be loaded when the viewer is initialized. See [Plugins](#plugins) for more details.
 
 Example:
 ```js
@@ -262,9 +290,9 @@ NOTE: `.crocodoc-page` and `.crocodoc-page-inner` classes can be used to style p
 * `.crocodoc-page`: background should be transparent, unless you want the background to also appear as a border (based on the padding size) - use `.crocodoc-page-inner` for changing the background of pages
 
 
-## Plugins
+### Plugins
 
-Plugins are reusable components that can hook into viewer.js instances to add functionality.
+Plugins are reusable components that can hook into viewer.js instances to add functionality. Plugins are initialized when a viewer instance is created and have their own configuration options.
 
 [//]: # (TODO: expand this section)
 
@@ -339,7 +367,7 @@ Viewer.js is supported in all modern desktop and mobile browsers. It will fall b
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 
-### Getting started with the code
+## Getting Started with the Code
 
 To install the development dependencies, you'll need [node](http://nodejs.org/) and [npm](https://npmjs.org/). Most node installs come with npm pre-packaged.
 
@@ -353,11 +381,13 @@ Then go to the viewer.js directory and run:
 npm install
 ```
 
-That's it! You should be setup with dev dependencies and ready to go. Here are the grunt commands for reference:
+That's it! You should be setup with dev dependencies and ready to go. 
+
+### Grunt
 
 * `grunt test` - runs `jshint` and `qunit` tests against the code
 * `grunt doc` - runs `test` and `jsdoc` to generate documentation in `doc/`
-* `grunt default` (or just `grunt`) - runs `test` and `concat` to build the following files:
+* `grunt` (alias for `grunt default`) - runs `test` and `concat` to build the following files:
     - `dist/crocodoc.viewer.js`
     - `dist/crocodoc.viewer.css`
 * `grunt build` - runs `default` as well as `cssmin` and `uglify` to build the following compressed files (in addition to the files built in `grunt default`):
@@ -367,6 +397,15 @@ That's it! You should be setup with dev dependencies and ready to go. Here are t
     - defaults to port 9000
     - examples: `http://localhost:9000/examples`
     - tests: `http://localhost:9000/test`
+
+### Logo Options
+
+There is an additional option that can be specified when running grunt tasks: `--no-logo`. If this flag is added, logos will not be embedded into the resulting CSS file (`dist/crocodoc.viewer(.min).css`).
+
+If you would like to replace the Box logo with your own, you can simply replace `src/images/logo.png` and `src/images/logo@2x.png` with your own logos. Running `grunt` or `grunt build` will embed the images into the resulting CSS files.
+
+**NOTE:** Make sure you are allowed to remove logos before building with this option. For more information, see [Logos](#logos) above.
+
 
 For more information about the code, see the [JS architecture overview](src/js/README.md).
 
