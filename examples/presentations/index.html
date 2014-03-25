@@ -13,16 +13,6 @@
             overflow: hidden;
             background: #222;
         }
-        /*body {
-            -webkit-transition: opacity 1s ease-in 0.5s;
-            transition: opacity 1s ease-in 0.5s;
-            opacity: 1;
-        }
-        body.transition {
-            -webkit-transition: opacity 0s;
-            transition: opacity 0s;
-            opacity: 0;
-        }*/
         .viewer {
             height: 100%;
         }
@@ -41,24 +31,37 @@
             width: 300px;
             text-align: center;
         }
+        button {
+            background: #fafafa;
+            border: 0;
+        }
+        button.selected {
+            background: #999;
+        }
+        button:focus {
+            outline: 0;
+            box-shadow: 0 0 0 1px #aaa;
+        }
     </style>
 </head>
 <body class="transition">
     <div class="viewer"></div>
     <div class="controls">
-        <button onclick="setMode('pop')">Pop</button>
-        <button onclick="setMode('slide')">Slide</button>
-        <button onclick="setMode('carousel')">Carousel</button>
-        <button onclick="setMode('book')">Book</button>
+        <button class="pop" onclick="setMode('pop')">Pop</button>
+        <button class="carousel" onclick="setMode('carousel')">Carousel</button>
+        <button class="slide" onclick="setMode('slide')">Slide</button>
+        <button class="book" onclick="setMode('book')">Book</button>
     </div>
     <script>
         var viewer,
             url = 'https://view-api.box.com/1/sessions/5a34f299b35947b5ac1e0b4d83553392/assets';
 
         function setMode(mode) {
+            $('.controls button').removeClass('selected');
+            $('.controls button.' + mode).addClass('selected');
             switch (mode) {
                 case 'pop':
-                    $('body').removeClass().addClass('crocodoc-presentation transition');
+                    $('body').removeClass().addClass('crocodoc-presentation');
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
                     break;
@@ -66,27 +69,23 @@
                 case 'slide':
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
-                    $('body').removeClass().addClass('crocodoc-presentation-slide transition');
+                    $('body').removeClass().addClass('crocodoc-presentation-slide');
                     break;
 
                 case 'carousel':
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
                     viewer.zoom(Crocodoc.ZOOM_OUT);
-                    $('body').removeClass().addClass('crocodoc-carousel transition');
+                    $('body').removeClass().addClass('crocodoc-carousel');
                     break;
 
                 case 'book':
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
-                    $('body').removeClass().addClass('crocodoc-pageflip transition');
+                    $('body').removeClass().addClass('crocodoc-pageflip');
                     break;
             }
         }
-
-        $('body').on('transitionend webkitTransitionEnd', function (ev) {
-            $(this).removeClass('transition');
-        });
 
         viewer = Crocodoc.createViewer('.viewer', {
             url: url,

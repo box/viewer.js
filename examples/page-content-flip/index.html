@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" media="screen" href="../../dist/crocodoc.viewer.css" />
+    <script src="../../test/framework/jquery.js"></script>
+    <script src="../../dist/crocodoc.viewer.js"></script>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #c8c8c8;
+        }
+        .viewer {
+            height: 100%;
+        }
+
+        .crocodoc-page {
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            -webkit-perspective: 1000px;
+            perspective: 1000px;
+        }
+
+        .crocodoc-page-content {
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transition: -webkit-transform 0.5s;
+        }
+
+        .page-content {
+            font-family: Calibri,Arial,sans-serif;
+            position: absolute;
+            margin-top: 0;
+            margin-left: 0;
+            width: 100%;
+            height: 100%;
+            text-align: left;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transition: -webkit-transform 0.5s, opacity 0.3s;
+            z-index: 1;
+        }
+
+        .page-content.front {
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .page-content.front .page-actions {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            margin-top: -10%;
+            height: 20%;
+            text-align: center;
+            font-size: 8em;
+            color: #aaa;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        .page-content.back .page-info {
+            padding: 5%;
+            text-align: center;
+            position: relative;
+        }
+
+        .page-content.back {
+            background: #7e7f95;
+            -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg);
+        }
+        .page-content-flipped .page-content.back {
+            -webkit-transform: rotateY(0);
+            transform: rotateY(0);
+        }
+        .page-content-flipped .crocodoc-page-content {
+            -webkit-transform: rotateY(-180deg);
+            transform: rotateY(-180deg);
+        }
+        .page-content.front {
+            opacity: 0;
+            cursor: pointer;
+        }
+        .crocodoc-page:hover .page-content.front {
+            opacity: 1;
+        }
+        .page-content-flipped .page-content.front {
+            -webkit-transform: rotateY(-180deg);
+            transform: rotateY(-180deg);
+        }
+    </style>
+    </style>
+</head>
+<body>
+    <div class="viewer"></div>
+    <script id="page-content-tmpl" type="text/x-template">
+        <div class="page-content back">
+            <div class="crocodoc-page-autoscale">
+                <div class="page-info">
+                    {{pageInfo}}
+                </div>
+            </div>
+        </div>
+        <div class="page-content front">
+            <div class="crocodoc-page-autoscale">
+                <div class="page-actions">
+                    Click for info!
+                </div>
+            </div>
+        </div>
+    </script>
+    <script src="page-content.js"></script>
+    <script>
+        var url = 'https://view-api.box.com/1/sessions/5a34f299b35947b5ac1e0b4d83553392/assets';
+        var viewer = Crocodoc.createViewer('.viewer', {
+            url: url,
+            plugins: {
+                'page-content': {
+                    defaultInfo: 'lol, a doge<br/><img src="https://static.view-api.box.com/images/spindoge.gif"/>',
+                    template: $('#page-content-tmpl').html(),
+                    pageInfos: [
+                        '<h1>WOW PAGE 1 AWESOME</h1>',
+                        'a form or something<input/><button>go!</button>'
+                    ]
+                }
+            }
+        });
+        viewer.load();
+    </script>
+</body>
+</html>

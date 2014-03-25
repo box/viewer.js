@@ -4,7 +4,9 @@ In this directory, you'll find several examples of common viewer.js use cases.
 
 * `basic-viewer`
     - The simplest possible viewer.js example. Loads a document with default configurations.
-* `page-content`
+* `page-content-flip`
+    - Add additional content to each page, with a fancy card-flip transition when interacted with.
+* `page-content-thumbnails`
     - Similar to `thumbnails`, but with additional interactive content added to each page via a custom plugin. 
 * `presentations`
     - Various demos of presentation transitions and modes.
