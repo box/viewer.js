@@ -52,9 +52,13 @@
     transform-origin: left top;
 }
 
-.crocodoc-pageflip .crocodoc-page-visible {
-    -webkit-transform: none;
-    transform: none;
+.crocodoc-pageflip .crocodoc-page-visible:nth-child(odd) {
+    -webkit-transform: rotateY(0.1deg);
+    transform: rotateY(0.1deg);
+}
+.crocodoc-pageflip .crocodoc-page-visible:nth-child(even) {
+    -webkit-transform: rotateY(-0.1deg);
+    transform: rotateY(-0.1deg);
 }
 
 .crocodoc-pageflip .crocodoc-page-before-buffer,
