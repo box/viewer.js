@@ -243,6 +243,12 @@ viewer.on('ready', function (ev) {
 * `resize` Triggered when the viewer is resized. Event properties:
     * `width` - the viewport width
     * `height` - the viewport height
+* `scrollstart` Triggered when the user starts scrolling. Event properties:
+    * `scrollTop` - the scrollTop position of the viewport
+    * `scrollLeft` - the scrollLeft position of the viewport
+* `scrollend` Triggered when the user stops scrolling (or when the content stops moving if there is a momentum effect). Event properties:
+    * `scrollTop` - the scrollTop position of the viewport
+    * `scrollLeft` - the scrollLeft position of the viewport
 * `zoom` Triggered when the zoom value changes. Event properties:
     * `zoom` - current zoom value
     * `zoomMode` - current zoom mode (string or null)
