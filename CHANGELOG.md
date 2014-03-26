@@ -2,6 +2,8 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.4.1**
+  * Fix a bug with asset preloading
 * **0.4.0**
   * Add [plugins](README.md#plugins)
   * Add presentation transition examples
