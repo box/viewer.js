@@ -18,14 +18,13 @@ Crocodoc.addComponent('page-svg', function (scope) {
     // content before we give up and stop rendering them
     var MAX_DATA_URLS = 1000,
         SVG_MIME_TYPE = 'image/svg+xml',
-        HTML_TEMPLATE = '<style>html, body { width:100%; height: 100%; margin: 0; overflow: hidden; }</style>',
-        PROXY_SCRIPT_TEMPLATE = '<script type="text/javascript" src="data:text/javascript;base64,{{encodedScript}}"></script>',
+        HTML_TEMPLATE = '<style>html,body{width:100%;height:100%;margin:0;overflow:hidden;}</style>',
         SVG_CONTAINER_TEMPLATE = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><script><![CDATA[('+proxySVG+')()]]></script></svg>',
 
         // Embed the svg in an iframe (initialized to about:blank), and inject
         // the SVG directly to the iframe window using document.write()
         // @NOTE: this breaks images in Safari because [?]
-        EMBED_STRATEGY_DOCUMENT_WRITE = 1,
+        EMBED_STRATEGY_IFRAME_INNERHTML = 1,
 
         // Embed the svg with a data-url
         // @NOTE: ff allows direct script access to objects embedded with a data url,
@@ -60,7 +59,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
         // Embed in a way similar to the EMBED_STRATEGY_DATA_URL_PROXY, but in this
         // method we use an iframe initialized to about:blank and document.write()
         // the proxy script before calling loadSVG on the iframe's contentWindow
-        // @NOTE: this is a workaround for the image issue with EMBED_STRATEGY_DOCUMENT_WRITE
+        // @NOTE: this is a workaround for the image issue with EMBED_STRATEGY_IFRAME_INNERHTML
         //        in safari; it also works in firefox, but causes a spinner because of
         //        document.write()
         EMBED_STRATEGY_IFRAME_PROXY = 7,
@@ -92,7 +91,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
         embedStrategy = browser.ie ? EMBED_STRATEGY_DATA_URL_IMG :
                         browser.firefox ? EMBED_STRATEGY_DATA_URL_IMG :
                         browser.safari ? EMBED_STRATEGY_IFRAME_PROXY :
-                        EMBED_STRATEGY_DOCUMENT_WRITE;
+                        EMBED_STRATEGY_IFRAME_INNERHTML;
 
     /**
      * Create and return a jQuery object for the SVG element
@@ -101,7 +100,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
      */
     function createSVGEl() {
         switch (embedStrategy) {
-            case EMBED_STRATEGY_DOCUMENT_WRITE:
+            case EMBED_STRATEGY_IFRAME_INNERHTML:
             case EMBED_STRATEGY_IFRAME_PROXY:
                 return $('<iframe>');
 
@@ -265,25 +264,36 @@ Crocodoc.addComponent('page-svg', function (scope) {
                             contentDocument && contentDocument.defaultView;
 
         switch (embedStrategy) {
-            case EMBED_STRATEGY_DOCUMENT_WRITE:
+            case EMBED_STRATEGY_IFRAME_INNERHTML:
                 // @NOTE: IE 9 fix. This line in the file is causing the page not to render in IE 9.
                 // The link is not needed here anymore because we are including the stylesheet separately.
                 if (browser.ie && browser.version < 10) {
                     svgText = svgText.replace(/<xhtml:link.*/,'');
                 }
                 html = HTML_TEMPLATE + svgText;
-                contentDocument.open();
-                contentDocument.write(html);
-                contentDocument.close();
+                // @NOTE: documentElement.innerHTML is read-only in IE
+                if (browser.ie && browser.version < 10) {
+                    contentDocument.body.innerHTML = html;
+                } else {
+                    contentDocument.documentElement.innerHTML = html;
+                }
                 svgEl = contentDocument.getElementsByTagName('svg')[0];
                 break;
 
             case EMBED_STRATEGY_IFRAME_PROXY:
-                html = HTML_TEMPLATE +
-                       util.template(PROXY_SCRIPT_TEMPLATE, { encodedScript: window.btoa('('+proxySVG+')()') });
-                contentDocument.open();
-                contentDocument.write(html);
-                contentDocument.close();
+                contentDocument.documentElement.innerHTML = HTML_TEMPLATE;
+                var head = contentDocument.getElementsByTagName('head')[0] || contentDocument.documentElement,
+                    script = contentDocument.createElement('script'),
+                    data = '('+proxySVG+')()'; // IIFE to create window.loadSVG
+                script.type = 'text/javascript';
+                try {
+                    // doesn't work on ie...
+                    script.appendChild(document.createTextNode(data));
+                } catch(e) {
+                    // IE has funky script nodes
+                    script.text = data;
+                }
+                head.insertBefore(script, head.firstChild);
                 if (contentDocument.readyState === 'complete') {
                     contentWindow.loadSVG(svgText);
                     if (!removeOnUnload) {
