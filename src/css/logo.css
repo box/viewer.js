@@ -11,6 +11,10 @@
     pointer-events: none;
 }
 
+.crocodoc-window-as-viewport .crocodoc-viewer-logo {
+    position: fixed;
+}
+
 /* hidpi logo */
 @media only screen and (-webkit-min-device-pixel-ratio: 2) {
     .crocodoc-viewer-logo {

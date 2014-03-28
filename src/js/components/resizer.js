@@ -20,7 +20,9 @@ Crocodoc.addComponent('resizer', function (scope) {
         // @NOTE: IE 11 uses upper-camel-case for this, which is apparently necessary
         'MSFullscreenChange';
 
-    var element,
+    var $window = $(window),
+        $document = $(document),
+        element,
         currentClientWidth,
         currentClientHeight,
         currentOffsetWidth,
@@ -86,8 +88,21 @@ Crocodoc.addComponent('resizer', function (scope) {
          */
         init: function (el) {
             element = $(el).get(0);
-           $(document).on(FULLSCREENCHANGE_EVENT, broadcast);
-            loop();
+
+            // use the documentElement for viewport dimensions
+            // if we are using the window as the viewport
+            if (element === window) {
+                element = document.documentElement;
+                $window.on('resize', checkResize);
+                // @NOTE: we don't need to loop with
+                // requestAnimationFrame in this case,
+                // because we can rely on window.resize
+                // events if the window is our viewport
+                checkResize();
+            } else {
+                loop();
+            }
+           $document.on(FULLSCREENCHANGE_EVENT, broadcast);
         },
 
         /**
@@ -95,7 +110,8 @@ Crocodoc.addComponent('resizer', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-           $(document).off(FULLSCREENCHANGE_EVENT, broadcast);
+            $document.off(FULLSCREENCHANGE_EVENT, broadcast);
+            $window.off('resize', checkResize);
             support.cancelAnimationFrame(resizeFrameID);
         }
     };
