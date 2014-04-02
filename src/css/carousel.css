@@ -1,16 +1,12 @@
 /***** CAROUSEL STUFF *****/
 
-.crocodoc-carousel .crocodoc-doc,
-.crocodoc-carousel .crocodoc-pages {
+.crocodoc-carousel .crocodoc-doc {
     background: transparent;
-}
-
-.crocodoc-carousel .crocodoc-pages {
     overflow: visible;
     -webkit-perspective: 500px;
     perspective: 500px;
-    -webkit-perspective-origin: 100% 50%;
-    perspective-origin: 100% 50%;
+    -webkit-perspective-origin: 50% 50%;
+    perspective-origin: 50% 50%;
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
 }

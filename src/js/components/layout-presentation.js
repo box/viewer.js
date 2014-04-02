@@ -119,7 +119,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
             var index = util.clamp(page - 1, 0, this.numPages);
             base.setCurrentPage.call(this, page);
             // update CSS classes
-            this.$pagesWrapper.find('.' + CSS_CLASS_CURRENT_PAGE).removeClass(CSS_CLASS_CURRENT_PAGE);
+            this.$doc.find('.' + CSS_CLASS_CURRENT_PAGE).removeClass(CSS_CLASS_CURRENT_PAGE);
             this.$pages.eq(this.state.currentPage - 1).addClass(CSS_CLASS_CURRENT_PAGE);
             this.updateVisiblePages(true);
             this.updatePageClasses(index);
@@ -164,7 +164,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
             docWidth = Math.max(zoomedWidth, viewportWidth);
             docHeight = Math.max(zoomedHeight, viewportHeight);
 
-            this.$pagesWrapper.add(this.$doc).css({
+            this.$doc.css({
                 width: docWidth,
                 height: docHeight
             });
