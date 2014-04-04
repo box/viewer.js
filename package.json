@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "node_modules/.bin/grunt test",
-    "postinstall": "cp git-hooks/* .git/hooks/"
+    "postinstall": "./postinstall.sh"
   },
   "devDependencies": {
     "grunt-cli": "~0.1.10",
