@@ -14,8 +14,11 @@ Crocodoc.addComponent('resizer', function (scope) {
     var support = scope.getUtility('support');
 
     // shorter way of defining
-    // 'webkitfullscreenchange mozfullscreenchange msfullscreenchange fullscreenchange'
-    var FULLSCREENCHANGE_EVENT = ['webkit',' moz', ' ms', ' ', ''].join('fullscreenchange');
+    // 'fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange'
+    var FULLSCREENCHANGE_EVENT = ['', ' webkit', ' moz', ' ']
+        .join('fullscreenchange') +
+        // @NOTE: IE 11 uses upper-camel-case for this, which is apparently necessary
+        'MSFullscreenChange';
 
     var element,
         currentClientWidth,
