@@ -5,7 +5,6 @@ module('Component - layout-base', {
             common: Crocodoc.getUtility('common'),
             support: { csstransform: true }
         };
-        this.scope = Crocodoc.getScopeForTest(this);
         this.config = {
             $el: $(),
             $viewport: $('<div>'),
@@ -19,8 +18,10 @@ module('Component - layout-base', {
             minZoom: 0.01,
             maxZoom: 5,
             stylesheet: {},
+            zoomLevels: [0.5, 1],
             namespace: 'crocodoc-namespace-123456'
         };
+        this.scope = Crocodoc.getScopeForTest(this);
 
         for (var i = 0; i < 10; i++) {
             this.config.$pagesWrapper.append('<div class="crocodoc-page"></div>');
@@ -45,7 +46,7 @@ test('init() should initialize state, page states, and zoom range when called', 
     var mock = this.mock(this.component);
     mock.expects('initState');
     mock.expects('updatePageStates');
-    mock.expects('initZoomLevels');
+    mock.expects('updateZoomLevels');
     this.component.init(this.config);
 });
 
@@ -261,10 +262,12 @@ test('handleResize() should update viewport dimensions when called', function ()
     deepEqual(data, this.component.state.viewportDimensions, 'viewport dimensions set properly');
 });
 
-test('handleResize() should zoom to the current zoom mode when called', function () {
+test('handleResize() should zoom to the current zoom mode and update zoom levels when called', function () {
     var mode = 'some zoom mode';
-    this.mock(this.component)
-        .expects('setZoom')
+    this.component.init();
+    var mock = this.mock(this.component);
+    mock.expects('updateZoomLevels');
+    mock.expects('setZoom')
         .withArgs(mode);
 
     this.component.state = { zoomState: { zoomMode: mode }};
@@ -429,4 +432,36 @@ test('setZoom() should remove the appropriate CSS rule from the stylesheet when 
 
     this.component.setZoom(zoom);
     this.component.setZoom(zoom);
+});
+
+test('updateZoomLevels() should update min and max zoom when called', function () {
+    this.config.zoomLevels = [0.1, 5];
+    this.config.minZoom = this.config.maxZoom = null;
+    this.stub(this.component, 'calculateZoomValue').returns(1);
+    this.component.init();
+    this.component.updateZoomLevels();
+    equal(this.component.state.minZoom, 0.1, 'min zoom is correct');
+    equal(this.component.state.maxZoom, 5, 'max zoom is correct');
+});
+
+test('updateZoomLevels() should add the preset zoom levels to the list of zoom levels when called', function () {
+    this.config.zoomLevels = [0.1, 5];
+    this.stub(this.component, 'calculateZoomValue')
+        .withArgs(Crocodoc.ZOOM_FIT_WIDTH).returns(1)
+        .withArgs(Crocodoc.ZOOM_FIT_HEIGHT).returns(1.5)
+        .withArgs(Crocodoc.ZOOM_AUTO).returns(2);
+    this.component.init();
+    this.component.updateZoomLevels();
+    deepEqual(this.component.zoomLevels, [0.1, 1, 1.5, 2, 5], 'zoom levels were added');
+});
+
+test('updateZoomLevels() should remove duplicate and very similar zoom levels from the list of zoom levels when called', function () {
+    this.config.zoomLevels = [0.1, 0.1, 1, 1.05, 5];
+    this.stub(this.component, 'calculateZoomValue')
+        .withArgs(Crocodoc.ZOOM_FIT_WIDTH).returns(1)
+        .withArgs(Crocodoc.ZOOM_FIT_HEIGHT).returns(1.01)
+        .withArgs(Crocodoc.ZOOM_AUTO).returns(1.5);
+    this.component.init();
+    this.component.updateZoomLevels();
+    deepEqual(this.component.zoomLevels, [0.1, 1, 1.5, 5], 'zoom levels were correct');
 });
