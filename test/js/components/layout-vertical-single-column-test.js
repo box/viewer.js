@@ -4,7 +4,7 @@ module('Component - layout-vertical-single-column', {
             common: Crocodoc.getUtility('common')
         };
         this.config = {
-            layout: 'not correct'
+            layout: Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.mixins = {
@@ -17,9 +17,8 @@ module('Component - layout-vertical-single-column', {
     }
 });
 
-test('init() should set the proper layout in config and initialize a vertical layout when called', function () {
+test('init() should initialize a vertical layout when called', function () {
     var initSpy = this.spy(this.mixins['layout-vertical'], 'init');
     this.component.init();
-    equal(this.config.layout, 'vertical-single-column', 'the config has been set');
-    ok(initSpy.calledOn(this.component), 'init was called with the proper config on the proper context');
+    ok(initSpy.calledOn(this.component), 'init was called on the proper context');
 });

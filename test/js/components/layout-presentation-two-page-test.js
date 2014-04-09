@@ -4,7 +4,7 @@ module('Component - layout-presentation-two-page', {
             common: Crocodoc.getUtility('common')
         };
         this.config = {
-            layout: 'not correct'
+            layout: Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.mixins = {
@@ -19,10 +19,10 @@ module('Component - layout-presentation-two-page', {
     }
 });
 
-test('init() should set the proper layout in config and initialize a presentation layout when called', function () {
+test('init() should enable twoPageMode and initialize a presentation layout when called', function () {
     var initSpy = this.spy(this.mixins['layout-presentation'], 'init');
     this.component.init();
-    equal(this.config.layout, 'presentation-two-page', 'the config has been set');
+    ok(this.component.twoPageMode, 'twoPageMode has been set');
     ok(initSpy.calledOn(this.component), 'init was called with the proper config on the proper context');
 });
 

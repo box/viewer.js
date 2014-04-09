@@ -26,8 +26,6 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE, ['layou
          * @returns {void}
          */
         init: function () {
-            var config = scope.getConfig();
-            config.layout = Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE;
             this.twoPageMode = true;
             presentation.init.call(this);
         },

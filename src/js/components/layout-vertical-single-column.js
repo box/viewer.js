@@ -11,24 +11,10 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN, ['layo
     'use strict';
 
     //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    var util = scope.getUtility('common');
-
-    //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    return util.extend({}, vertical, {
-        /**
-         * Initialize the vertical-single-column layout component
-         * @returns {void}
-         */
-        init: function () {
-            var config = scope.getConfig();
-            config.layout = Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN;
-            vertical.init.call(this);
-        }
-    });
+    // there is nothing different about this layout aside from the name (and CSS class name)
+    // so we can just return the vertical layout
+    return vertical;
 });
