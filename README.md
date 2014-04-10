@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/box/viewer.js.png?branch=master)](https://travis-ci.org/box/viewer.js)
+
 # Viewer.js
 
 A viewer for documents converted with the [Box View API](http://developers.box.com/view/).
