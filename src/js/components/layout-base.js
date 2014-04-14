@@ -23,7 +23,11 @@ Crocodoc.addComponent('layout-base', function (scope) {
         STYLE_PADDING_TOP = STYLE_PADDING_PREFIX + 'top',
         STYLE_PADDING_RIGHT = STYLE_PADDING_PREFIX + 'right',
         STYLE_PADDING_LEFT = STYLE_PADDING_PREFIX + 'left',
-        STYLE_PADDING_BOTTOM = STYLE_PADDING_PREFIX + 'bottom';
+        STYLE_PADDING_BOTTOM = STYLE_PADDING_PREFIX + 'bottom',
+        // threshold for removing similar zoom levels (closer to 1 is more similar)
+        ZOOM_LEVEL_SIMILARITY_THRESHOLD = 0.95,
+        // threshold for removing similar zoom presets (e.g., auto, fit-width, etc)
+        ZOOM_LEVEL_PRESETS_SIMILARITY_THRESHOLD = 0.99;
 
     var util = scope.getUtility('common'),
         support = scope.getUtility('support');
@@ -144,8 +148,8 @@ Crocodoc.addComponent('layout-base', function (scope) {
             this.$el.addClass(this.layoutClass);
 
             this.initState();
-            this.initZoomLevels();
             this.updatePageStates();
+            this.updateZoomLevels();
         },
 
         /**
@@ -358,34 +362,89 @@ Crocodoc.addComponent('layout-base', function (scope) {
         },
 
         /**
+         * Update zoom levels and the min and max zoom
+         * @returns {void}
+         */
+        updateZoomLevels: function () {
+            var i, lastZoomLevel,
+                zoomLevels = this.config.zoomLevels.slice() || [1],
+                auto = this.calculateZoomValue(Crocodoc.ZOOM_AUTO),
+                fitWidth = this.calculateZoomValue(Crocodoc.ZOOM_FIT_WIDTH),
+                fitHeight = this.calculateZoomValue(Crocodoc.ZOOM_FIT_HEIGHT),
+                presets = [fitWidth, fitHeight];
+
+            // update min and max zoom before adding presets into the mix
+            // because presets should not be able to override min/max zoom
+            this.state.minZoom = this.config.minZoom || zoomLevels[0];
+            this.state.maxZoom = this.config.maxZoom || zoomLevels[zoomLevels.length - 1];
+
+            // if auto is not the same as fitWidth or fitHeight,
+            // add it as a possible next zoom
+            if (auto !== fitWidth && auto !== fitHeight) {
+                presets.push(auto);
+            }
+
+            // add auto-zoom levels and sort
+            zoomLevels = zoomLevels.concat(presets);
+            zoomLevels.sort(function sortZoomLevels(a, b){
+                return a - b;
+            });
+
+            this.zoomLevels = [];
+
+            /**
+             * Return true if we should use this zoom level
+             * @param   {number} zoomLevel The zoom level to consider
+             * @returns {boolean}          True if we should keep this level
+             * @private
+             */
+            function shouldUseZoomLevel(zoomLevel) {
+                var similarity = lastZoomLevel / zoomLevel;
+                // remove duplicates
+                if (zoomLevel === lastZoomLevel) {
+                    return false;
+                }
+                // keep anything that is within the similarity threshold
+                if (similarity < ZOOM_LEVEL_SIMILARITY_THRESHOLD) {
+                    return true;
+                }
+                // check if it's a preset
+                if (util.inArray(zoomLevel, presets) > -1) {
+                    // keep presets if they are within a higher threshold
+                    if (similarity < ZOOM_LEVEL_PRESETS_SIMILARITY_THRESHOLD) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // remove duplicates from sorted list, and remove unnecessary levels
+            // @NOTE: some zoom levels end up being very close to the built-in
+            // presets (fit-width/fit-height/auto), which makes zooming previous
+            // or next level kind of annoying when the zoom level barely changes.
+            // This fixes that by applying a threshold to the zoom levels to
+            // each preset, and removing the non-preset version if the
+            // ratio is below the threshold.
+            lastZoomLevel = 0;
+            for (i = 0; i < zoomLevels.length; ++i) {
+                if (shouldUseZoomLevel(zoomLevels[i])) {
+                    lastZoomLevel = zoomLevels[i];
+                    this.zoomLevels.push(lastZoomLevel);
+                }
+            }
+        },
+
+        /**
          * Calculate the next zoom level for zooming in or out
          * @param   {string} direction Can be either Crocodoc.ZOOM_IN or Crocodoc.ZOOM_OUT
-         * @returns {Object} an object with params:
-         *                      zoom: false or numeric value to zoom to
-         *                      mode: null or string zoom mode ('fitWidth', 'fitHeight')
-         * @TODO(clakenen): consider making auto, fitWidth, and fitHeight optional additions?
+         * @returns {number|boolean} The next zoom level or false if the viewer cannot be
+         *                               zoomed in the given direction
          */
         calculateNextZoomLevel: function (direction) {
             var i,
                 zoom = false,
                 currentZoom = this.state.zoomState.zoom,
-                zoomLevels = this.zoomLevels.slice(),
-                auto = this.calculateZoomValue(Crocodoc.ZOOM_AUTO),
-                fitWidth = this.calculateZoomValue(Crocodoc.ZOOM_FIT_WIDTH),
-                fitHeight = this.calculateZoomValue(Crocodoc.ZOOM_FIT_HEIGHT),
-                additions = [fitWidth, fitHeight];
-
-            // if auto is not the same as fitWidth or fitHeight,
-            // add it as a possible next zoom
-            if (auto !== fitWidth && auto !== fitHeight) {
-                additions.push(auto);
-            }
-
-            // add auto-zoom levels and sort
-            zoomLevels = zoomLevels.concat(additions);
-            zoomLevels.sort(function sortZoomLevels(a, b){
-                return a - b;
-            });
+                zoomLevels = this.zoomLevels;
 
             if (direction === Crocodoc.ZOOM_IN) {
                 for (i = 0; i < zoomLevels.length; ++i) {
@@ -714,16 +773,6 @@ Crocodoc.addComponent('layout-base', function (scope) {
         },
 
         /**
-         * Initialize zoom levels and the min and max zoom
-         * @returns {void}
-         */
-        initZoomLevels: function () {
-            this.zoomLevels = this.config.zoomLevels || [1];
-            this.state.minZoom = this.config.minZoom || this.zoomLevels[0];
-            this.state.maxZoom = this.config.maxZoom || this.zoomLevels[this.zoomLevels.length - 1];
-        },
-
-        /**
          * Calculate and update the current page
          * @returns {void}
          */
@@ -740,6 +789,7 @@ Crocodoc.addComponent('layout-base', function (scope) {
         handleResize: function (data) {
             var zoomMode = this.state.zoomState.zoomMode;
             this.state.viewportDimensions = data;
+            this.updateZoomLevels();
             this.setZoom(zoomMode);
         },
 
