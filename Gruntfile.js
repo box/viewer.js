@@ -106,7 +106,6 @@ module.exports = function (grunt) {
             css: {
                 src: [
                     'src/css/viewer.css',
-                    'src/css/presentation.css',
                     'src/css/theme.css',
                     'src/css/logo.css'
                 ],
@@ -115,7 +114,6 @@ module.exports = function (grunt) {
             'css-no-logo': {
                 src: [
                     'src/css/viewer.css',
-                    'src/css/presentation.css',
                     'src/css/theme.css'
                 ],
                 dest: 'dist/crocodoc.viewer.css'
