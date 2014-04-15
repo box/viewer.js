@@ -112,13 +112,9 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_HORIZONTAL, ['layout-base'], f
                 docWidth = Math.max(zoomedWidth, state.viewportDimensions.clientWidth),
                 docHeight = Math.max(zoomedHeight, state.viewportDimensions.clientHeight);
 
-            this.$pagesWrapper.css({
-                height: docHeight,
-                lineHeight: docHeight + 'px',
-                width: docWidth
-            });
             this.$doc.css({
                 height: docHeight,
+                lineHeight: docHeight + 'px',
                 width: docWidth
             });
         }

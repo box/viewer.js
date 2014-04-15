@@ -66,3 +66,17 @@ test('module should fire "resize" event with the proper data when element is res
     this.clock.tick(1);
     $el.remove();
 });
+
+test('onmessage() should trigger a resize message when called', function () {
+    var w = 100, h = 200,
+        data = {
+            width: w,
+            height: h
+        },
+        $el = $('<div>').css(data).appendTo(document.body);
+    this.component.init($el);
+    this.mock(this.scope)
+        .expects('broadcast')
+        .withArgs('resize', sinon.match(data));
+    this.component.onmessage('layoutchange');
+});

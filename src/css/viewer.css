@@ -40,11 +40,13 @@
 
 /* outside wrapper for positioning the transformed inner wrapper properly */
 .crocodoc-doc {
-    width: 100%;
-    height: 100%;
     overflow: hidden;
     /* @NOTE: position:relative is necessary for overflow:hidden to work in IE7 */
     position: relative;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    text-align: center;
+    font-size: 100%;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
 }
@@ -60,20 +62,6 @@
     width: auto;
     height: auto;
     overflow: visible;
-}
-
-/* wrapper around all pages, gets css transforms for zoom */
-.crocodoc-pages {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    text-align: center;
-    font-size: 100%;
-    overflow: hidden;
-    -webkit-transform-origin: 0 0;
-    -moz-transform-origin: 0 0;
-    -ms-transform-origin: 0 0;
-    transform-origin: 0 0;
 }
 
 /* individual pages */
@@ -217,7 +205,7 @@
 }
 
 /* Layout-specific styles -------------------------------- */
-.crocodoc-layout-horizontal .crocodoc-pages {
+.crocodoc-layout-horizontal .crocodoc-doc {
     text-align: left;
     white-space: nowrap;
 }
@@ -234,8 +222,8 @@
     display: block;
 }
 
-.crocodoc-layout-presentation-two-page .crocodoc-pages,
-.crocodoc-layout-presentation .crocodoc-pages {
+.crocodoc-layout-presentation-two-page .crocodoc-doc,
+.crocodoc-layout-presentation .crocodoc-doc {
     overflow: visible;
     /* @NOTE: this is for IE 7; text-align is incorrectly honored even when pages are position:absolute/display:block */
     text-align: left;

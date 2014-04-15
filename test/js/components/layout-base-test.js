@@ -8,8 +8,7 @@ module('Component - layout-base', {
         this.config = {
             $el: $(),
             $viewport: $('<div>'),
-            $doc: $(),
-            $pagesWrapper: $('<div>'),
+            $doc: $('<div>'),
             $pages: $(),
             page: 1,
             currentPage: 1,
@@ -24,9 +23,9 @@ module('Component - layout-base', {
         this.scope = Crocodoc.getScopeForTest(this);
 
         for (var i = 0; i < 10; i++) {
-            this.config.$pagesWrapper.append('<div class="crocodoc-page"></div>');
+            this.config.$doc.append('<div class="crocodoc-page"></div>');
         }
-        this.config.$pages = this.config.$pagesWrapper.find('.crocodoc-page');
+        this.config.$pages = this.config.$doc.find('.crocodoc-page');
         this.component = Crocodoc.getComponentForTest('layout-base', this.scope);
     }
 });
@@ -287,7 +286,7 @@ test('handleScrollEnd() should update the current page when called', function ()
     var currentPage = 3;
     this.stub(this.component, 'updateVisiblePages');
     this.stub(this.component, 'handleScroll');
-    this.config.$pages = this.config.$pagesWrapper.find('.crocodoc-page');
+    this.config.$pages = this.config.$doc.find('.crocodoc-page');
     var $prevPage = this.config.$pages.eq(0).addClass(CSS_CLASS_CURRENT_PAGE);
     var $currentPage = this.config.$pages.eq(currentPage - 1);
     this.component.init(this.config);

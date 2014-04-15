@@ -127,20 +127,9 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
             var state = this.state,
                 zoom = state.zoomState.zoom,
                 zoomedWidth,
-                docWidth,
-                docHeight,
-                wrapWidth,
-                wrapHeight;
+                docWidth;
 
             zoomedWidth = Math.floor(state.widestPage.totalActualWidth * zoom);
-            wrapWidth = Math.max(zoomedWidth, state.viewportDimensions.clientWidth);
-            wrapHeight = this.$pagesWrapper.height();
-
-            this.$pagesWrapper.css({
-                height: 'auto',
-                width: wrapWidth
-            });
-            wrapHeight = this.$pagesWrapper.height();
 
             // use clientWidth for the doc (prevent scrollbar)
             // use width:auto when possible
@@ -150,10 +139,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
                 docWidth = zoomedWidth;
             }
 
-            docHeight = wrapHeight;
-
             this.$doc.css({
-                height: docHeight,
                 width: docWidth
             });
         }

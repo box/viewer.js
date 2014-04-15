@@ -21,7 +21,7 @@
     z-index: 1;
 }
 
-.crocodoc-pageflip .crocodoc-pages {
+.crocodoc-pageflip .crocodoc-doc {
     overflow: visible;
     -webkit-perspective: 2000px;
     perspective: 2000px;

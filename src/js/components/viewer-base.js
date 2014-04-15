@@ -15,7 +15,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         ATTR_SVG_VERSION         = 'data-svg-version',
         CSS_CLASS_VIEWER         = CSS_CLASS_PREFIX + 'viewer',
         CSS_CLASS_DOC            = CSS_CLASS_PREFIX + 'doc',
-        CSS_CLASS_PAGES          = CSS_CLASS_PREFIX + 'pages',
         CSS_CLASS_VIEWPORT       = CSS_CLASS_PREFIX + 'viewport',
         CSS_CLASS_LOGO           = CSS_CLASS_PREFIX + 'viewer-logo',
         CSS_CLASS_DRAGGABLE      = CSS_CLASS_PREFIX + 'draggable',
@@ -37,8 +36,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     var VIEWER_HTML_TEMPLATE =
         '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
             '<div class="' + CSS_CLASS_DOC + '">' +
-                '<div class="' + CSS_CLASS_PAGES + '">' +
-                '</div>' +
             '</div>' +
         '</div>' +
         '<div class="' + CSS_CLASS_LOGO + '"></div>';
@@ -136,7 +133,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             config.$viewport = $el.find('.' + CSS_CLASS_VIEWPORT);
         }
         config.$doc = $el.find('.' + CSS_CLASS_DOC);
-        config.$pagesWrapper = $el.find('.' + CSS_CLASS_PAGES);
     }
 
     /**
@@ -188,7 +184,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         }
 
         // insert skeleton and keep a reference to the jq object
-        config.$pages = $(skeleton).appendTo(config.$pagesWrapper);
+        config.$pages = $(skeleton).appendTo(config.$doc);
     }
 
     /**
@@ -574,10 +570,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         /**
          * Set the layout to the given mode, destroying and cleaning up the current
          * layout if there is one
-         * @param  {string} mode The layout mode
+         * @param  {string} layoutMode The layout mode
          * @returns {Layout} The layout object
          */
-        setLayout: function (mode) {
+        setLayout: function (layoutMode) {
             var lastPage = config.page,
                 lastZoom = config.zoom || 1,
                 // create a layout component with the new layout config
@@ -586,16 +582,16 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // if there is already a layout, save some state
             if (layout) {
                 // ignore this if we already have the specified layout
-                if (mode === config.layout) {
+                if (layoutMode === config.layout) {
                     return layout;
                 }
                 lastPage = layout.state.currentPage;
                 lastZoom = layout.state.zoomState;
             }
 
-            newLayout = scope.createComponent('layout-' + mode);
+            newLayout = scope.createComponent('layout-' + layoutMode);
             if (!newLayout) {
-                throw new Error('Invalid layout ' +  mode);
+                throw new Error('Invalid layout ' +  layoutMode);
             }
 
             // remove and destroy the existing layout component
@@ -605,7 +601,9 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 scope.destroyComponent(layout);
             }
 
-            config.layout = mode;
+
+            var previousLayoutMode = config.layout;
+            config.layout = layoutMode;
 
             layout = newLayout;
             layout.init();
@@ -614,6 +612,13 @@ Crocodoc.addComponent('viewer-base', function (scope) {
 
             config.currentLayout = layout;
 
+            scope.broadcast('layoutchange', {
+                // in the context of event data, `layout` and `previousLayout`
+                // are actually the name of those layouts, and not the layout
+                // objects themselves
+                previousLayout: previousLayoutMode,
+                layout: layoutMode
+            });
             return layout;
         },
 

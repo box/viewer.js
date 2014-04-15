@@ -140,7 +140,6 @@ Crocodoc.addComponent('layout-base', function (scope) {
             this.$doc = config.$doc;
             this.$viewport = config.$viewport;
             this.$pages = config.$pages;
-            this.$pagesWrapper = config.$pagesWrapper;
             this.numPages = config.numPages;
 
             // add the layout css class
@@ -206,7 +205,7 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            this.$pagesWrapper.add(this.$doc).removeAttr('style');
+            this.$doc.removeAttr('style');
             this.$pages.css('padding', '');
             this.$el.removeClass(this.layoutClass);
         },
@@ -817,7 +816,7 @@ Crocodoc.addComponent('layout-base', function (scope) {
          */
         handleScrollEnd: function (data) {
             // update CSS classes
-            this.$pagesWrapper.find('.' + CSS_CLASS_CURRENT_PAGE).removeClass(CSS_CLASS_CURRENT_PAGE);
+            this.$doc.find('.' + CSS_CLASS_CURRENT_PAGE).removeClass(CSS_CLASS_CURRENT_PAGE);
             this.$pages.eq(this.state.currentPage - 1).addClass(CSS_CLASS_CURRENT_PAGE);
             this.updateVisiblePages(true);
             this.handleScroll(data);

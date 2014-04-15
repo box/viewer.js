@@ -291,6 +291,17 @@ test('setLayout() should not remove a previous layout or create a new one when c
     this.component.setLayout(Crocodoc.LAYOUT_VERTICAL);
 });
 
+test('setLayout() should broadcast a layoutchange message when called and the layout changes', function () {
+    this.component.init();
+
+    this.stub(this.scope,'createComponent').returns(this.components.layout);
+
+    this.mock(this.scope)
+        .expects('broadcast')
+        .withArgs('layoutchange', sinon.match.object);
+    this.component.setLayout(Crocodoc.LAYOUT_VERTICAL);
+});
+
 test('onmessage() should call fire() when called with all subscribed messages except scroll, afterscroll, and linkclicked', function () {
     this.component.init($('<div>'), { });
     var spy = this.spy(this.viewerAPI, 'fire');

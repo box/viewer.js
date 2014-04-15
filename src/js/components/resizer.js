@@ -81,6 +81,22 @@ Crocodoc.addComponent('resizer', function (scope) {
     }
 
     return {
+
+        messages: ['layoutchange'],
+
+        /**
+         * Handle framework messages
+         * @returns {void}
+         */
+        onmessage: function () {
+            // force trigger resize when layout changes
+            // @NOTE: we do this because the clientWidth/Height
+            // could be different based on the layout (and whether
+            // or not the new layout changes scrollbars)
+            currentOffsetHeight = null;
+            checkResize();
+        },
+
         /**
          * Initialize the Resizer component with an element to watch
          * @param  {HTMLElement} el The element to watch
