@@ -157,7 +157,14 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         initState: function () {
-            var viewportEl = this.$viewport[0];
+            var viewportEl = this.$viewport[0],
+                dimensionsEl = viewportEl;
+
+            // use the documentElement for viewport dimensions
+            // if we are using the window as the viewport
+            if (viewportEl === window) {
+                dimensionsEl = document.documentElement;
+            }
             // setup initial state
             this.state = {
                 pages: [],
@@ -175,10 +182,10 @@ Crocodoc.addComponent('layout-base', function (scope) {
                 scrollTop: viewportEl.scrollTop,
                 scrollLeft: viewportEl.scrollLeft,
                 viewportDimensions: {
-                    clientWidth: viewportEl.clientWidth,
-                    clientHeight: viewportEl.clientHeight,
-                    offsetWidth: viewportEl.offsetWidth,
-                    offsetHeight: viewportEl.offsetHeight
+                    clientWidth: dimensionsEl.clientWidth,
+                    clientHeight: dimensionsEl.clientHeight,
+                    offsetWidth: dimensionsEl.offsetWidth,
+                    offsetHeight: dimensionsEl.offsetHeight
                 },
                 zoomState: {
                     zoom: 1,

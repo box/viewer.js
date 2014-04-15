@@ -299,6 +299,9 @@
         // enable/disable links layer
         enableLinks: true,
 
+        // enable/disable click-and-drag
+        enableDragging: false,
+
         // query string parameters to append to all asset requests
         queryParams: null,
 
@@ -313,8 +316,10 @@
         // USE AT YOUR OWN RISK!
         //--------------------------------------------------------------------------
 
-        // enable/disable click-and-drag
-        enableDragging: false,
+        // whether to use the browser window as the viewport into the document (this
+        // is useful when the document should take up the entire browser window, e.g.,
+        // on mobile devices)
+        useWindowAsViewport: false,
 
         // whether or not the conversion is finished (eg., pages are ready to be loaded)
         conversionIsComplete: true,

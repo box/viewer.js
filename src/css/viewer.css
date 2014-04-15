@@ -26,7 +26,6 @@
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
 }
-
 .crocodoc-draggable .crocodoc-viewport {
     cursor: move;
     cursor: -webkit-grab;
@@ -48,6 +47,19 @@
     position: relative;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+}
+
+.crocodoc-window-as-viewport .crocodoc-viewport {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    overflow: visible;
+}
+
+.crocodoc-window-as-viewport .crocodoc-doc {
+    width: auto;
+    height: auto;
+    overflow: visible;
 }
 
 /* wrapper around all pages, gets css transforms for zoom */

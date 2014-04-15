@@ -24,6 +24,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         CSS_CLASS_MOBILE         = CSS_CLASS_PREFIX + 'mobile',
         CSS_CLASS_IELT9          = CSS_CLASS_PREFIX + 'ielt9',
         CSS_CLASS_SUPPORTS_SVG   = CSS_CLASS_PREFIX + 'supports-svg',
+        CSS_CLASS_WINDOW_AS_VIEWPORT = CSS_CLASS_PREFIX + 'window-as-viewport',
         CSS_CLASS_PAGE           = CSS_CLASS_PREFIX + 'page',
         CSS_CLASS_PAGE_INNER     = CSS_CLASS_PAGE + '-inner',
         CSS_CLASS_PAGE_CONTENT   = CSS_CLASS_PAGE + '-content',
@@ -128,9 +129,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     function initViewerHTML() {
         // create viewer HTML
         $el.html(VIEWER_HTML_TEMPLATE);
-        config.$viewport = $el.find('.'+CSS_CLASS_VIEWPORT);
-        config.$doc = $el.find('.'+CSS_CLASS_DOC);
-        config.$pagesWrapper = $el.find('.'+CSS_CLASS_PAGES);
+        if (config.useWindowAsViewport) {
+            config.$viewport = $(window);
+            $el.addClass(CSS_CLASS_WINDOW_AS_VIEWPORT);
+        } else {
+            config.$viewport = $el.find('.' + CSS_CLASS_VIEWPORT);
+        }
+        config.$doc = $el.find('.' + CSS_CLASS_DOC);
+        config.$pagesWrapper = $el.find('.' + CSS_CLASS_PAGES);
     }
 
     /**
