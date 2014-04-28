@@ -17,6 +17,14 @@ module.exports = function (grunt) {
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
+    // Middleware snippet for grunt-connect to make CORS testing a bit easier
+    var accessControlSnippet = function (req, res, next) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+        res.setHeader('Access-Control-Allow-Headers', '*');
+        return next();
+    };
+
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         connect: {
@@ -35,7 +43,7 @@ module.exports = function (grunt) {
                         var middlewares = [];
 
                         // RewriteRules support
-                        middlewares.push(rewriteRulesSnippet);
+                        middlewares.push(rewriteRulesSnippet, accessControlSnippet);
 
                         if (!Array.isArray(options.base)) {
                             options.base = [options.base];
