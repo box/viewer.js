@@ -35,6 +35,24 @@ Crocodoc.addUtility('ajax', function (framework) {
         };
     }
 
+    /**
+     * Get a XHR object
+     * @returns {XMLHttpRequest} An XHR object
+     * @private
+     */
+    function getXMLHttpRequest() {
+        if (window.XMLHttpRequest) {
+            return new window.XMLHttpRequest();
+        } else {
+            try {
+                return new ActiveXObject('MSXML2.XMLHTTP.3.0');
+            }
+            catch(ex) {
+                return null;
+            }
+        }
+    }
+
     return {
         /**
          * Basic AJAX request
@@ -48,7 +66,7 @@ Crocodoc.addUtility('ajax', function (framework) {
         request: function (url, options) {
             options = options || {};
             var method = options.method || 'GET',
-                req = new window.XMLHttpRequest();
+                req = getXMLHttpRequest();
 
             /**
              * Function to call on successful AJAX request
@@ -99,16 +117,19 @@ Crocodoc.addUtility('ajax', function (framework) {
                     };
                     ajaxFail();
                 }
-            } else {
+            } else if (req) {
                 req.open(method, url, true);
                 req.onreadystatechange = function () {
-                    if (this.readyState === 4) { // DONE
+                    if (req.readyState === 4) { // DONE
                         // remove the onreadystatechange handler,
                         // because it could be called again
-                        req.onreadystatechange = null;
+                        // @NOTE: we replace it with a noop function, because
+                        // IE8 will throw an error if the value is not of type
+                        // 'function' when using ActiveXObject
+                        req.onreadystatechange = function () {};
 
                         try {
-                            if (this.status === 200) {
+                            if (req.status === 200) {
                                 ajaxSuccess();
                             } else {
                                 ajaxFail();
@@ -120,6 +141,12 @@ Crocodoc.addUtility('ajax', function (framework) {
                     }
                 };
                 req.send();
+            } else {
+                req = {
+                    status: 0,
+                    statusText: 'AJAX not supported'
+                };
+                ajaxFail();
             }
 
             return req;
