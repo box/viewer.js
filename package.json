@@ -1,8 +1,9 @@
 {
-  "name": "crocodoc-viewer",
+  "name": "viewer",
   "version": "0.4.1",
-  "description": "Crocodoc Viewer",
+  "description": "A viewer for documents converted with the Box View API",
   "author": "Cameron Lakenen <lakenen@box.com>",
+  "main": "dist/crocodoc.viewer.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/box/viewer.js.git"
@@ -11,6 +12,24 @@
     "test": "node_modules/.bin/grunt test",
     "postinstall": "./postinstall.sh"
   },
+  "keywords": [
+    "box",
+    "box view",
+    "crocodoc",
+    "view api",
+    "viewer",
+    "viewerjs"
+  ],
+  "bugs": {
+    "url": "https://github.com/box/viewer.js/issues"
+  },
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "https://github.com/box/viewer.js/blob/master/LICENSE"
+    }
+  ],
+  "dependencies": {},
   "devDependencies": {
     "grunt-cli": "~0.1.10",
     "grunt": "~0.4.1",
