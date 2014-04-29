@@ -2,6 +2,13 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.4.2**
+  * Add support for non-native XMLHTTP in IE
+  * Simplify DOM structure to improve performance and maintainability
+  * Add `useWindowAsViewport` option to allow mobile optimizations for full-page viewers
+  * Fix fullscreen issue in IE11
+  * Fix issue where npm install fails when cloned as git submodule
+  * Fix issue where empty URL hash causes pages to focus on load in Chrome/Safari
 * **0.4.1**
   * Fix a bug with asset preloading
 * **0.4.0**
