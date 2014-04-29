@@ -14,6 +14,7 @@ html, body {
     top: 0;
     width: 400px;
     box-shadow: inset -3px 0 3px -2px rgba(0,0,0,0.4);
+    background: #fff;
 }
 .main {
     position: absolute;
@@ -63,7 +64,7 @@ html, body {
 }
 
 .thumbnails .crocodoc-page {
-    padding: 40px 0 40px 100px;
+    padding: 40px;
 }
 .thumbnails .crocodoc-page .crocodoc-page-svg {
     opacity: 0.8;
