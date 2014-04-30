@@ -14,6 +14,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-connect-rewrite');
     grunt.loadNpmTasks('grunt-jsdoc');
     grunt.loadNpmTasks('grunt-image-embed');
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -66,7 +67,7 @@ module.exports = function (grunt) {
         cssmin: {
             minify: {
                 files: [{
-                    'dist/crocodoc.viewer.min.css': ['<%= concat.css.dest %>']
+                    'build/crocodoc.viewer.min.css': ['<%= concat.css.dest %>']
                 }]
             }
         },
@@ -78,7 +79,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 files: [{
-                    'dist/crocodoc.viewer.min.js': ['<%= concat.js.dest %>']
+                    'build/crocodoc.viewer.min.js': ['<%= concat.js.dest %>']
                 }]
             }
         },
@@ -101,7 +102,7 @@ module.exports = function (grunt) {
                     'src/js/utilities/*.js',
                     'src/js/components/*.js',
                 ],
-                dest: 'dist/crocodoc.viewer.js'
+                dest: 'build/crocodoc.viewer.js'
             },
             css: {
                 src: [
@@ -109,14 +110,14 @@ module.exports = function (grunt) {
                     'src/css/theme.css',
                     'src/css/logo.css'
                 ],
-                dest: 'dist/crocodoc.viewer.css'
+                dest: 'build/crocodoc.viewer.css'
             },
             'css-no-logo': {
                 src: [
                     'src/css/viewer.css',
                     'src/css/theme.css'
                 ],
-                dest: 'dist/crocodoc.viewer.css'
+                dest: 'build/crocodoc.viewer.css'
             }
         },
         jshint: {
@@ -139,12 +140,23 @@ module.exports = function (grunt) {
         },
         imageEmbed: {
             dist: {
-                src: ['dist/crocodoc.viewer.css'],
-                dest: 'dist/crocodoc.viewer.css',
+                src: ['build/crocodoc.viewer.css'],
+                dest: 'build/crocodoc.viewer.css',
                 options: {
                     deleteAfterEncoding: false,
                     baseDir: './'
                 }
+            }
+        },
+        copy: {
+            main: {
+                files: [{
+                    expand: true,
+                    cwd: 'build/',
+                    src: ['*'],
+                    dest: 'dist/',
+                    filter: 'isFile'
+                }]
             }
         }
     });
@@ -162,4 +174,5 @@ module.exports = function (grunt) {
     grunt.registerTask('default', defaultTasks);
     grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'connect:development']);
+    grunt.registerTask('release', ['build', 'copy']);
 };
