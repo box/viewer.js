@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.4.2 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.4.3 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 

@@ -2,6 +2,8 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.4.3**
+  * Add npm and bower support
 * **0.4.2**
   * Add support for non-native XMLHTTP in IE
   * Simplify DOM structure to improve performance and maintainability
