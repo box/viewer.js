@@ -85,7 +85,7 @@ module.exports = function (grunt) {
         concat: {
             options: {
                 stripBanners: true,
-                banner: '/*! <%= pkg.description %> - v<%= pkg.version %> | (c) <%= grunt.template.today("yyyy") %> Box */\n\n',
+                banner: '/*! Crocodoc Viewer - v<%= pkg.version %> | (c) <%= grunt.template.today("yyyy") %> Box */\n\n',
             },
             js: {
                 // also use the jQuery wrapper for js files
