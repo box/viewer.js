@@ -6,6 +6,7 @@
 Gruntfile.js
 jsdoc-conf.json
 
+build
 examples
 git-hooks
 node_modules
