@@ -308,6 +308,10 @@
         // plugin configs
         plugins: {},
 
+        // whether to use the browser window as the viewport into the document (this
+        // is useful when the document should take up the entire browser window, e.g.,
+        // on mobile devices)
+        useWindowAsViewport: false,
 
         //--------------------------------------------------------------------------
         // The following are undocumented, internal, or experimental options,
@@ -315,11 +319,6 @@
         // --
         // USE AT YOUR OWN RISK!
         //--------------------------------------------------------------------------
-
-        // whether to use the browser window as the viewport into the document (this
-        // is useful when the document should take up the entire browser window, e.g.,
-        // on mobile devices)
-        useWindowAsViewport: false,
 
         // whether or not the conversion is finished (eg., pages are ready to be loaded)
         conversionIsComplete: true,

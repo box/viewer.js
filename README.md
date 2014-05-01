@@ -169,6 +169,10 @@ Examples:
 ```
 
 
+**useWindowAsViewport**
+
+If true, use the browser window as the viewport for the document. This is useful when the document should take up the entire browser window (e.g., on mobile devices). Default: `false`.
+
 ### Viewer Methods
 
 **destroy()**
