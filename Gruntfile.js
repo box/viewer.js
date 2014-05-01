@@ -124,10 +124,10 @@ module.exports = function (grunt) {
             options: {
                 jshintrc: true
             },
-            files: ['Gruntfile.js', 'src/js/**/*.js', 'test/js/**/*.js']
+            files: ['Gruntfile.js', 'src/js/**/*.js', 'test/js/**/*.js', 'test/plugins/**/*.js']
         },
         qunit: {
-            files: ['test/index.html']
+            files: ['test/index.html', 'test/plugins/index.html']
         },
         jsdoc : {
             dist : {

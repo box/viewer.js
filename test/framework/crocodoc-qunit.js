@@ -48,3 +48,14 @@ Crocodoc.getComponentForTest = function (name, scope, mixins) {
     }
     return null;
 };
+
+
+/**
+ * Get a plugin for testing
+ * @param   {string} name     The plugin name
+ * @param   {object} scope    The scope to pass in
+ * @returns {object?}         The plugin or null
+ */
+Crocodoc.getPluginForTest = function (name, scope) {
+    return this.getComponentForTest('plugin-' + name, scope);
+};

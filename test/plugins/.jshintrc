@@ -1,0 +1,9 @@
+{
+  "globals": {
+    "module": false,
+    "test": false,
+    "qunit": false,
+    "sinon": false
+  },
+  "sub": true
+}
