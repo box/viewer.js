@@ -6,6 +6,7 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
 
 ## Contents
 * [Quick Start](#quick-start)
+    - [Get the Source](#get-the-source)
     - [Loading a Simple Viewer](#loading-a-simple-viewer)
 * [Logos](#logos)
 * [Documentation](#documentation)
@@ -24,6 +25,21 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
 * [Copyright and License](#copyright-and-license)
 
 ## Quick Start
+
+### Get the Source
+
+The built development and production source files are available in the `dist/` directory in this repository.
+
+It's also available on [npm](http://npmjs.org) and [Bower](http://bower.io):
+
+```
+npm install viewer
+```
+
+```
+bower install viewer
+```
+
 
 ### Loading a Simple Viewer
 
