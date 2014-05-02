@@ -322,6 +322,8 @@ NOTE: `.crocodoc-page` and `.crocodoc-page-inner` classes can be used to style p
 
 Plugins are reusable components that can hook into viewer.js instances to add functionality. Plugins are initialized when a viewer instance is created and have their own configuration options.
 
+See [`/plugins`](plugins) for some plugin examples.
+
 [//]: # (TODO: expand this section)
 
 Example:

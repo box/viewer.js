@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>QUnit</title>
+    <link rel="stylesheet" href="../framework/qunit.css">
+    <style>
+        .blanket { font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+
+    <script src="../framework/jquery.js"></script>
+    <script src="../framework/qunit.js"></script>
+    <script src="../framework/qunit-parameterize.js"></script>
+    <script src="../framework/sinon.js"></script>
+    <script src="../framework/sinon-qunit.js"></script>
+    <script src="../framework/blanket.js"></script>
+
+
+    <script src="../../src/js/core/crocodoc.js"></script>
+    <script src="../framework/crocodoc-qunit.js"></script>
+
+
+    <!-- Crocodoc Source Files -->
+    <script src="../../src/js/core/event-target.js"></script>
+    <script src="../../src/js/core/scope.js"></script>
+
+    <script src="../../src/js/utilities/browser.js"></script>
+    <script src="../../src/js/utilities/subpx.js"></script>
+    <script src="../../src/js/utilities/support.js"></script>
+    <script src="../../src/js/utilities/common.js"></script>
+
+
+    <!-- Plugin source files -->
+    <script src="../../plugins/fullscreen/fullscreen.js" data-cover></script>
+
+    <!-- Test Files -->
+    <script src="fullscreen/fullscreen-test.js"></script>
+</body>
+</html>
