@@ -21,6 +21,7 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
 * [Getting Started with the Code](#getting-started-with-the-code)
     - [Grunt](#grunt)
     - [Logo Options](#logo-options)
+* [Common Issues](#common-issues)
 * [Change Log](#change-log)
 * [Copyright and License](#copyright-and-license)
 
@@ -28,9 +29,9 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
 
 ### Get the Source
 
-The built development and production source files are available in the `dist/` directory in this repository.
+You can find the pre-built development and production source files in the `dist/` directory in this repository.
 
-It's also available on [npm](http://npmjs.org) and [Bower](http://bower.io):
+Viewer.js is also available on [npm](http://npmjs.org) and [Bower](http://bower.io):
 
 ```
 npm install viewer
@@ -62,7 +63,7 @@ Example
 
 ## Logos
 
-As per section 2.6 of our agreement of our [API terms](http://developers.box.com/box-view-terms/), we require that all apps using Box View with the Standard tier conspicuously display a Box logo when displaying Box View documents. An [approved logo](src/images/logo.png) is included within this repository. If your Box View plan permits custom branding of the viewer, please refer to [Logo Options](#logo-options) for instructions on how to build the viewer without the Box logo or with a custom logo.
+As per section 2.6 of our agreement of our [API terms](http://developers.box.com/box-view-terms/), we require that all apps using Box View with the Standard tier conspicuously display a Box logo when displaying Box View documents. We have included an [approved logo](src/images/logo.png) within this repository. If your Box View plan permits custom branding of the viewer, please refer to [Logo Options](#logo-options) for instructions on how to build the viewer without the Box logo or with a custom logo.
 
 
 ## Documentation
@@ -94,17 +95,19 @@ The only required config parameter is `url`. All others are optional.
 
 **url (required)**
 
-The base URL where the document assets are located. Viewer.js will look for document assets (including `info.json`, `stylesheet.css`, etc) in this path.
+The `url` parameter specifies the base URL where the document assets are located. Viewer.js will look for document assets (including `info.json`, `stylesheet.css`, etc) in this path.
 
 
 **layout**
 
-The layout mode to use. Default `Crocodoc.LAYOUT_VERTICAL`. See [Setting the Layout Mode](#setting-the-layout-mode) for available layouts.
+The `layout` parameter specifies the layout mode to use. Default `Crocodoc.LAYOUT_VERTICAL`. See [Setting the Layout Mode](#setting-the-layout-mode) for available layouts.
 
 
 **zoom**
 
-The initial zoom level to use. Default `Crocodoc.ZOOM_AUTO`. Possible values are:
+The `zoom` parameter specifies the initial zoom level to use. Default `Crocodoc.ZOOM_AUTO`.
+
+Possible values:
 * `Crocodoc.ZOOM_FIT_WIDTH` - zooms to fit the width of the (largest) page within the viewport
 * `Crocodoc.ZOOM_FIT_HEIGHT` - zooms to fit the height of the (largest) page within the viewport
 * `Crocodoc.ZOOM_AUTO` - zooms to best fit the document within the viewport
@@ -112,27 +115,27 @@ The initial zoom level to use. Default `Crocodoc.ZOOM_AUTO`. Possible values are
 
 **page**
 
-The initial page number to scroll to immediately when the document loads. Default: `1`.
+The `page` parameter specifies the initial page number to show when the document loads. Default: `1`.
 
 
 **enableTextSelection**
 
-If true, text selection will be enabled for this document. Default: `true`. *Note: text selection is not supported in IE 8 see [Browser Support](#browser-support) for more information.*
+The `enableTextSelection` parameter specifies whether or not users can select text. If `true`, users can select text. Default: `true`. *Note: text selection is not supported in IE 8 see [Browser Support](#browser-support) for more information.*
 
 
 **enableLinks**
 
-If true, embedded hyperlinks will be enabled for this document. Default: `true`.
+The `enableLinks` parameter specifies whether or not hyperlinks are enabled. If `true`, hyperlinks are enabled. Default: `true`.
 
 
 **enableDragging**
 
-If true, click-and-drag scrolling will be enabled for this document. Default: `false`. **NOTE: text selection is not fully supported when dragging is enabled. It is recommended that you disable text selection if you plan to enable dragging.**
+The `enableDragging` parameter specifies whether or not dragging is enabled. If `true`, click-and-drag scrolling/panning will be enabled for this document. Default: `false`. **NOTE: text selection is not fully supported when dragging is enabled. It is recommended that you disable text selection if you plan to enable dragging.**
 
 
 **plugins**
 
-Specify a map of plugin names to their configs. Plugin names specified in this object will be loaded when the viewer is initialized. See [Plugins](#plugins) for more details.
+The `plugins` parameter allows you to specify a map of plugin names to their respective configs. Plugin names specified in this object will be loaded when the viewer is initialized. See [Plugins](#plugins) for more details.
 
 Example:
 ```js
@@ -150,7 +153,7 @@ Example:
 
 **queryParams**
 
-Optional query string parameters to append to each asset request (eg., `info.json` or `page-1.svg`). Can be an object or string. Default: `null`.
+The `queryParams` parameter allows you to specify query string parameters to append to each asset request (eg., `info.json` or `page-1.svg`). Can be an object or string. Default: `null`.
 
 Examples:
 ```js
@@ -171,28 +174,28 @@ Examples:
 
 **useWindowAsViewport**
 
-If true, use the browser window as the viewport for the document. This is useful when the document should take up the entire browser window (e.g., on mobile devices). Default: `false`.
+The `useWindowAsViewport` parameter allows you to specify whether to use the browser window as the viewport for the document. This is useful when the document should take up the entire browser window (e.g., on mobile devices). Use this option on mobile devices to allow the browser to auto-hide browser chrome when scrolling. Default: `false`.
 
 ### Viewer Methods
 
 **destroy()**
 
-Removes and cleans up the viewer instance.
+The `destroy` method removes and cleans up the viewer instance.
 
 
 **on(name, handler)**
 
-Binds an event handler for the specified event name fired by the viewer object. Events are described below.
+The `on` method binds an event handler for the specified event name fired by the viewer object. See [Event Handling](#event-handling) for available events.
 
 
 **off(name[, handler])**
 
-Unbinds an event handler for the specified event name and handler fired by the viewer object. If `handler` is not given, unbinds all event handlers on this viewer object with the given name.
+The `off` method unbinds an event handler for the specified event name and handler fired by the viewer object. If `handler` is not given, unbinds all event handlers on this viewer object with the given name.
 
 
 **scrollTo(page)**
 
-Scrolls to the specified page. The `page` argument may be one of the following:
+The `scrollTo` method scrolls the viewer to the specified page. The `page` argument may be one of the following:
 * `(number)` - scroll the the specified page number
 * `Crocodoc.SCROLL_PREVIOUS` - scroll to the previous page
 * `Crocodoc.SCROLL_NEXT` - scroll to the next page
@@ -209,7 +212,7 @@ viewer.scrollTo(Crocodoc.SCROLL_NEXT);
 
 **zoom(val)**
 
-Sets the zoom level of the document. Possible values:
+The `zoom` method sets the current zoom level of the document. Possible values:
 * `Crocodoc.ZOOM_FIT_WIDTH` - zooms to fit the width of the (largest) page within the viewport
 * `Crocodoc.ZOOM_FIT_HEIGHT` - zooms to fit the height of the (largest) page within the viewport
 * `Crocodoc.ZOOM_AUTO` - zooms to best fit the document within the viewport
@@ -228,7 +231,7 @@ viewer.zoom(Crocodoc.ZOOM_FIT_WIDTH);
 
 **setLayout(mode)**
 
-Set the layout mode. See [Setting the Layout Mode](#setting-the-layout-mode) for available layouts.
+The `setLayout` method sets the layout mode. See [Setting the Layout Mode](#setting-the-layout-mode) for available layouts.
 
 Examples
 ```js
@@ -244,8 +247,8 @@ Example
 ```js
 // ready event fires when the document metadata has loaded
 // and the viewer is ready to be interacted with
-viewer.on('ready', function (ev) {
-    console.log('the viewer is ready, and the document has ' + ev.data.numPages + ' pages');
+viewer.on('ready', function (event) {
+    console.log('the viewer is ready, and the document has ' + event.data.numPages + ' pages');
 });
 ```
 
@@ -292,7 +295,7 @@ viewer.on('ready', function (ev) {
 
 ### Setting the Layout Mode
 
-You can set a layout initially via the configuation object:
+You can set a layout initially via the configuration object:
 
 ```js
 var viewer = Crocodoc.createViewer('.viewer', {
@@ -387,7 +390,7 @@ var viewer = Crocodoc.createViewer('.viewer', {
 
 Viewer.js is supported in all modern desktop and mobile browsers. It will fall back to raster images in older browsers that do not support SVG.
 
-*NOTE: raster fallback requires that `.png` representations have already been generated for the converted document.*
+*NOTE: raster fall-back requires that `.png` representations have already been generated for the converted document.*
 
 [//]: # (TODO: expand this section)
 
@@ -411,7 +414,7 @@ Then go to the viewer.js directory and run:
 npm install
 ```
 
-That's it! You should be setup with dev dependencies and ready to go. 
+That's it! You should be setup with development dependencies and ready to go. 
 
 ### Grunt
 
@@ -437,7 +440,22 @@ If you would like to replace the Box logo with your own, you can simply replace 
 **NOTE:** Make sure you are allowed to remove logos before building with this option. For more information, see [Logos](#logos) above.
 
 
-For more information about the code, see the [JS architecture overview](src/js/README.md).
+For more information about the code, see the [JS architecture overview](src/js/README.md
+
+
+## Common Issues
+
+**I did everything right! Why am I seeing a blank screen?**
+
+1. If you don't see any errors in the JavaScript console, your viewer's container element might have a height of `0px`. Viewer.js does not force a height on its container element, so that needs to be set by the developer (whether it's a percent or explicit pixel value doesn't matter):
+
+    ```html
+    <div class="viewer" style="height: 560px"></div>
+    ```
+
+2. Are you loading assets from a `file://` URL? Many browsers' security policies block these requests, so viewer.js is unable to load assets. To resolve this issue, you can run a local server using `grunt serve` (see [Getting Started with the Code](#getting-started-with-the-code)) or save your assets to some remote server for testing.
+
+3. IE 8 and 9 have a bug in the XHR/XDR implementation that causes requests to HTTPS domains to fail if they originate from an HTTP domain (with the error: "Access Denied"). If your domain is running on HTTP, Box View API URLs will fail on IE 8 and 9. At the moment, the View API only responds on HTTPS, so we have no workaround for this issue other than to recommend that you use SSL on your site.
 
 
 ## Change Log

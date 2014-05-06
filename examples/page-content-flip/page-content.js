@@ -45,6 +45,7 @@ Crocodoc.addPlugin('page-content', function (scope) {
         });
     }
 
+    // hide page info when the user clicks outside a page
     function handleMousedown(event) {
         if (currentPage === null) {
             return;
@@ -81,7 +82,6 @@ Crocodoc.addPlugin('page-content', function (scope) {
         // initialize config and $pages object
         init: function (pluginConfig) {
             config = util.extend(config, pluginConfig);
-
         },
 
         // remove all page content when destroyed
