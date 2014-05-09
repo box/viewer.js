@@ -288,12 +288,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
             case EMBED_STRATEGY_IFRAME_INNERHTML:
                 // @NOTE: IE 9 fix. This line in the file is causing the page not to render in IE 9.
                 // The link is not needed here anymore because we are including the stylesheet separately.
-                if (browser.ie && browser.version < 10) {
+                if (browser.ielt10) {
                     svgText = svgText.replace(/<xhtml:link.*/,'');
                 }
                 html = HTML_TEMPLATE + svgText;
                 // @NOTE: documentElement.innerHTML is read-only in IE
-                if (browser.ie && browser.version < 10) {
+                if (browser.ielt10) {
                     contentDocument.body.innerHTML = html;
                 } else {
                     contentDocument.documentElement.innerHTML = html;

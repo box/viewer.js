@@ -9,29 +9,31 @@ Crocodoc.addUtility('browser', function () {
     var ua = navigator.userAgent,
         version,
         browser = {},
-        ios, android, blackberry,
-        webos, silk, ie;
-
-    ios = /iphone|ipod|ipad/i.test(ua);
-    android = /android/i.test(ua);
-    webos = /webos/i.test(ua);
-    blackberry = /blackberry/i.test(ua);
-    silk = /blackberry/i.test(ua);
-    ie = /MSIE/i.test(ua);
+        ios = /ip(hone|od|ad)/i.test(ua),
+        android = /android/i.test(ua),
+        blackberry = /blackberry/i.test(ua),
+        webos = /webos/i.test(ua),
+        kindle = /silk|kindle/i.test(ua),
+        ie = /MSIE|Trident/i.test(ua);
 
     if (ie) {
         browser.ie = true;
-        version = /MSIE\s+(\d+\.\d+)/i.exec(ua);
+        if (/MSIE/i.test(ua)) {
+            version = /MSIE\s+(\d+\.\d+)/i.exec(ua);
+        } else {
+            version = /Trident.*rv[ :](\d+\.\d+)/.exec(ua);
+        }
         browser.version = version && parseFloat(version[1]);
         browser.ielt9 = browser.version < 9;
         browser.ielt10 = browser.version < 10;
+        browser.ielt11 = browser.version < 11;
     }
     if (ios) {
         browser.ios = true;
         version = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
         browser.version = version && parseFloat(version[1] + '.' + version[2]);
     }
-    browser.mobile = /mobile/i.test(ua) || ios || android || blackberry || webos || silk;
+    browser.mobile = /mobile/i.test(ua) || ios || android || blackberry || webos || kindle;
     browser.firefox = /firefox/i.test(ua);
     if (/safari/i.test(ua)) {
         browser.chrome = /chrome/i.test(ua);
