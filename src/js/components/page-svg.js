@@ -57,11 +57,10 @@ Crocodoc.addComponent('page-svg', function (scope) {
         EMBED_STRATEGY_DATA_URL_PROXY = 6,
 
         // Embed in a way similar to the EMBED_STRATEGY_DATA_URL_PROXY, but in this
-        // method we use an iframe initialized to about:blank and document.write()
-        // the proxy script before calling loadSVG on the iframe's contentWindow
+        // method we use an iframe initialized to about:blank and embed the proxy
+        // script before calling loadSVG on the iframe's contentWindow
         // @NOTE: this is a workaround for the image issue with EMBED_STRATEGY_IFRAME_INNERHTML
-        //        in safari; it also works in firefox, but causes a spinner because of
-        //        document.write()
+        //        in safari; it also works in firefox
         EMBED_STRATEGY_IFRAME_PROXY = 7,
 
         // Embed in an img tag via data:url, downloading stylesheet separately, and
@@ -90,7 +89,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
         removeOnUnload = browser.mobile || browser.ielt10,
         embedStrategy = browser.ie ? EMBED_STRATEGY_DATA_URL_IMG :
                         browser.firefox ? EMBED_STRATEGY_DATA_URL_IMG :
-                        browser.safari ? EMBED_STRATEGY_IFRAME_PROXY :
+                        browser.safari ? EMBED_STRATEGY_IFRAME_INNERHTML :
                         EMBED_STRATEGY_IFRAME_INNERHTML;
 
     /**
@@ -246,6 +245,28 @@ Crocodoc.addComponent('page-svg', function (scope) {
         return $loadSVGTextPromise;
     }
 
+    /**
+     * Fixes a bug in iOS 6.1 where <use> elements are not supported properly
+     * by replacing each <use> element with a clone of its referenced <image>
+     * @param   {Document} contentDocument The SVG document
+     * @returns {void}
+     */
+    function fixUseElements(contentDocument) {
+        // find all <use> elements
+        var useEls = contentDocument.querySelectorAll('use');
+        [].forEach.call(useEls, function (use) {
+            var id = use.getAttribute('xlink:href'),
+                // clone the referenced <image> element
+                image = contentDocument.querySelector(id).cloneNode(),
+                parent = use.parentNode;
+            // remove the id so we don't have duplicates
+            image.removeAttribute('id');
+            // copy over the transform
+            image.setAttribute('transform', use.getAttribute('transform'));
+            // replace the use with the image
+            parent.replaceChild(image, use);
+        });
+    }
 
     /**
      * Embed the SVG into the page
@@ -276,6 +297,11 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     contentDocument.body.innerHTML = html;
                 } else {
                     contentDocument.documentElement.innerHTML = html;
+                    // @NOTE: there is a bug in iOS 6.1 Safari where <use>
+                    // elements don't work properly
+                    if (browser.ios && browser.version < 7) {
+                        fixUseElements(contentDocument);
+                    }
                 }
                 svgEl = contentDocument.getElementsByTagName('svg')[0];
                 break;
