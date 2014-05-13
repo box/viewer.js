@@ -651,6 +651,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             } else {
                 $loadStylesheetPromise = loadResource(stylesheetURL, true);
                 $loadStylesheetPromise.then(function handleStylesheetResponse(responseText) {
+                    // @NOTE: There is a bug in IE that causes the text layer to
+                    // not render the font when loaded for a second time (i.e.,
+                    // destroy and recreate a viewer for the same document), so
+                    // namespace the font-family so there is no collision
+                    if (browser.ie) {
+                        responseText = responseText.replace(/font-family:[\s\"\']*([\w-]+)\b/g,
+                            '$0-' + config.id);
+                    }
                     config.cssText = responseText;
                     stylesheetEl = util.insertCSS(responseText);
                     config.stylesheet = stylesheetEl.sheet;
