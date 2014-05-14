@@ -53,7 +53,7 @@ Example
 <div class="viewer" style="height: 400px"></div>
 <script type="text/javascript">
     var viewer = Crocodoc.createViewer('.viewer', {
-        url: 'https://view-api.box.com/1/sessions/<session_id>/assets/'
+        url: 'https://view-api.box.com/1/sessions/3c6abc0dcf35422e8353cf9c27578d5c/assets/'
     });
     viewer.load();
 </script>
