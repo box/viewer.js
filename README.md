@@ -47,10 +47,10 @@ bower install viewer
 
 Example
 ```html
-<link rel="stylesheet" href="crocodoc.viewer.min.css">
-<script type="text/javascript" src="jquery.min.js">
-<script type="text/javascript" src="crocodoc.viewer.min.js">
-<div class="viewer" style="height: 100%"></div>
+<link rel="stylesheet" href="crocodoc.viewer.min.css" />
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="crocodoc.viewer.min.js"></script>
+<div class="viewer" style="height: 400px"></div>
 <script type="text/javascript">
     var viewer = Crocodoc.createViewer('.viewer', {
         url: 'https://view-api.box.com/1/sessions/<session_id>/assets/'
