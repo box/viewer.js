@@ -304,7 +304,10 @@ test('setLayout() should broadcast a layoutchange message when called and the la
 
 test('onmessage() should call fire() when called with all subscribed messages except scroll, afterscroll, and linkclicked', function () {
     this.component.init($('<div>'), { });
-    var spy = this.spy(this.viewerAPI, 'fire');
+    var spy = this.stub(this.viewerAPI, 'fire').returns({
+        preventDefault: function () {},
+        isDefaultPrevented: function () {}
+    });
     for (var i = 0; i < this.component.messages.length; ++i) {
         var m = this.component.messages[i];
         this.component.onmessage(m, {});

@@ -10,6 +10,36 @@
     'use strict';
 
     /**
+     * Build an event object for the given type and data
+     * @param   {string} type The event type
+     * @param   {Object} data The event data
+     * @returns {Object}      The event object
+     */
+    function buildEventObject(type, data) {
+        var isDefaultPrevented = false;
+        return {
+            type: type,
+            data: data,
+
+            /**
+             * Prevent the default action for this event
+             * @returns {void}
+             */
+            preventDefault: function () {
+                isDefaultPrevented = true;
+            },
+
+            /**
+             * Return true if preventDefault() has been called on this event
+             * @returns {Boolean}
+             */
+            isDefaultPrevented: function () {
+                return isDefaultPrevented;
+            }
+        };
+    }
+
+    /**
      * An object that is capable of generating custom events and also
      * executing handlers for events when they occur.
      * @constructor
@@ -49,16 +79,13 @@
          * @param {string} type The type of event to fire.
          * @param {Object} data An object with properties that should end up on
          *      the event object for the given event.
-         * @returns {void}
+         * @returns {Object} The event object
          */
         fire: function(type, data) {
             var handlers,
                 i,
                 len,
-                event = {
-                    type: type,
-                    data: data
-                };
+                event = buildEventObject(type, data);
 
             // if there are handlers for the event, call them in order
             handlers = this._handlers[event.type];
@@ -87,6 +114,8 @@
                     }
                 }
             }
+
+            return event;
         },
 
         /**
