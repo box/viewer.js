@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.4.3 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.4.4 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 
@@ -268,6 +268,36 @@ var Crocodoc = (function () {
     'use strict';
 
     /**
+     * Build an event object for the given type and data
+     * @param   {string} type The event type
+     * @param   {Object} data The event data
+     * @returns {Object}      The event object
+     */
+    function buildEventObject(type, data) {
+        var isDefaultPrevented = false;
+        return {
+            type: type,
+            data: data,
+
+            /**
+             * Prevent the default action for this event
+             * @returns {void}
+             */
+            preventDefault: function () {
+                isDefaultPrevented = true;
+            },
+
+            /**
+             * Return true if preventDefault() has been called on this event
+             * @returns {Boolean}
+             */
+            isDefaultPrevented: function () {
+                return isDefaultPrevented;
+            }
+        };
+    }
+
+    /**
      * An object that is capable of generating custom events and also
      * executing handlers for events when they occur.
      * @constructor
@@ -307,16 +337,13 @@ var Crocodoc = (function () {
          * @param {string} type The type of event to fire.
          * @param {Object} data An object with properties that should end up on
          *      the event object for the given event.
-         * @returns {void}
+         * @returns {Object} The event object
          */
         fire: function(type, data) {
             var handlers,
                 i,
                 len,
-                event = {
-                    type: type,
-                    data: data
-                };
+                event = buildEventObject(type, data);
 
             // if there are handlers for the event, call them in order
             handlers = this._handlers[event.type];
@@ -345,6 +372,8 @@ var Crocodoc = (function () {
                     }
                 }
             }
+
+            return event;
         },
 
         /**
@@ -698,6 +727,10 @@ var Crocodoc = (function () {
         // plugin configs
         plugins: {},
 
+        // whether to use the browser window as the viewport into the document (this
+        // is useful when the document should take up the entire browser window, e.g.,
+        // on mobile devices)
+        useWindowAsViewport: false,
 
         //--------------------------------------------------------------------------
         // The following are undocumented, internal, or experimental options,
@@ -705,11 +738,6 @@ var Crocodoc = (function () {
         // --
         // USE AT YOUR OWN RISK!
         //--------------------------------------------------------------------------
-
-        // whether to use the browser window as the viewport into the document (this
-        // is useful when the document should take up the entire browser window, e.g.,
-        // on mobile devices)
-        useWindowAsViewport: false,
 
         // whether or not the conversion is finished (eg., pages are ready to be loaded)
         conversionIsComplete: true,
@@ -890,27 +918,33 @@ Crocodoc.addUtility('browser', function () {
     'use strict';
 
     var ua = navigator.userAgent,
+        version,
         browser = {},
-        ios, android, blackberry,
-        webos, silk, ie;
-
-    ios = /iphone|ipod|ipad/i.test(ua);
-    android = /android/i.test(ua);
-    webos = /webos/i.test(ua);
-    blackberry = /blackberry/i.test(ua);
-    silk = /blackberry/i.test(ua);
-    ie = /MSIE/i.test(ua);
+        ios = /ip(hone|od|ad)/i.test(ua),
+        android = /android/i.test(ua),
+        blackberry = /blackberry/i.test(ua),
+        webos = /webos/i.test(ua),
+        kindle = /silk|kindle/i.test(ua),
+        ie = /MSIE|Trident/i.test(ua);
 
     if (ie) {
         browser.ie = true;
-        browser.version = parseFloat(/MSIE\s+(\d+\.\d+)/i.exec(ua)[1]);
+        if (/MSIE/i.test(ua)) {
+            version = /MSIE\s+(\d+\.\d+)/i.exec(ua);
+        } else {
+            version = /Trident.*rv[ :](\d+\.\d+)/.exec(ua);
+        }
+        browser.version = version && parseFloat(version[1]);
         browser.ielt9 = browser.version < 9;
         browser.ielt10 = browser.version < 10;
+        browser.ielt11 = browser.version < 11;
     }
     if (ios) {
         browser.ios = true;
+        version = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
+        browser.version = version && parseFloat(version[1] + '.' + version[2]);
     }
-    browser.mobile = /mobile/i.test(ua) || ios || android || blackberry || webos || silk;
+    browser.mobile = /mobile/i.test(ua) || ios || android || blackberry || webos || kindle;
     browser.firefox = /firefox/i.test(ua);
     if (/safari/i.test(ua)) {
         browser.chrome = /chrome/i.test(ua);
@@ -3694,7 +3728,7 @@ Crocodoc.addComponent('page-img', function (scope) {
          */
         unload: function () {
             loading = false;
-            if (removeOnUnload) {
+            if ($img && removeOnUnload) {
                 $img.remove();
                 $img = null;
             } else if ($img) {
@@ -3762,7 +3796,7 @@ Crocodoc.addComponent('page-links', function (scope) {
         var $link = $(ev.target),
             data = $link.data('link');
         if (data) {
-            scope.broadcast('linkclicked', data);
+            scope.broadcast('linkclick', data);
         }
         ev.preventDefault();
     }
@@ -3859,11 +3893,10 @@ Crocodoc.addComponent('page-svg', function (scope) {
         EMBED_STRATEGY_DATA_URL_PROXY = 6,
 
         // Embed in a way similar to the EMBED_STRATEGY_DATA_URL_PROXY, but in this
-        // method we use an iframe initialized to about:blank and document.write()
-        // the proxy script before calling loadSVG on the iframe's contentWindow
+        // method we use an iframe initialized to about:blank and embed the proxy
+        // script before calling loadSVG on the iframe's contentWindow
         // @NOTE: this is a workaround for the image issue with EMBED_STRATEGY_IFRAME_INNERHTML
-        //        in safari; it also works in firefox, but causes a spinner because of
-        //        document.write()
+        //        in safari; it also works in firefox
         EMBED_STRATEGY_IFRAME_PROXY = 7,
 
         // Embed in an img tag via data:url, downloading stylesheet separately, and
@@ -3892,7 +3925,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
         removeOnUnload = browser.mobile || browser.ielt10,
         embedStrategy = browser.ie ? EMBED_STRATEGY_DATA_URL_IMG :
                         browser.firefox ? EMBED_STRATEGY_DATA_URL_IMG :
-                        browser.safari ? EMBED_STRATEGY_IFRAME_PROXY :
+                        browser.safari ? EMBED_STRATEGY_IFRAME_INNERHTML :
                         EMBED_STRATEGY_IFRAME_INNERHTML;
 
     /**
@@ -4048,6 +4081,28 @@ Crocodoc.addComponent('page-svg', function (scope) {
         return $loadSVGTextPromise;
     }
 
+    /**
+     * Fixes a bug in iOS 6.1 where <use> elements are not supported properly
+     * by replacing each <use> element with a clone of its referenced <image>
+     * @param   {Document} contentDocument The SVG document
+     * @returns {void}
+     */
+    function fixUseElements(contentDocument) {
+        // find all <use> elements
+        var useEls = contentDocument.querySelectorAll('use');
+        [].forEach.call(useEls, function (use) {
+            var id = use.getAttribute('xlink:href'),
+                // clone the referenced <image> element
+                image = contentDocument.querySelector(id).cloneNode(),
+                parent = use.parentNode;
+            // remove the id so we don't have duplicates
+            image.removeAttribute('id');
+            // copy over the transform
+            image.setAttribute('transform', use.getAttribute('transform'));
+            // replace the use with the image
+            parent.replaceChild(image, use);
+        });
+    }
 
     /**
      * Embed the SVG into the page
@@ -4069,15 +4124,20 @@ Crocodoc.addComponent('page-svg', function (scope) {
             case EMBED_STRATEGY_IFRAME_INNERHTML:
                 // @NOTE: IE 9 fix. This line in the file is causing the page not to render in IE 9.
                 // The link is not needed here anymore because we are including the stylesheet separately.
-                if (browser.ie && browser.version < 10) {
+                if (browser.ielt10) {
                     svgText = svgText.replace(/<xhtml:link.*/,'');
                 }
                 html = HTML_TEMPLATE + svgText;
                 // @NOTE: documentElement.innerHTML is read-only in IE
-                if (browser.ie && browser.version < 10) {
+                if (browser.ielt10) {
                     contentDocument.body.innerHTML = html;
                 } else {
                     contentDocument.documentElement.innerHTML = html;
+                    // @NOTE: there is a bug in iOS 6.1 Safari where <use>
+                    // elements don't work properly
+                    if (browser.ios && browser.version < 7) {
+                        fixUseElements(contentDocument);
+                    }
                 }
                 svgEl = contentDocument.getElementsByTagName('svg')[0];
                 break;
@@ -5356,15 +5416,18 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     }
 
     /**
-     * Handler for linkclicked messages
+     * Handler for linkclick messages
      * @returns {void}
      * @private
      */
-    function handleLinkClicked(data) {
-        if (data.uri) {
-            window.open(data.uri);
-        } else if (data.destination) {
-            api.scrollTo(data.destination.pagenum);
+    function handleLinkClick(data) {
+        var event = api.fire('linkclick', data);
+        if (!event.isDefaultPrevented()) {
+            if (data.uri) {
+                window.open(data.uri);
+            } else if (data.destination) {
+                api.scrollTo(data.destination.pagenum);
+            }
         }
     }
 
@@ -5498,7 +5561,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             'dragend',
             'dragstart',
             'fail',
-            'linkclicked',
+            'linkclick',
             'pagefail',
             'pagefocus',
             'pageload',
@@ -5518,8 +5581,8 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          */
         onmessage: function (name, data) {
             switch (name) {
-                case 'linkclicked':
-                    handleLinkClicked(data);
+                case 'linkclick':
+                    handleLinkClick(data);
                     break;
 
                 case 'zoom':
@@ -5683,6 +5746,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             } else {
                 $loadStylesheetPromise = loadResource(stylesheetURL, true);
                 $loadStylesheetPromise.then(function handleStylesheetResponse(responseText) {
+                    // @NOTE: There is a bug in IE that causes the text layer to
+                    // not render the font when loaded for a second time (i.e.,
+                    // destroy and recreate a viewer for the same document), so
+                    // namespace the font-family so there is no collision
+                    if (browser.ie) {
+                        responseText = responseText.replace(/font-family:[\s\"\']*([\w-]+)\b/g,
+                            '$0-' + config.id);
+                    }
                     config.cssText = responseText;
                     stylesheetEl = util.insertCSS(responseText);
                     config.stylesheet = stylesheetEl.sheet;

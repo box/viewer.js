@@ -2,6 +2,12 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.4.4**
+  * Fix issue where PNG fallback breaks zooming on mobile devices
+  * Add `linkclick` viewer event
+  * Fix an issue in IE 10 where the text layer could lose its font when the same document is loaded multiple times in the lifetime of a page
+  * Fix an issue where embedded images don't display in iOS 6.1 Safari
+  * Add fullscreen plugin
 * **0.4.3**
   * Add npm and bower support
 * **0.4.2**

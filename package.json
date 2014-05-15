@@ -1,6 +1,6 @@
 {
   "name": "viewer",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "A viewer for documents converted with the Box View API",
   "author": "Cameron Lakenen <lakenen@box.com>",
   "main": "dist/crocodoc.viewer.js",
