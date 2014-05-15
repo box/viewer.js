@@ -324,15 +324,18 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     }
 
     /**
-     * Handler for linkclicked messages
+     * Handler for linkclick messages
      * @returns {void}
      * @private
      */
-    function handleLinkClicked(data) {
-        if (data.uri) {
-            window.open(data.uri);
-        } else if (data.destination) {
-            api.scrollTo(data.destination.pagenum);
+    function handleLinkClick(data) {
+        var event = api.fire('linkclick', data);
+        if (!event.isDefaultPrevented()) {
+            if (data.uri) {
+                window.open(data.uri);
+            } else if (data.destination) {
+                api.scrollTo(data.destination.pagenum);
+            }
         }
     }
 
@@ -466,7 +469,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             'dragend',
             'dragstart',
             'fail',
-            'linkclicked',
+            'linkclick',
             'pagefail',
             'pagefocus',
             'pageload',
@@ -486,8 +489,8 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          */
         onmessage: function (name, data) {
             switch (name) {
-                case 'linkclicked':
-                    handleLinkClicked(data);
+                case 'linkclick':
+                    handleLinkClick(data);
                     break;
 
                 case 'zoom':

@@ -22,23 +22,23 @@ test('fire() should only call the event handlers registered for the event when c
 });
 
 test('fire() should call the event handler with a custom event object for custom event when called with a custom event object', function() {
-    var handler = this.mock().withArgs({
+    var handler = this.mock().withArgs(sinon.match({
         type: 'myevent',
         data: undefined
-    });
+    }));
 
     this.eventTarget.on('myevent', handler);
     this.eventTarget.fire('myevent');
 });
 
 test('fire() should call the event handler with a custom event object and extra data for custom event when called with extra data', function() {
-    var handler = this.mock().withArgs({
+    var handler = this.mock().withArgs(sinon.match({
         type: 'myevent',
         data: {
             foo: 'bar',
             time: 'now'
         }
-    });
+    }));
 
     this.eventTarget.on('myevent', handler);
     this.eventTarget.fire('myevent', {
@@ -55,6 +55,24 @@ test('fire() should not call the event handler for custom event when off() is ca
 
     this.eventTarget.fire('myevent');
     ok(handler.notCalled);
+});
+
+test('fire() should return an event object with the proper methods and data when called', function () {
+    var type = 'myevent',
+        data = { some: 'data' },
+        event = this.eventTarget.fire(type, data);
+
+    equal(event.type, type, 'event type should be correct');
+    equal(event.data, data, 'event data should be correct');
+    equal(typeof event.preventDefault, 'function', 'event.preventDefault should be a function');
+    equal(typeof event.isDefaultPrevented, 'function', 'event.isDefaultPrevented should be a function');
+});
+
+test('event.preventDefault() should prevent default behavior when called', function () {
+    var event = this.eventTarget.fire('myevent');
+    event.preventDefault();
+
+    ok(event.isDefaultPrevented(), 'default behavior should be prevented');
 });
 
 test('registered event handler should be called only once when attached with one()', function () {
