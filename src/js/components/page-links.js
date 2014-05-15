@@ -61,7 +61,7 @@ Crocodoc.addComponent('page-links', function (scope) {
         var $link = $(ev.target),
             data = $link.data('link');
         if (data) {
-            scope.broadcast('linkclicked', data);
+            scope.broadcast('linkclick', data);
         }
         ev.preventDefault();
     }
