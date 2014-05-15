@@ -93,7 +93,7 @@ Crocodoc.addComponent('page-img', function (scope) {
          */
         unload: function () {
             loading = false;
-            if (removeOnUnload) {
+            if ($img && removeOnUnload) {
                 $img.remove();
                 $img = null;
             } else if ($img) {
