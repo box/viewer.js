@@ -15,6 +15,7 @@
             height: 100%;
         }
 
+        /* Some custom CSS for flipping pages around: */
         .crocodoc-page {
             -webkit-transform-style: preserve-3d;
             transform-style: preserve-3d;
@@ -93,6 +94,7 @@
 </head>
 <body>
     <div class="viewer"></div>
+    <!-- This is a template used by our page-content plugin: -->
     <script id="page-content-tmpl" type="text/x-template">
         <div class="page-content back">
             <div class="crocodoc-page-autoscale">
@@ -115,7 +117,9 @@
         var viewer = Crocodoc.createViewer('.viewer', {
             url: url,
             plugins: {
+                // load the page-content plugin (see page-content.js)
                 'page-content': {
+                    // some config for the plugin...
                     defaultInfo: 'lol, a doge<br/><img src="https://static.view-api.box.com/images/spindoge.gif"/>',
                     template: $('#page-content-tmpl').html(),
                     pageInfos: [

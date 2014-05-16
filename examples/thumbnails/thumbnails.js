@@ -1,17 +1,25 @@
-
 var url = 'https://view-api.box.com/1/sessions/5a34f299b35947b5ac1e0b4d83553392/assets';
+// Create a viewer for the thumbnails
 var thumbnails = Crocodoc.createViewer('.thumbnails', {
     url: url,
+    // Disable links and text selection, because they are not needed in thumbnails
     enableTextSelection: false,
     enableLinks: false,
+    // This is kind of a hack at this point, but I basically just manually found
+    // the zoom level that worked to have two pages side-by-side (and reduced
+    // the minimum zoom level to accommodate)
     minZoom: 0.17,
     zoom: 0.17,
     layout: Crocodoc.LAYOUT_VERTICAL
 });
+// Keep a reference to the currently fully-visible pages so we can auto-scroll
+// the thumbnails when necessary
 var visibleThumbnails = [];
 thumbnails.on('ready', function () {
+    // wait for the thumbnails to be ready before loading the presentation
     presentation.load();
 });
+// Update the visible thumbnails when it's zoomed or page changes
 thumbnails.on('zoom', function (event) {
     visibleThumbnails = event.data.fullyVisiblePages;
 });
@@ -21,6 +29,7 @@ thumbnails.on('pagefocus', function (event) {
 
 thumbnails.load();
 
+// Create a viewer for the presentation slides (the large view)
 var presentation = Crocodoc.createViewer('.presentation', {
     url: url,
     layout: Crocodoc.LAYOUT_PRESENTATION
@@ -50,7 +59,13 @@ function updatePageControls(currentPage, numPages) {
     if ($.inArray(currentPage, visibleThumbnails) === -1) {
         thumbnails.scrollTo(currentPage);
     }
-    $('.thumbnails .crocodoc-page').removeClass('current-thumbnail').eq(currentPage - 1).addClass('current-thumbnail');
+
+    // remove the current-thumbnail class from the old thumbnail and add it to
+    // the newly-focused one
+    $('.thumbnails .crocodoc-page')
+        .removeClass('current-thumbnail')
+        .eq(currentPage - 1)
+        .addClass('current-thumbnail');
 }
 
 // Bind click events for controlling the viewer
@@ -60,11 +75,14 @@ $('.scroll-previous').on('click', function () {
 $('.scroll-next').on('click', function () {
     presentation.scrollTo(Crocodoc.SCROLL_NEXT);
 });
-$('.thumbnails').on('click', ' .crocodoc-page', function () {
+// Delegate clicks on .crocodoc-page elements in the thumbnails viewer to scroll
+// to the proper page
+$('.thumbnails').on('click', '.crocodoc-page', function () {
     var pageNum = $(this).index()+1;
     presentation.scrollTo(pageNum);
 });
 
+// Bind some key events to flip through slides easily
 $(window).on('keydown', function (ev) {
     if (ev.keyCode === 37) {
         presentation.scrollTo(Crocodoc.SCROLL_PREVIOUS);

@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <!-- Include the appropriate CSS and JS files: -->
     <link rel="stylesheet" href="../../dist/crocodoc.viewer.css" />
     <script src="../../test/framework/jquery.js"></script>
     <script src="../../dist/crocodoc.viewer.js"></script>
     <style>
         html, body {
             margin: 0;
+            /* It's important that the viewer element has a height */
             height: 100%;
             background: #fafafa;
         }
+        /* Add a border and box-shadow to each page */
         .crocodoc-page-inner {
             border: 1px solid #ccc;
             box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
@@ -18,9 +21,12 @@
 </head>
 <body>
     <script>
-        var viewer = Crocodoc.createViewer('body', {
+        // Create a viewer instance on the body element
+        var viewer = Crocodoc.createViewer(document.body, {
+            // Specify where the viewer should find the assets for this doc
             url: 'https://view-api.box.com/1/sessions/3c6abc0dcf35422e8353cf9c27578d5c/assets'
         });
+        // Load the assets and render the document!
         viewer.load();
     </script>
 </body>
