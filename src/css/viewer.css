@@ -155,6 +155,12 @@
 .crocodoc-page-link {
     position: absolute;
     display: block;
+}
+/* Fix for IE ctrl+click behavior */
+.crocodoc-page-link span {
+    width: 100%;
+    height: 100%;
+    display: block;
     /* IE <= 9 requires a background image for an empty element to actually receive click events */
     background: url(data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==) 0 0 no-repeat;
 }
