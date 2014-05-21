@@ -100,8 +100,9 @@ module.exports = function (grunt) {
                     'src/js/core/scope.js',
                     'src/js/core/event-target.js',
                     'src/js/core/viewer.js',
+                    'src/js/data-providers/*.js',
                     'src/js/utilities/*.js',
-                    'src/js/components/*.js',
+                    'src/js/components/*.js'
                 ],
                 dest: 'build/crocodoc.viewer.js'
             },

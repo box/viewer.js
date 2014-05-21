@@ -21,6 +21,7 @@
 
         var instances = [],
             messageQueue = [],
+            dataProviders = {},
             ready = false;
 
         /**
@@ -115,6 +116,7 @@
                 }
             }
             instances = [];
+            dataProviders = {};
         };
 
         /**
@@ -157,6 +159,39 @@
                 ready = true;
                 broadcastQueuedMessages();
             }
+        };
+
+        /**
+         * Get a model object from a data provider.
+         *
+         * @param {string} objectType The type of object to retrieve ('page-svg', 'page-text', etc)
+         * @param {string} objectKey  The key of the object to retrieve
+         * @returns {$.Promise}
+         */
+        this.get = function(objectType, objectKey) {
+            var provider = this.getDataProvider(objectType);
+            if (provider) {
+                return provider.get(objectType, objectKey);
+            }
+            return $.Deferred().reject('data-provider not found').promise();
+        };
+
+        /**
+         * Get an instance of a data provider.
+         *
+         * @param {string} objectType The type of object to retrieve a data provider for ('page-svg', 'page-text', etc)
+         * @returns {Object} The data provider
+         */
+        this.getDataProvider = function (objectType) {
+            var provider;
+            if (dataProviders[objectType]) {
+                provider = dataProviders[objectType];
+            } else {
+                provider = this.createComponent('data-provider-' + objectType);
+                dataProviders[objectType] = provider;
+            }
+
+            return provider;
         };
     };
 })();

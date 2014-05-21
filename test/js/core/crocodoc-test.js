@@ -1,5 +1,5 @@
 
-module('Famework - utilities');
+module('Framework - Utilities');
 
 test('getUtility() should call the creator function with the framework as an argument when called for an existing utility', function() {
     Crocodoc.addUtility('utility 1', this.mock().withArgs(Crocodoc));
@@ -27,7 +27,7 @@ test('getUtility() should return null when called for a non-existing utility', f
     equal(utility, null, 'null returned');
 });
 
-module('Famework - components');
+module('Framework - Components');
 
 test('createComponent() should call the creator function with the passed scope as an argument when called for an existing module', function () {
     var testScope = {};
@@ -56,6 +56,11 @@ test('addComponent() should throw an error when called with a module name and mi
 test('createComponent() should return null when called for a non-existing module', function() {
     var module = Crocodoc.createComponent('non-existing', {});
     equal(module, null, 'null returned');
+});
+
+test('addDataProvider() should call addComponent when a model name and creator function are passed in', function() {
+    this.mock(Crocodoc).expects('addComponent');
+    Crocodoc.addDataProvider('my-data-provider', function () {});
 });
 
 module('Framework - createViewer', {

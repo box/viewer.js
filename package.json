@@ -3,6 +3,9 @@
   "version": "0.4.5",
   "description": "A viewer for documents converted with the Box View API",
   "author": "Cameron Lakenen <lakenen@box.com>",
+  "contributors": [
+      "Nicholas Silva <nes@box.com>"
+  ],
   "main": "dist/crocodoc.viewer.js",
   "repository": {
     "type": "git",
@@ -20,6 +23,7 @@
     "viewer",
     "viewerjs"
   ],
+  "homepage": "https://github.com/box/viewer.js",
   "bugs": {
     "url": "https://github.com/box/viewer.js/issues"
   },

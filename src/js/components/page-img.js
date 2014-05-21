@@ -18,8 +18,9 @@ Crocodoc.addComponent('page-img', function (scope) {
     var browser = scope.getUtility('browser');
 
     var $img, $el,
-        imgSrc,
-        loading = false,
+        $loadImgPromise,
+        page,
+        imageLoaded = false,
         removeOnUnload = browser.mobile;
 
     //--------------------------------------------------------------------------
@@ -29,12 +30,13 @@ Crocodoc.addComponent('page-img', function (scope) {
     return {
         /**
          * Initialize the page-img component
-         * @param  {Object} config Configuration object
+         * @param  {Element} el     The element to insert the image into
+         * @param  {number} pageNum The page number
          * @returns {void}
          */
-        init: function (el, config) {
+        init: function (el, pageNum) {
             $el = $(el);
-            imgSrc = config.imgSrc + (config.queryString || '');
+            page = pageNum;
         },
 
         /**
@@ -42,49 +44,45 @@ Crocodoc.addComponent('page-img', function (scope) {
          * @returns {void}
          */
         destroy: function () {
+            removeOnUnload = true;
+            this.unload();
             $el.empty();
         },
 
         /**
-         * Preload does nothing in this component -- it's here for
-         * consistency with the page-svg component API
+         * Preload the image
          * @returns {void}
          */
-        preload: function () { /* noop */ },
+        preload: function () {
+            if (!$loadImgPromise) {
+                $loadImgPromise = scope.get('page-img', page);
+            }
+        },
 
         /**
          * Load the image
-         * @returns {$.Deferred}    A jQuery Deferred object
+         * @returns {$.Promise}    A jQuery Promise object
          */
         load: function () {
-            var $deferred = $.Deferred();
-            if (!$img) {
-                // image hasn't been loaded yet, so create an image
-                var img = new window.Image();
-                loading = true;
-                // add load and error handlers
-                img.onload = function () {
-                    loading = false;
-                    $deferred.resolve();
-                };
-                img.onerror = function () {
-                    $img = null;
-                    $deferred.reject({
-                        error: 'failed to load image'
-                    });
-                };
-                // load the image
-                img.src = imgSrc;
-                // insert into the DOM
-                $img = $(img);
-                $el.html($img);
-            } else {
-                if (!loading) {
-                    $deferred.resolve();
+            this.preload();
+
+            $loadImgPromise.done(function loadImgSuccess(img) {
+                if (!imageLoaded) {
+                    imageLoaded = true;
+                    $img = $(img).appendTo($el);
                 }
-            }
-            $img.show();
-            return $deferred;
+                // always show the image
+                $img.show();
+            });
+
+            $loadImgPromise.fail(function loadImgFail(error) {
+                imageLoaded = false;
+                if (error) {
+                    scope.broadcast('asseterror', error);
+                }
+            });
+
+            return $loadImgPromise;
         },
 
         /**
@@ -92,10 +90,16 @@ Crocodoc.addComponent('page-img', function (scope) {
          * @returns {void}
          */
         unload: function () {
-            loading = false;
-            if ($img && removeOnUnload) {
-                $img.remove();
-                $img = null;
+            if ($loadImgPromise) {
+                $loadImgPromise.abort();
+            }
+            if (removeOnUnload) {
+                if ($img) {
+                    $img.remove();
+                    $img = null;
+                }
+                $loadImgPromise = null;
+                imageLoaded = false;
             } else if ($img) {
                 $img.hide();
             }

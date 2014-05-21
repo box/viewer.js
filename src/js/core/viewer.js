@@ -73,6 +73,9 @@
                 return;
             }
 
+            // make the url absolute
+            config.url = scope.getUtility('url').makeAbsolute(config.url);
+
             viewerBase.loadAssets();
         };
 
