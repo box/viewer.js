@@ -5,33 +5,43 @@ module('Utility - ajax', {
     }
 });
 
-// test('An ajax success should resolve the promise with a non-empty reponse', function() {
-//     var promiseResolved = false;
-//     var $deferred = $.Deferred();
-//     this.utilities.ajax.fetch.returns($deferred.promise());
-//     $deferred.resolve('some data');
+// @TODO: test ajax.request
 
-//     var promise = this.dataProvider.get('page-svg', 3);
-//     promise.done(function(){promiseResolved = true;});
-//     ok(promiseResolved);
-// });
+test('fetch() should resolve a promise if the successful response is non-empy', function() {
+    var promiseResolved = false;
+    var responseObject = { responseText: 'some data' };
+    this.stub(this.util, 'request').yieldsToOn('success', responseObject);
 
-// test('An ajax success should reject the promise with an empty reponse', function() {
-//     var promiseRejected = false;
-//     var responseObject = {responseText:''};
-//     this.utilities.ajax.request.yieldsToOn('success',responseObject);
 
-//     this.promise = this.dataProvider.get('page-svg', 'testdatadoesnotmatter');
-//     this.promise.fail(function(){promiseRejected = true;});
-//     ok(promiseRejected);
-// });
+    var promise = this.util.fetch('someurl', 0);
+    promise.done(function(){
+        ok(true, 'promise should be resolved');
+    });
+});
 
-// test('An ajax failure should reject the promise', function() {
-//     var promiseRejected = false;
-//     var responseObject = {status:'testdatadoesnotmatter', statusText:'testdatadoesnotmatter'};
-//     this.utilities.ajax.request.yieldsToOn('fail',responseObject);
+test('fetch() should reject a promise if the successful response is empty', function() {
+    var promiseResolved = false;
+    var responseObject = { responseText: '' };
+    this.stub(this.util, 'request').yieldsToOn('success', responseObject);
 
-//     this.promise = this.dataProvider.get('page-svg', 'testdatadoesnotmatter');
-//     this.promise.fail(function(){promiseRejected = true;});
-//     ok(promiseRejected);
-// });
+
+    var promise = this.util.fetch('someurl', 0);
+    promise.fail(function(){
+        ok(true, 'promise should be rejected');
+    });
+});
+
+test('fetch() should reject a promise if the request fails', function() {
+    var promiseResolved = false;
+    var responseObject = {
+        status: 404,
+        statusText: 'not found'
+    };
+
+    this.stub(this.util, 'request').yieldsToOn('fail', responseObject);
+
+    var promise = this.util.fetch('someurl', 0);
+    promise.fail(function(){
+        ok(true, 'promise should be rejected');
+    });
+});
