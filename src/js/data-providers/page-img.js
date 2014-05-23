@@ -16,7 +16,7 @@ Crocodoc.addDataProvider('page-img', function(scope) {
         /**
          * Retrieve the page image asset from the server
          * @param {number} pageNum The page number for which to request the page image
-         * @returns {$.Promise}    A promise with an additional abort() method that will abort the XHR request.
+         * @returns {$.Promise}    A promise with an additional abort() method that will abort the img request.
          */
         get: function(pageNum) {
             var img = this.getImage(),

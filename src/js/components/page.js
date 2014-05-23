@@ -139,14 +139,19 @@ Crocodoc.addComponent('page', function (scope) {
                 return false;
             }
 
-            //load page
-            status = Crocodoc.PAGE_STATUS_LOADING;
+            // request assets to be loaded... but only ACTUALLY load if it is
+            // not loaded already
+            if (status !== Crocodoc.PAGE_STATUS_LOADED) {
+                status = Crocodoc.PAGE_STATUS_LOADING;
+            }
             return $.when(pageContent.load(), pageText.load())
                 .done(function handleLoadDone() {
                     if (loadRequested) {
-                        status = Crocodoc.PAGE_STATUS_LOADED;
-                        $el.removeClass(CSS_CLASS_PAGE_LOADING);
-                        scope.broadcast('pageload', { page: pageNum });
+                        if (status !== Crocodoc.PAGE_STATUS_LOADED) {
+                            $el.removeClass(CSS_CLASS_PAGE_LOADING);
+                            status = Crocodoc.PAGE_STATUS_LOADED;
+                            scope.broadcast('pageload', { page: pageNum });
+                        }
                     } else {
                         pageComponent.unload();
                     }
