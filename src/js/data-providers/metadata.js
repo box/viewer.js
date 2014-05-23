@@ -30,8 +30,7 @@ Crocodoc.addDataProvider('metadata', function(scope) {
          * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
          */
         get: function() {
-            var jsonPath = config.template.json,
-                url = config.url + jsonPath + config.queryString,
+            var url = this.getURL(),
                 $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
 
             // @NOTE: promise.then() creates a new promise, which does not copy
@@ -40,6 +39,15 @@ Crocodoc.addDataProvider('metadata', function(scope) {
             return $promise.then(processJSONContent).promise({
                 abort: $promise.abort
             });
+        },
+
+        /**
+         * Build and return the URL to the metadata JSON
+         * @returns {string}         The URL
+         */
+        getURL: function () {
+            var jsonPath = config.template.json;
+            return config.url + jsonPath + config.queryString;
         }
     };
 });
