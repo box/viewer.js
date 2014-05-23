@@ -38,8 +38,7 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
          * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
          */
         get: function() {
-            var cssPath = config.template.css,
-                url = config.url + cssPath + config.queryString,
+            var url = this.getURL(),
                 $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
 
             // @NOTE: promise.then() creates a new promise, which does not copy
@@ -48,6 +47,15 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
             return $promise.then(processStylesheetContent).promise({
                 abort: $promise.abort
             });
+        },
+
+        /**
+         * Build and return the URL to the stylesheet CSS
+         * @returns {string}         The URL
+         */
+        getURL: function () {
+            var cssPath = config.template.css;
+            return config.url + cssPath + config.queryString;
         }
     };
 });
