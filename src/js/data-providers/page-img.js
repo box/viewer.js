@@ -19,24 +19,31 @@ Crocodoc.addDataProvider('page-img', function(scope) {
          * @returns {$.Promise}    A promise with an additional abort() method that will abort the XHR request.
          */
         get: function(pageNum) {
-            var img,
+            var img = this.getImage(),
                 retries = Crocodoc.ASSET_REQUEST_RETRIES,
                 loaded = false,
-                imgPath = util.template(config.template.img, { page: pageNum }),
-                url = config.url + imgPath + config.queryString,
+                url = this.getURL(pageNum),
                 $deferred = $.Deferred();
 
-            img = new Image();
+            function loadImage() {
+                img.setAttribute('src', url);
+            }
+
+            function abortImage() {
+                img.removeAttribute('src');
+            }
+
             // add load and error handlers
             img.onload = function () {
                 loaded = true;
                 $deferred.resolve(img);
             };
+
             img.onerror = function () {
                 if (retries > 0) {
                     retries--;
-                    img.setAttribute('src', null);
-                    img.setAttribute('src', url);
+                    abortImage();
+                    loadImage();
                 } else {
                     img = null;
                     loaded = false;
@@ -46,16 +53,36 @@ Crocodoc.addDataProvider('page-img', function(scope) {
                     });
                 }
             };
+
             // load the image
-            img.setAttribute('src', url);
+            loadImage();
 
             return $deferred.promise({
                 abort: function () {
                     if (!loaded) {
-                        img.setAttribute('src', null);
+                        abortImage();
+                        $deferred.reject();
                     }
                 }
             });
+        },
+
+        /**
+         * Build and return the URL to the PNG asset for the specified page
+         * @param   {number} pageNum The page number
+         * @returns {string}         The URL
+         */
+        getURL: function (pageNum) {
+            var imgPath = util.template(config.template.img, { page: pageNum });
+            return config.url + imgPath + config.queryString;
+        },
+
+        /**
+         * Create and return a new image element (used for testing purporses)
+         * @returns {Image}
+         */
+        getImage: function () {
+            return new Image();
         }
     };
 });
