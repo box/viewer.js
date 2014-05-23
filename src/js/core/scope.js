@@ -171,7 +171,7 @@
         this.get = function(objectType, objectKey) {
             var provider = this.getDataProvider(objectType);
             if (provider) {
-                return provider.get(objectType, objectKey);
+                return provider.get(objectKey);
             }
             return $.Deferred().reject('data-provider not found').promise();
         };

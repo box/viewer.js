@@ -43,14 +43,14 @@ test('creator should return an object with a get function', function(){
 
 test('get() should return a $.Promise with an abort() function', function() {
     this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    propEqual(this.dataProvider.get('page-svg', 1), $.Deferred().promise({abort:function(){}}));
+    propEqual(this.dataProvider.get(1), $.Deferred().promise({abort:function(){}}));
 });
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {
     this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
     this.mock(this.promise).expects('abort').once();
 
-    var promise = this.dataProvider.get('page-svg', 2);
+    var promise = this.dataProvider.get(2);
     promise.abort();
 });
 
@@ -70,7 +70,7 @@ test('get() should apply the subpx hack if the browser is firefox and subpixel r
 
     this.$deferred.resolve(svgText);
 
-    var promise = this.dataProvider.get('page-svg', 3);
+    var promise = this.dataProvider.get(3);
     promise.done(function (text) {
         ok(text.indexOf('<style>text { text-rendering: geometricPrecision; }</style>') > -1, 'should have subpx hack');
     });

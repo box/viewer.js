@@ -27,9 +27,7 @@ Crocodoc.addDataProvider('metadata', function(scope) {
     return {
         /**
          * Retrieve the info.json asset from the server
-         *
-         * @param {string} modelName The name of the requested model (metadata)
-         * @returns {$.Promise}      A promise with an additional abort() method that will abort the XHR request.
+         * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
          */
         get: function() {
             var jsonPath = config.template.json,

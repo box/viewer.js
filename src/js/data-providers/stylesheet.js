@@ -35,9 +35,7 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
     return {
         /**
          * Retrieve the stylesheet.css asset from the server
-         *
-         * @param {string} modelName The name of the requested model (stylesheet)
-         * @returns {$.Promise}      A promise with an additional abort() method that will abort the XHR request.
+         * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
          */
         get: function() {
             var cssPath = config.template.css,
