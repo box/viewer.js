@@ -120,6 +120,7 @@ Crocodoc.addUtility('ajax', function (framework) {
             } else if (req) {
                 req.open(method, url, true);
                 req.onreadystatechange = function () {
+                    var status;
                     if (req.readyState === 4) { // DONE
                         // remove the onreadystatechange handler,
                         // because it could be called again
@@ -129,13 +130,16 @@ Crocodoc.addUtility('ajax', function (framework) {
                         req.onreadystatechange = function () {};
 
                         try {
-                            if (req.status === 200) {
-                                ajaxSuccess();
-                            } else {
-                                ajaxFail();
-                            }
+                            status = req.status;
                         } catch (e) {
                             // NOTE: IE (9?) throws an error when the request is aborted
+                            ajaxFail();
+                            return;
+                        }
+
+                        if (status === 200) {
+                            ajaxSuccess();
+                        } else {
                             ajaxFail();
                         }
                     }
