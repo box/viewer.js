@@ -10,6 +10,8 @@ Crocodoc.addUtility('common', function () {
 
     'use strict';
 
+    var DEFAULT_PT2PX_RATIO = 1.33333;
+
     var util = {};
 
     util.extend = $.extend;
@@ -320,6 +322,7 @@ Crocodoc.addUtility('common', function () {
             if ('getComputedStyle' in window) {
                 return window.getComputedStyle(el);
             }
+            // IE <= 8
             return el.currentStyle;
         },
 
@@ -328,7 +331,7 @@ Crocodoc.addUtility('common', function () {
          * @returns {number} The pixel value
          */
         calculatePtSize: function () {
-            var width,
+            var style,
                 px,
                 testSize = 10000,
                 div = document.createElement('div');
@@ -336,8 +339,16 @@ Crocodoc.addUtility('common', function () {
             div.style.position = 'absolute';
             div.style.width = testSize + 'pt';
             document.body.appendChild(div);
-            width = util.getComputedStyle(div).width;
-            px = parseFloat(width) / testSize;
+            style = util.getComputedStyle(div);
+            if (style && style.width) {
+                px = parseFloat(style.width) / testSize;
+            } else {
+                // @NOTE: there is a bug in Firefox where `getComputedStyle()`
+                // returns null if called in a hidden (`display:none`) iframe
+                // (https://bugzilla.mozilla.org/show_bug.cgi?id=548397), so we
+                // fallback to a default value if this happens.
+                px = DEFAULT_PT2PX_RATIO;
+            }
             document.body.removeChild(div);
             return px;
         },
