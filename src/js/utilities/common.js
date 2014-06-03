@@ -232,13 +232,16 @@ Crocodoc.addUtility('common', function () {
         insertCSS: function (css) {
             var styleEl = document.createElement('style'),
                 cssTextNode = document.createTextNode(css);
+
+            document.getElementsByTagName('head')[0].appendChild(styleEl);
             try {
                 styleEl.setAttribute('type', 'text/css');
                 styleEl.appendChild(cssTextNode);
             } catch (err) {
-                // uhhh IE < 9
+                // IE < 9 throws an error when you append a child node to a style
+                // element for some reason..
+                styleEl.styleSheet.cssText = css;
             }
-            document.getElementsByTagName('head')[0].appendChild(styleEl);
             return styleEl;
         },
 

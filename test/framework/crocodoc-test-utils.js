@@ -1,4 +1,6 @@
-/*global Crocodoc*/
+/*global Crocodoc, sinon*/
+
+sinon.config.useFakeTimers = false;
 
 /**
  * Get a scope for testing

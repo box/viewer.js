@@ -33,7 +33,7 @@ QUnit.cases([
     { fitWidth: 1.8, fitHeight: 0.8, widestWidth: 100, tallestHeight: 50, mobile: false, value: 0.8 },
     { fitWidth: 1.8, fitHeight: 1.8, widestWidth: 100, tallestHeight: 50, mobile: false, value: 1 },
     { fitWidth: 0.9, fitHeight: 0.8, widestWidth: 100, tallestHeight: 150, mobile: false, value: 0.9 },
-    { fitWidth: 1.9, fitHeight: 0.8, widestWidth: 100, tallestHeight: 150, mobile: true, value: 1.9 },
+    { fitWidth: 1.9, fitHeight: 0.8, widestWidth: 100, tallestHeight: 150, mobile: true, value: 1.9 }
 ]).test('calculateZoomAutoValue() should return the correct zoom auto value when called', function (params) {
     var stub = this.stub(this.component, 'calculateZoomValue');
     stub.withArgs(Crocodoc.ZOOM_FIT_WIDTH).returns(params.fitWidth);

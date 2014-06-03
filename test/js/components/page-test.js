@@ -11,7 +11,7 @@ module('Component - page', {
                 unload: function () {}
             },
             'page-links': {
-                init: function () {},
+                init: function () {}
             },
             'page-svg': {
                 init: function () {},

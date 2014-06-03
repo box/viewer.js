@@ -33,7 +33,7 @@ module('Component - layout-paged', {
 QUnit.cases([
     { name: 'resize', data: {}, method: 'handleResize' },
     { name: 'scroll', data: {}, method: 'handleScroll' },
-    { name: 'scrollend', data: {}, method: 'handleScrollEnd' },
+    { name: 'scrollend', data: {}, method: 'handleScrollEnd' }
 ]).test('onmessage() should call the correct handler with the passed data when called', function (params) {
     this.mock(this.component)
         .expects(params.method)

@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/box/viewer.js.png?branch=master)](https://travis-ci.org/box/viewer.js)
 [![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
+[![Selenium Test Status](https://saucelabs.com/browser-matrix/viewerjs.svg)](https://saucelabs.com/u/viewerjs)
 
 # Viewer.js
 

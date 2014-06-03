@@ -3,6 +3,32 @@
 module('Utility - common', {
     setup: function () {
         this.util = Crocodoc.getUtilityForTest('common');
+        this.getStyle = function (el, prop) {
+            if ('getComputedStyle' in window) {
+                return window.getComputedStyle(el)[prop];
+            }
+            // IE <= 8
+            return el.currentStyle[prop];
+        };
+        this.isRed = function (cssVal) {
+            cssVal = cssVal.toLowerCase();
+            if (cssVal === 'red') {
+                return true;
+            }
+            if (cssVal === '#f00' || cssVal === '#ff0000') {
+                return true;
+            }
+            if (/rgba?\s*\(\s*255\s*,\s*0\s*,\s*0\s*(,\s*1\s*)?\)/.test(cssVal)) {
+                return true;
+            }
+            return false;
+        };
+        this.testEl = document.createElement('div');
+        this.testEl.setAttribute('class', 'test-el');
+        document.body.appendChild(this.testEl);
+    },
+    teardown: function () {
+        document.body.removeChild(this.testEl);
     }
 });
 
@@ -61,7 +87,7 @@ QUnit.cases([
     { low: 0, high: 50, max: 20, result: { min: 0, max: 20 } },
     { low: 10, high: 50, max: 20, result: { min: 0, max: 20 } },
     { low: 10, high: 50, max: 60, result: { min: 10, max: 50 } },
-    { low: -10, high: 50, max: 60, result: { min: 0, max: 60 } },
+    { low: -10, high: 50, max: 60, result: { min: 0, max: 60 } }
 ]).test('constrainRange() should return the expected range object when called', function (params) {
     deepEqual(this.util.constrainRange(params.low, params.high, params.max), params.result);
 });
@@ -82,17 +108,12 @@ test('throttle() should return a function that calls the provided function only 
     clock.restore();
 });
 
-function getStyle(el, prop) {
-    var styles = getComputedStyle && getComputedStyle(el) || el.currentStyle;
-    return styles[prop];
-}
-
 test('insertCSS() should insert the given CSS string when called', function () {
-    var str = 'body { background-color: rgb(255, 0, 0) !important; }',
+    var str = '.test-el { background-color: red !important; }',
         stylesheetEl = this.util.insertCSS(str);
 
     // test if the style has been applied
-    equal(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
+    ok(this.isRed(this.getStyle(this.testEl, 'backgroundColor')), 'should be red');
     stylesheetEl.parentNode.removeChild(stylesheetEl);
 });
 
@@ -100,11 +121,11 @@ test('insertCSS() should insert the given CSS string when called', function () {
 test('appendCSSRule() should append the given CSS rule when called', function () {
     var stylesheetEl = this.util.insertCSS(''),
         sheet = stylesheetEl.styleSheet || stylesheetEl.sheet,
-        selector = 'body',
-        rule = 'background-color: rgb(255, 0, 0) !important;';
+        selector = '.test-el',
+        rule = 'background-color: red !important;';
 
     this.util.appendCSSRule(sheet, selector, rule);
-    equal(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
+    ok(this.isRed(this.getStyle(this.testEl, 'backgroundColor')), 'should be red');
     stylesheetEl.parentNode.removeChild(stylesheetEl);
 });
 
@@ -112,20 +133,14 @@ test('appendCSSRule() should append the given CSS rule when called', function ()
 test('deleteCSSRule() should delete the given CSS rule when called', function () {
     var stylesheetEl = this.util.insertCSS(''),
         sheet = stylesheetEl.styleSheet || stylesheetEl.sheet,
-        selector = 'body',
-        rule = 'background-color: rgb(255, 0, 0) !important;';
-
-    // make sure the background color is not already red...
-    notEqual(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
+        selector = '.test-el',
+        rule = 'background-color: red !important;';
 
     var index = this.util.appendCSSRule(sheet, selector, rule);
-
-    equal(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
+    ok(this.isRed(this.getStyle(this.testEl, 'backgroundColor')), 'should be red');
 
     this.util.deleteCSSRule(sheet, index);
-
-    notEqual(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
-
+    ok(!this.isRed(this.getStyle(this.testEl, 'backgroundColor')), 'should not be red');
 
     stylesheetEl.parentNode.removeChild(stylesheetEl);
 });

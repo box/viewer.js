@@ -17,6 +17,9 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-git');
     grunt.loadNpmTasks('grunt-text-replace');
     grunt.loadNpmTasks('grunt-editor');
+    grunt.loadNpmTasks('grunt-saucelabs');
+    grunt.loadNpmTasks('grunt-git-rev-parse');
+    grunt.loadNpmTasks('grunt-saucelabs-browsers');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -63,6 +66,14 @@ module.exports = function (grunt) {
 
                         return middlewares;
                     }
+                }
+            },
+            sauce: {
+                options: {
+                    keepalive: false,
+                    open: false,
+                    port: 9002,
+                    base: ''
                 }
             }
         },
@@ -229,6 +240,50 @@ module.exports = function (grunt) {
             changelog: {
                 src: ['CHANGELOG.md']
             }
+        },
+        'git-rev-parse': {
+            build: {
+                options: {
+                    prop: 'git-revision'
+                }
+            }
+        },
+        'saucelabs-browsers': {
+            all: {
+                options: {
+                    filter: function (browsers) {
+                        browsers = require('./filter-saucelabs-browsers')(browsers).all;
+                        return browsers;
+                    }
+                }
+            }
+        },
+        'saucelabs-qunit': {
+            all: {
+                options: {
+                    username: 'viewerjs',
+                    testname: 'qunit',
+                    urls: [
+                        'http://localhost:9002/test/index.html?noglobals=true',
+                        'http://localhost:9002/test/plugins/index.html?noglobals=true'
+                    ],
+                    build: process.env.TRAVIS_JOB_ID || 'local:<%= grunt.config("git-revision") %>',
+                    browsers: '<%= saucelabs.browsers %>',
+                    concurrency: 3,
+                    tunnelTimeout: 5,
+                    throttled: 3,
+                    'max-duration': 120,
+                    maxRetries: 2,
+                    sauceConfig: {
+                        'record-video': false,
+                        'video-upload-on-pass': false,
+                        'idle-timeout': 60
+                    },
+                    onTestComplete: function(result, callback) {
+                        return callback(null, result.passed);
+                    }
+                }
+            }
         }
     });
 
@@ -254,6 +309,7 @@ module.exports = function (grunt) {
     grunt.registerTask('build-minify', ['build-setup', 'cssmin', 'uglify']);
     grunt.registerTask('build', ['default', 'build-minify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'parallel:examples']);
+    grunt.registerTask('sauce', ['test', 'git-rev-parse', 'connect:sauce', 'saucelabs-browsers:all', 'saucelabs-qunit']);
 
     grunt.registerTask('changelog', function () {
         var logs = grunt.config('gitlog.changelog.result');
