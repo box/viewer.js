@@ -42,6 +42,13 @@
     "grunt-contrib-connect": "~0.6.0",
     "grunt-connect-rewrite": "^0.2.1",
     "grunt-image-embed": "^0.3.1",
-    "grunt-contrib-copy": "^0.5.0"
+    "grunt-contrib-copy": "^0.5.0",
+    "grunt-saucelabs": "^8.0.1",
+    "sinon": "^1.10.2",
+    "sinon-qunit": "^2.0.0",
+    "jquery": "^2.1.1",
+    "qunitjs": "^1.14.0",
+    "qunit-parameterize": "^0.4.0",
+    "blanket": "^1.1.6"
   }
 }

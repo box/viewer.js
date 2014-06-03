@@ -231,8 +231,8 @@ test('calculateScrollPositionForPage() should return the correct offset when cal
 test('scrollToOffset() scrolls to the given offset left and top when called', function () {
     var left = 10, top = 20;
     this.component.init(this.config);
-    var scrollLeftSpy = this.spy(this.component.$viewport, 'scrollLeft'),
-        scrollTopSpy = this.spy(this.component.$viewport, 'scrollTop');
+    var scrollLeftSpy = this.stub(this.component.$viewport, 'scrollLeft'),
+        scrollTopSpy = this.stub(this.component.$viewport, 'scrollTop');
     this.component.scrollToOffset(left, top);
     ok(scrollLeftSpy.calledWith(left), 'scrollLeft set properly');
     ok(scrollTopSpy.calledWith(top), 'scrollTop set properly');
