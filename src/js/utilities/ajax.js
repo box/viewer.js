@@ -137,7 +137,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                             return;
                         }
 
-                        if (status === 200) {
+                        if (status === 200 || util.isRequestToLocalFileOk(url, req)) {
                             ajaxSuccess();
                         } else {
                             ajaxFail();

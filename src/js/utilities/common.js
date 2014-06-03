@@ -395,6 +395,25 @@ Crocodoc.addUtility('common', function () {
             }
             return protocolRegExp.test(url) &&
                 getDomain(location.href) !== getDomain(url);
-        }
+        },
+
+        /**
+        * Returns true if a request made to a local file has a status equals zero (0)
+        * and if it has a response text
+        * @param   {string}  url The URL
+        * @param   {Object}  request The request object
+        */
+        isRequestToLocalFileOk: function(url, request) {
+            /**
+            * Returns true if the given url is a local file scheme URL
+            * @param   {string}  url The URL
+            * @returns {Boolean} Whether or not the url is a local file scheme URL
+            */
+            function isLocalFileUrl(url) {
+                return url.lastIndexOf('file:///', 0) === 0;
+            }
+            
+            return isLocalFileUrl(url) && request.status === 0 && request.responseText !== '';
+        }        
     });
 });
