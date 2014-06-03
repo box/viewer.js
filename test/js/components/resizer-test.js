@@ -4,7 +4,10 @@ module('Component - resizer', {
         this.frameID = 100;
         this.utilities = {
             support: {
-                requestAnimationFrame: sinon.stub().callsArgAsync(0).returns(this.frameID),
+                requestAnimationFrame: function (fn) {
+                    setTimeout(fn, 1);
+                    return self.frameID;
+                },
                 cancelAnimationFrame: function () {}
             },
             common: Crocodoc.getUtility('common')
@@ -56,13 +59,13 @@ test('module should fire "resize" event with the proper data when element is res
         }).appendTo(document.body);
 
     module.init($el);
+    this.clock.tick(1);
+
     this.mock(this.scope)
         .expects('broadcast')
         .withArgs('resize', sinon.match(data));
-    setTimeout(function () {
-        $el.css(data);
-    }, 1);
 
+    $el.css(data);
     this.clock.tick(1);
     $el.remove();
 });

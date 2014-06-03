@@ -89,17 +89,17 @@ test('throttle() should return a function that calls the provided function only 
     clock.restore();
 });
 
-function hasStyle(el, prop, style) {
+function getStyle(el, prop) {
     var styles = getComputedStyle && getComputedStyle(el) || el.currentStyle;
-    return styles[prop] === style;
+    return styles[prop];
 }
 
 test('insertCSS() should insert the given CSS string when called', function () {
-    var str = 'body { background-color: rgb(255, 0, 0) !important; }';
+    var str = 'body { background-color: rgb(255, 0, 0) !important; }',
         stylesheetEl = this.util.insertCSS(str);
 
     // test if the style has been applied
-    ok(hasStyle(document.body, 'background-color', 'rgb(255, 0, 0)'));
+    equal(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
     stylesheetEl.parentNode.removeChild(stylesheetEl);
 });
 
@@ -111,21 +111,27 @@ test('appendCSSRule() should append the given CSS rule when called', function ()
         rule = 'background-color: rgb(255, 0, 0) !important;';
 
     this.util.appendCSSRule(sheet, selector, rule);
-    ok(hasStyle(document.body, 'background-color', 'rgb(255, 0, 0)'));
+    equal(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
     stylesheetEl.parentNode.removeChild(stylesheetEl);
 });
 
-// assumes insertCSS works properly
+// assumes insertCSS and appendCSSRule works properly
 test('deleteCSSRule() should delete the given CSS rule when called', function () {
     var stylesheetEl = this.util.insertCSS(''),
         sheet = stylesheetEl.styleSheet || stylesheetEl.sheet,
         selector = 'body',
         rule = 'background-color: rgb(255, 0, 0) !important;';
 
+    // make sure the background color is not already red...
+    notEqual(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
+
     var index = this.util.appendCSSRule(sheet, selector, rule);
+
+    equal(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
+
     this.util.deleteCSSRule(sheet, index);
 
-    ok(!hasStyle(document.body, 'background-color', 'rgb(255, 0, 0)'));
+    notEqual(getStyle(document.body, 'backgroundColor'), 'rgb(255, 0, 0)');
 
 
     stylesheetEl.parentNode.removeChild(stylesheetEl);

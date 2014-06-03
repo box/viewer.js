@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>QUnit</title>
-    <link rel="stylesheet" href="../framework/qunit.css">
+    <link rel="stylesheet" href="../../node_modules/qunitjs/qunit/qunit.css">
     <style>
         .blanket { font-size: 14px; }
     </style>
@@ -12,16 +12,18 @@
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
 
-    <script src="../framework/jquery.js"></script>
-    <script src="../framework/qunit.js"></script>
-    <script src="../framework/qunit-parameterize.js"></script>
-    <script src="../framework/sinon.js"></script>
-    <script src="../framework/sinon-qunit.js"></script>
-    <script src="../framework/blanket.js"></script>
+    <script src="../../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../../node_modules/qunitjs/qunit/qunit.js"></script>
+    <script src="../../node_modules/qunit-parameterize/qunit-parameterize.js"></script>
+    <script src="../../node_modules/sinon/pkg/sinon.js"></script>
+    <script src="../../node_modules/sinon/pkg/sinon-ie.js"></script>
+    <script src="../../node_modules/sinon-qunit/lib/sinon-qunit.js"></script>
+    <!-- <script src="../../node_modules/blanket/dist/qunit/blanket.js"></script> -->
 
 
+    <!-- Base Crocodoc namespace needs to be loaded first -->
     <script src="../../src/js/core/crocodoc.js"></script>
-    <script src="../framework/crocodoc-qunit.js"></script>
+    <script src="../framework/crocodoc-test-utils.js"></script>
 
 
     <!-- Crocodoc Source Files -->
