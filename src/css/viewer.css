@@ -50,8 +50,6 @@
     overflow: hidden;
     /* @NOTE: position:relative is necessary for overflow:hidden to work in IE7 */
     position: relative;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
     text-align: center;
     font-size: 100%;
     -webkit-transform: translateZ(0);
