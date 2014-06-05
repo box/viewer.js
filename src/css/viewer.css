@@ -3,6 +3,13 @@
     position: relative;
 }
 
+/* prevent sizing issues from bootstrap (and others) that change global defaults */
+.crocodoc-viewer * {
+    -webkit-box-sizing: initial;
+    -moz-box-sizing: initial;
+    box-sizing: initial;
+}
+
 .crocodoc-viewer-fullscreen {
     background: #000;
     margin: 0;
