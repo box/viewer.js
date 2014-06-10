@@ -154,7 +154,9 @@ Crocodoc.addPlugin('realtime', function (scope) {
      * @private
      */
     function handleFinishedEvent() {
-        broadcastMessageWhenReady('pageavailable', { upto: viewerConfig.numPages });
+        // @NOTE: we can't use upto: numpages here, because we might not know
+        // how many pages there are yet
+        broadcastMessageWhenReady('pageavailable', { all: true });
         viewerAPI.fire('realtimecomplete');
         realtime.destroy();
     }

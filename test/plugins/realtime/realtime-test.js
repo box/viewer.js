@@ -91,7 +91,7 @@ test('pageavailable message should be broadcast with all pages when conversion i
 
     this.plugin.onmessage('ready');
 
-    ok(spy.calledWith('pageavailable', sinon.match({ upto: this.config.numPages })), 'pageavailable should be broadcast');
+    ok(spy.calledWith('pageavailable', sinon.match({ all: true })), 'pageavailable should be broadcast');
 });
 
 test('realtimeerror event should be fired when there is an error', function () {

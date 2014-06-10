@@ -313,3 +313,16 @@ test('handlePageAvailable() should queue the appropriate pages to load when call
     ok(spy.calledWith(1));
     ok(spy.calledWith(2));
 });
+
+test('handlePageAvailable() should queue the appropriate pages to load when called with data.all', function () {
+    var page = 3;
+    for (var i = 0; i < 10; i++) {
+        this.pages.push(this.pageComponent);
+    }
+    this.component.init(this.pages);
+    var spy = this.spy(this.component, 'queuePageToLoad');
+    this.component.handlePageAvailable({ all: true });
+    ok(spy.calledWith(0));
+    ok(spy.calledWith(1));
+    ok(spy.calledWith(2));
+});
