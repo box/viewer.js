@@ -136,28 +136,6 @@ Crocodoc.addUtility('common', function () {
         },
 
         /**
-         * Make the given path absolute
-         *  - if path doesn't contain protocol and domain, prepend the current protocol and domain
-         *  - if the path is relative (eg. doesn't begin with /), also fill in the current path
-         * @param   {string} path The path to make absolute
-         * @returns {string}      The absolute path
-         */
-        makeAbsolute: function (path) {
-            var location = window.location,
-                pathname = location.pathname;
-            if (/^http|^\/\//i.test(path)) {
-                return path;
-            }
-            if (path.charAt(0) !== '/') {
-                if (pathname.lastIndexOf('/') !== pathname.length - 1) {
-                    pathname = pathname.substring(0, pathname.lastIndexOf('/') + 1);
-                }
-                path = pathname + path;
-            }
-            return location.protocol + '//' + location.host + path;
-        },
-
-        /**
          * Return the current time since epoch in ms
          * @returns {int} The current time
          */
@@ -381,39 +359,6 @@ Crocodoc.addUtility('common', function () {
                 }
             }
             return template;
-        },
-
-        /**
-         * Returns true if the given url is external to the current domain
-         * @param   {string}  url The URL
-         * @returns {Boolean} Whether or not the url is external
-         */
-        isCrossDomain: function (url) {
-            var protocolRegExp = /^(http(s)?|file)+:\/\//;
-            function getDomain(url) {
-                return url.replace(protocolRegExp, '').split('/')[0];
-            }
-            return protocolRegExp.test(url) &&
-                getDomain(location.href) !== getDomain(url);
-        },
-
-        /**
-        * Returns true if a request made to a local file has a status equals zero (0)
-        * and if it has a response text
-        * @param   {string}  url The URL
-        * @param   {Object}  request The request object
-        */
-        isRequestToLocalFileOk: function(url, request) {
-            /**
-            * Returns true if the given url is a local file scheme URL
-            * @param   {string}  url The URL
-            * @returns {Boolean} Whether or not the url is a local file scheme URL
-            */
-            function isLocalFileUrl(url) {
-                return url.lastIndexOf('file:///', 0) === 0;
-            }
-            
-            return isLocalFileUrl(url) && request.status === 0 && request.responseText !== '';
-        }        
+        }
     });
 });
