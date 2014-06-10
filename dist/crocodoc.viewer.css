@@ -1,8 +1,15 @@
-/*! Crocodoc Viewer - v0.4.4 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.4.5 | (c) 2014 Box */
 
 .crocodoc-viewer {
     padding:0;
     position: relative;
+}
+
+/* prevent sizing issues from bootstrap (and others) that change global defaults */
+.crocodoc-viewer * {
+    -webkit-box-sizing: initial;
+    -moz-box-sizing: initial;
+    box-sizing: initial;
 }
 
 .crocodoc-viewer-fullscreen {
@@ -45,8 +52,6 @@
     overflow: hidden;
     /* @NOTE: position:relative is necessary for overflow:hidden to work in IE7 */
     position: relative;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
     text-align: center;
     font-size: 100%;
     -webkit-transform: translateZ(0);
@@ -156,6 +161,12 @@
 }
 .crocodoc-page-link {
     position: absolute;
+    display: block;
+}
+/* Fix for IE ctrl+click behavior */
+.crocodoc-page-link span {
+    width: 100%;
+    height: 100%;
     display: block;
     /* IE <= 9 requires a background image for an empty element to actually receive click events */
     background: url(data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==) 0 0 no-repeat;

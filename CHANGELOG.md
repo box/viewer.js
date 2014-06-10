@@ -2,6 +2,11 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.4.5**
+  * Fix [#49](https://github.com/box/viewer.js/issues/49) - Centering broken if Bootstrap css loaded
+  * Fix [#40](https://github.com/box/viewer.js/issues/40) - Hidden document viewer does not load pages in Firefox
+  * Fix [#37](https://github.com/box/viewer.js/issues/37) - exceptions thrown in AJAX request handler are swallowed
+  * Fix [#24](https://github.com/box/viewer.js/issues/24) - Enable request to local files
 * **0.4.4**
   * Fix issue where PNG fallback breaks zooming on mobile devices
   * Add `linkclick` viewer event

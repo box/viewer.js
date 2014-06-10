@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.4.4 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.4.5 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 
@@ -766,7 +766,8 @@ Crocodoc.addUtility('ajax', function (framework) {
 
     'use strict';
 
-    var util = framework.getUtility('common');
+    var util = framework.getUtility('common'),
+        urlUtil = framework.getUtility('url');
 
     /**
      * Creates a request object to call the success/fail handlers on
@@ -812,6 +813,18 @@ Crocodoc.addUtility('ajax', function (framework) {
         }
     }
 
+    /**
+    * Returns true if a request made to a local file has a status equals zero (0)
+    * and if it has a response text
+    * @param   {string}  url The URL
+    * @param   {Object}  request The request object
+    */
+    function isRequestToLocalFileOk(url, request) {
+        return urlUtil.parse(url).protocol === 'file:' &&
+               request.status === 0 &&
+               request.responseText !== '';
+    }
+
     return {
         /**
          * Basic AJAX request
@@ -849,7 +862,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                 }
             }
 
-            if (util.isCrossDomain(url) && !('withCredentials' in req)) {
+            if (urlUtil.isCrossDomain(url) && !('withCredentials' in req)) {
                 if ('XDomainRequest' in window) {
                     req = new window.XDomainRequest();
                     try {
@@ -879,6 +892,7 @@ Crocodoc.addUtility('ajax', function (framework) {
             } else if (req) {
                 req.open(method, url, true);
                 req.onreadystatechange = function () {
+                    var status;
                     if (req.readyState === 4) { // DONE
                         // remove the onreadystatechange handler,
                         // because it could be called again
@@ -888,13 +902,16 @@ Crocodoc.addUtility('ajax', function (framework) {
                         req.onreadystatechange = function () {};
 
                         try {
-                            if (req.status === 200) {
-                                ajaxSuccess();
-                            } else {
-                                ajaxFail();
-                            }
+                            status = req.status;
                         } catch (e) {
                             // NOTE: IE (9?) throws an error when the request is aborted
+                            ajaxFail();
+                            return;
+                        }
+
+                        if (status === 200 || isRequestToLocalFileOk(url, req)) {
+                            ajaxSuccess();
+                        } else {
                             ajaxFail();
                         }
                     }
@@ -960,6 +977,8 @@ Crocodoc.addUtility('browser', function () {
 Crocodoc.addUtility('common', function () {
 
     'use strict';
+
+    var DEFAULT_PT2PX_RATIO = 1.33333;
 
     var util = {};
 
@@ -1082,28 +1101,6 @@ Crocodoc.addUtility('common', function () {
                 min: low,
                 max: high
             };
-        },
-
-        /**
-         * Make the given path absolute
-         *  - if path doesn't contain protocol and domain, prepend the current protocol and domain
-         *  - if the path is relative (eg. doesn't begin with /), also fill in the current path
-         * @param   {string} path The path to make absolute
-         * @returns {string}      The absolute path
-         */
-        makeAbsolute: function (path) {
-            var location = window.location,
-                pathname = location.pathname;
-            if (/^http|^\/\//i.test(path)) {
-                return path;
-            }
-            if (path.charAt(0) !== '/') {
-                if (pathname.lastIndexOf('/') !== pathname.length - 1) {
-                    pathname = pathname.substring(0, pathname.lastIndexOf('/') + 1);
-                }
-                path = pathname + path;
-            }
-            return location.protocol + '//' + location.host + path;
         },
 
         /**
@@ -1271,6 +1268,7 @@ Crocodoc.addUtility('common', function () {
             if ('getComputedStyle' in window) {
                 return window.getComputedStyle(el);
             }
+            // IE <= 8
             return el.currentStyle;
         },
 
@@ -1279,7 +1277,7 @@ Crocodoc.addUtility('common', function () {
          * @returns {number} The pixel value
          */
         calculatePtSize: function () {
-            var width,
+            var style,
                 px,
                 testSize = 10000,
                 div = document.createElement('div');
@@ -1287,8 +1285,16 @@ Crocodoc.addUtility('common', function () {
             div.style.position = 'absolute';
             div.style.width = testSize + 'pt';
             document.body.appendChild(div);
-            width = util.getComputedStyle(div).width;
-            px = parseFloat(width) / testSize;
+            style = util.getComputedStyle(div);
+            if (style && style.width) {
+                px = parseFloat(style.width) / testSize;
+            } else {
+                // @NOTE: there is a bug in Firefox where `getComputedStyle()`
+                // returns null if called in a hidden (`display:none`) iframe
+                // (https://bugzilla.mozilla.org/show_bug.cgi?id=548397), so we
+                // fallback to a default value if this happens.
+                px = DEFAULT_PT2PX_RATIO;
+            }
             document.body.removeChild(div);
             return px;
         },
@@ -1321,20 +1327,6 @@ Crocodoc.addUtility('common', function () {
                 }
             }
             return template;
-        },
-
-        /**
-         * Returns true if the given url is external to the current domain
-         * @param   {string}  url The URL
-         * @returns {Boolean} Whether or not the url is external
-         */
-        isCrossDomain: function (url) {
-            var protocolRegExp = /^(http(s)?|file)+:\/\//;
-            function getDomain(url) {
-                return url.replace(protocolRegExp, '').split('/')[0];
-            }
-            return protocolRegExp.test(url) &&
-                getDomain(location.href) !== getDomain(url);
         }
     });
 });
@@ -1533,6 +1525,92 @@ Crocodoc.addUtility('support', function () {
          */
         cancelAnimationFrame: function () {
             caf.apply(window, arguments);
+        }
+    };
+});
+
+/**
+ * URL utility
+ */
+Crocodoc.addUtility('url', function (framework) {
+
+    'use strict';
+
+    var browser = framework.getUtility('browser');
+
+    return {
+        /**
+         * Return the current page's URL
+         * @returns {string} The current URL
+         */
+        getCurrentURL: function () {
+            return window.location.href;
+        },
+
+        /**
+         * Make the given path absolute
+         *  - if path doesn't contain protocol and domain, prepend the current protocol and domain
+         *  - if the path is relative (eg. doesn't begin with /), also fill in the current path
+         * @param   {string} path The path to make absolute
+         * @returns {string}      The absolute path
+         */
+        makeAbsolute: function (path) {
+            return this.parse(path).href;
+        },
+
+        /**
+         * Returns true if the given url is external to the current domain
+         * @param   {string}  url The URL
+         * @returns {Boolean} Whether or not the url is external
+         */
+        isCrossDomain: function (url) {
+            var parsedURL = this.parse(url);
+
+            return parsedURL.protocol !== window.location.protocol ||
+                   parsedURL.host !== window.location.host;
+        },
+
+        /**
+         * Parse a URL into protocol, host, port, etc
+         * @param   {string} url The URL to parse
+         * @returns {object}     The parsed URL parts
+         */
+        parse: function (url) {
+            var parsed,
+                pathname;
+
+            if (url === this.getCurrentURL()) {
+                parsed = window.location;
+            } else {
+                parsed = document.createElement('a');
+                parsed.href = url;
+
+                // @NOTE: IE does not automatically parse relative urls,
+                // but requesting href back from the <a> element will return
+                // an absolute URL, which can then be fed back in to get the
+                // expected result. WTF? Yep!
+                if (browser.ie && url !== parsed.href) {
+                    url = parsed.href;
+                    parsed.href = url;
+                }
+            }
+
+            // @NOTE: IE does not include the preceding '/' in pathname
+            pathname = parsed.pathname;
+            if (!/^\//.test(pathname)) {
+                pathname = '/' + pathname;
+            }
+
+            return {
+                href: parsed.href,
+                protocol: parsed.protocol, // includes :
+                host: parsed.host, // includes port
+                hostname: parsed.hostname, // does not include port
+                port: parsed.port,
+                pathname: pathname,
+                hash: parsed.hash,  // inclues #
+                search: parsed.search // incudes ?
+            };
         }
     };
 });
@@ -3751,7 +3829,8 @@ Crocodoc.addComponent('page-links', function (scope) {
 
     var CSS_CLASS_PAGE_LINK = 'crocodoc-page-link';
 
-    var $el;
+    var $el,
+        browser = scope.getUtility('browser');
 
     /**
      * Create a link element given link data
@@ -3764,12 +3843,23 @@ Crocodoc.addComponent('page-links', function (scope) {
             left = link.bbox[0],
             top = link.bbox[1],
             attr = {};
+
+        if (browser.ie) {
+            // @NOTE: IE doesn't allow override of ctrl+click on anchor tags,
+            // but there is a workaround to add a child element (which triggers
+            // the onclick event first)
+            $('<span>')
+                .appendTo($link)
+                .on('click', handleClick);
+        }
+
         $link.css({
             left: left + 'pt',
             top: top + 'pt',
             width: link.bbox[2] - left + 'pt',
             height: link.bbox[3] - top + 'pt'
         });
+
         if (link.uri) {
             if (/^http|^mailto/.test(link.uri)) {
                 attr.href = encodeURI(link.uri);
@@ -3781,6 +3871,7 @@ Crocodoc.addComponent('page-links', function (scope) {
         } else if (link.destination) {
             attr.href = '#page-' + link.destination.pagenum;
         }
+
         $link.attr(attr);
         $link.data('link', link);
         $link.appendTo($el);
@@ -3788,17 +3879,19 @@ Crocodoc.addComponent('page-links', function (scope) {
 
     /**
      * Handle link clicks
-     * @param   {Event} ev The event object
+     * @param   {Event} event The event object
      * @returns {void}
      * @private
      */
-    function handleClick(ev) {
-        var $link = $(ev.target),
+    function handleClick(event) {
+        var targetEl = browser.ie ? event.target.parentNode : event.target,
+            $link = $(targetEl),
             data = $link.data('link');
+
         if (data) {
             scope.broadcast('linkclick', data);
         }
-        ev.preventDefault();
+        event.preventDefault();
     }
 
     //--------------------------------------------------------------------------
@@ -3814,7 +3907,11 @@ Crocodoc.addComponent('page-links', function (scope) {
         init: function (el, links) {
             $el = $(el);
             this.createLinks(links);
-            $el.on('click', '.'+CSS_CLASS_PAGE_LINK, handleClick);
+            if (!browser.ie) {
+                // @NOTE: event handlers are individually bound in IE, because
+                // the ctrl+click workaround fails when using event delegation
+                $el.on('click', '.' + CSS_CLASS_PAGE_LINK, handleClick);
+            }
         },
 
         /**
@@ -3822,7 +3919,10 @@ Crocodoc.addComponent('page-links', function (scope) {
          * @returns {void}
          */
         destroy: function () {
+            // @NOTE: individual click event handlers needed for IE are
+            // implicitly removed by jQuery when we empty the links container
             $el.empty().off('click');
+            $el = browser = null;
         },
 
         /**
@@ -5151,6 +5251,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     var DOCUMENT_100_PERCENT_WIDTH = 1024;
 
     var util = scope.getUtility('common'),
+        urlUtil = scope.getUtility('url'),
         ajax = scope.getUtility('ajax'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support');
@@ -5354,7 +5455,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             cssSrc,
             start = config.pageStart - 1,
             end = config.pageEnd,
-            url = util.makeAbsolute(config.url),
+            url = urlUtil.makeAbsolute(config.url),
             status = config.conversionIsComplete ? Crocodoc.PAGE_STATUS_NOT_LOADED : Crocodoc.PAGE_STATUS_CONVERTING,
             links = sortPageLinks();
 
@@ -5722,7 +5823,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {void}
          */
         loadAssets: function () {
-            var absolutePath = util.makeAbsolute(config.url),
+            var absolutePath = urlUtil.makeAbsolute(config.url),
                 stylesheetURL = absolutePath + config.template.css,
                 metadataURL = absolutePath + config.template.json,
                 $loadStylesheetPromise,
