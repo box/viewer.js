@@ -66,13 +66,6 @@ QUnit.cases([
     deepEqual(this.util.constrainRange(params.low, params.high, params.max), params.result);
 });
 
-test('makeAbsolute() should return an absolute href when called', function () {
-    var path = '/hello/world',
-        origin = location.protocol + '//' + location.host;
-
-    equal(this.util.makeAbsolute(path), origin + path);
-});
-
 test('throttle() should return a function that calls the provided function only as often as requested when called', function () {
     var wait = 100,
         clock = sinon.useFakeTimers(),

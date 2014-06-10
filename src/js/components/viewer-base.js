@@ -59,6 +59,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     var DOCUMENT_100_PERCENT_WIDTH = 1024;
 
     var util = scope.getUtility('common'),
+        urlUtil = scope.getUtility('url'),
         ajax = scope.getUtility('ajax'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support');
@@ -262,7 +263,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             cssSrc,
             start = config.pageStart - 1,
             end = config.pageEnd,
-            url = util.makeAbsolute(config.url),
+            url = urlUtil.makeAbsolute(config.url),
             status = config.conversionIsComplete ? Crocodoc.PAGE_STATUS_NOT_LOADED : Crocodoc.PAGE_STATUS_CONVERTING,
             links = sortPageLinks();
 
@@ -630,7 +631,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {void}
          */
         loadAssets: function () {
-            var absolutePath = util.makeAbsolute(config.url),
+            var absolutePath = urlUtil.makeAbsolute(config.url),
                 stylesheetURL = absolutePath + config.template.css,
                 metadataURL = absolutePath + config.template.json,
                 $loadStylesheetPromise,

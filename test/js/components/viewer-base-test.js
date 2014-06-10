@@ -46,13 +46,15 @@ module('Component - viewer-base', {
         this.utilities = {
             common: {
                 insertCSS: function () { return { sheet: {} }; },
-                makeAbsolute: function () {},
                 getSelectedNode: function () {},
                 isFn: sinon.stub().returns(true),
                 extend: $.extend,
                 clamp: sinon.stub().returnsArg(0),
                 template: sinon.stub().returnsArg(0),
                 calculatePtSize: sinon.stub().returns(1.33)
+            },
+            url: {
+                makeAbsolute: function () {},
             },
             ajax: {
                 request: function () {}
@@ -78,7 +80,7 @@ module('Component - viewer-base', {
 
 test('loadAssets() should make an AJAX request when config.url is set', function () {
     var spy = this.spy(this.utilities.ajax, 'request');
-    this.stub(this.utilities.common, 'makeAbsolute').returnsArg(0);
+    this.stub(this.utilities.url, 'makeAbsolute').returnsArg(0);
 
     this.component.init();
     this.component.loadAssets();

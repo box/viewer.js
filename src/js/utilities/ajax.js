@@ -7,7 +7,8 @@ Crocodoc.addUtility('ajax', function (framework) {
 
     'use strict';
 
-    var util = framework.getUtility('common');
+    var util = framework.getUtility('common'),
+        urlUtil = framework.getUtility('url');
 
     /**
      * Creates a request object to call the success/fail handlers on
@@ -53,6 +54,18 @@ Crocodoc.addUtility('ajax', function (framework) {
         }
     }
 
+    /**
+    * Returns true if a request made to a local file has a status equals zero (0)
+    * and if it has a response text
+    * @param   {string}  url The URL
+    * @param   {Object}  request The request object
+    */
+    function isRequestToLocalFileOk(url, request) {
+        return urlUtil.parse(url).protocol === 'file:' &&
+               request.status === 0 &&
+               request.responseText !== '';
+    }
+
     return {
         /**
          * Basic AJAX request
@@ -90,7 +103,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                 }
             }
 
-            if (util.isCrossDomain(url) && !('withCredentials' in req)) {
+            if (urlUtil.isCrossDomain(url) && !('withCredentials' in req)) {
                 if ('XDomainRequest' in window) {
                     req = new window.XDomainRequest();
                     try {
@@ -137,7 +150,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                             return;
                         }
 
-                        if (status === 200 || util.isRequestToLocalFileOk(url, req)) {
+                        if (status === 200 || isRequestToLocalFileOk(url, req)) {
                             ajaxSuccess();
                         } else {
                             ajaxFail();
