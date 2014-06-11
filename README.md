@@ -15,6 +15,7 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
     - [Viewer Methods](#viewer-methods)
     - [Event Handling](#event-handling)
     - [Setting the Layout Mode](#setting-the-layout-mode)
+    - [Realtime Page Streaming](#realtime-page-streaming)
     - [Plugins](#plugins)
 * [Browser Support](#browser-support)
 * [Contributing](#contributing)
@@ -319,6 +320,11 @@ The currently supported layouts are:
 NOTE: `.crocodoc-page` and `.crocodoc-page-inner` classes can be used to style pages, but there are some important restrictions:
 * `.crocodoc-page`: padding should be used to adjust page spacing (never use margin for this)
 * `.crocodoc-page`: background should be transparent, unless you want the background to also appear as a border (based on the padding size) - use `.crocodoc-page-inner` for changing the background of pages
+
+
+### Realtime Page Streaming
+
+The Box View API conversion pipeline is optimized to minimize time to view the first page of a document. This means that a session can be created and a document can be viewed as soon as page 1 (and some metadata) is finished converting. It is now possible to use viewer.js to view documents as soon as the first page is ready by using the [realtime plugin](plugins/realtime). This plugin makes a connection to the Box View API's realtime channel (a link to which is provided in the `urls` parameter of the session creation response), which streams updates about the conversion progress of a document.
 
 
 ### Plugins

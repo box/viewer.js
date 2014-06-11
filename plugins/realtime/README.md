@@ -31,7 +31,7 @@ var viewer = Crocodoc.createViewer('.viewer', {
     plugins: {
         // the Box View realtime URL received when requesting a session
         realtime: {
-            url: 'https://view-api.box.com/realtime/uuid'
+            url: 'https://view-api.box.com/sse/<uuid>'
         }
     }
 });
