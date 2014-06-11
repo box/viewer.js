@@ -15,10 +15,11 @@ Crocodoc.addDataProvider('page-img', function(scope) {
     return {
         /**
          * Retrieve the page image asset from the server
+         * @param {string} objectType The type of data being requested
          * @param {number} pageNum The page number for which to request the page image
          * @returns {$.Promise}    A promise with an additional abort() method that will abort the img request.
          */
-        get: function(pageNum) {
+        get: function(objectType, pageNum) {
             var img = this.getImage(),
                 retries = Crocodoc.ASSET_REQUEST_RETRIES,
                 loaded = false,

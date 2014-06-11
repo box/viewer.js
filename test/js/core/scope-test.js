@@ -170,7 +170,10 @@ test('getUtility() should call framework.getUtility() when called', function () 
 module('Framework - Scope - DataProviders', {
     setup: function () {
         this.framework = Crocodoc;
-        this.scope = new Crocodoc.Scope(this.framework);
+        this.config = {
+            dataProviders: {}
+        };
+        this.scope = new Crocodoc.Scope(this.config);
     },
     teardown: function () {
         this.scope.destroy();
@@ -204,6 +207,18 @@ test('get() should call the get() method on the return object from the dataProvi
     var getFunction = this.mock().once();
     this.framework.addDataProvider(dataProviderName, function(){return {get:getFunction};});
     this.scope.get(dataProviderName, 'testdatadoesnotmatter');
+});
+
+test('get() should call get() on the dp specified in config.dataProviders with the original dp name when called', function() {
+    var dataProviderName = 'page-svg-for-scope-test',
+        key = 'testdatadoesnotmatter',
+        getFunction = this.mock().withArgs(dataProviderName, key).once();
+    this.config.dataProviders = {
+        'page-svg-for-scope-test': 'page-svg-for-scope-test-override'
+    };
+    this.framework.addDataProvider(dataProviderName, function(){return {get:getFunction};});
+    this.framework.addDataProvider(this.config.dataProviders[dataProviderName], function(){return {get:getFunction};});
+    this.scope.get(dataProviderName, key);
 });
 
 test('get() should return a rejected promise when called with a data model for which there is no provider', function() {

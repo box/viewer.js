@@ -261,6 +261,15 @@
             json: 'info.json'
         },
 
+        // default data-providers
+        dataProviders: {
+            metadata: 'metadata',
+            stylesheet: 'stylesheet',
+            'page-svg': 'page-svg',
+            'page-text': 'page-text',
+            'page-img': 'page-img'
+        },
+
         // page to start/end on (pages outside this range will not be shown)
         pageStart: null,
         pageEnd: null,

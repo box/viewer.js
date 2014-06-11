@@ -51,7 +51,7 @@ test('get() should return a $.Promise with an abort() function', function() {
     };
     this.stub(this.dataProvider, 'getImage').returns(img);
     this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    propEqual(this.dataProvider.get(1), $.Deferred().promise({abort:function(){}}));
+    propEqual(this.dataProvider.get('page-img', 1), $.Deferred().promise({abort:function(){}}));
 });
 
 test('abort() should abort the image load when called on the returned promise', function() {
@@ -61,7 +61,7 @@ test('abort() should abort the image load when called on the returned promise', 
     };
     this.stub(this.dataProvider, 'getImage').returns(img);
 
-    var promise = this.dataProvider.get(2);
+    var promise = this.dataProvider.get('page-img', 2);
     promise.abort();
     ok(img.removeAttribute.calledWith('src'), 'image load should be aborted');
 });
@@ -78,7 +78,7 @@ test('get() should return a promise that is resolved with the img object when th
     };
     this.stub(this.dataProvider, 'getImage').returns(img);
 
-    var promise = this.dataProvider.get(2);
+    var promise = this.dataProvider.get('page-img', 2);
 
     img.onload();
     promise.done(function (i) {
@@ -98,7 +98,7 @@ test('get() should retry Crocodoc.ASSET_REQUEST_RETRIES times when the image fai
     var loadSpy = this.spy(img, 'setAttribute').withArgs('src', url);
     var abortSpy = this.spy(img, 'removeAttribute').withArgs('src');
 
-    var promise = this.dataProvider.get(2);
+    var promise = this.dataProvider.get('page-img', 2);
 
     for (var i = 0; i < Crocodoc.ASSET_REQUEST_RETRIES; ++i) {
         img.onerror();
@@ -114,7 +114,7 @@ test('get() should return a promise that is rejected with the error object when 
     };
     this.stub(this.dataProvider, 'getImage').returns(img);
 
-    var promise = this.dataProvider.get(2);
+    var promise = this.dataProvider.get('page-img', 2);
 
     img.onerror();
     img.onerror();

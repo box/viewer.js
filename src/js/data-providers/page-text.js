@@ -40,10 +40,11 @@ Crocodoc.addDataProvider('page-text', function(scope) {
     return {
         /**
          * Retrieve a text asset from the server
+         * @param {string} objectType The type of data being requested
          * @param {number} pageNum The page number for which to request the text HTML
          * @returns {$.Promise}    A promise with an additional abort() method that will abort the XHR request.
          */
-        get: function(pageNum) {
+        get: function(objectType, pageNum) {
             var url = this.getURL(pageNum),
                 $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
 
