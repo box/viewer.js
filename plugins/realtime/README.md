@@ -44,19 +44,26 @@ The following configuration options are available:
 
 **url**
 
-The URL to the Box View realtime endpoint associated with the viewing session.
+The URL to the Box View realtime endpoint associated with the viewing session. This would be available in the View API session response.
 
 
 ## Events
 
 The following events will be fired on the viewer object:
 
+* `realtimeupdate` - fired when a new realtime update arrives. Event properties:
+    * `page` - the page that has become available
 * `realtimeerror` - fired when the an error occurs with realtime. Event properties:
     * `error` - the error details
 * `realtimecomplete` - fired when the conversion is complete (we have been notified of all pages being available)
 
 Example:
 ```js
+viewer.on('realtimeupdate', function (event) {
+    // some magic function that updates a conversion progress bar
+    updateConversionProgress(event.data.page);
+});
+
 viewer.on('realtimecomplete', function () {
     alert('the document is finished converting!');
 });

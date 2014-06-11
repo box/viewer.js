@@ -61,48 +61,7 @@ Crocodoc.addPlugin('realtime', function (scope) {
     var util = scope.getUtility('common'),
         viewerConfig = scope.getConfig(),
         viewerAPI = viewerConfig.api,
-        realtime,
-        ready = false,
-        messageQueue = [];
-
-    /**
-     * Broadcast a message or queue it until the viewer is ready
-     * @param   {string} name The name of the message
-     * @param   {*} data The message data
-     * @returns {void}
-     * @private
-     */
-    function broadcastMessageWhenReady(name, data) {
-        if (ready) {
-            scope.broadcast(name, data);
-        } else {
-            messageQueue.push({ name: name, data: data });
-        }
-    }
-
-    /**
-     * Broadcasts any (pageavailable) messages that were queued up
-     * before the viewer was ready
-     * @returns {void}
-     * @private
-     */
-    function broadcastQueuedMessages() {
-        var message;
-        while (messageQueue.length) {
-            message = messageQueue.shift();
-            scope.broadcast(message.name, message.data);
-        }
-    }
-
-    /**
-     * Handle ready message from the viewer
-     * @returns {void}
-     * @private
-     */
-    function handleReadyMessage() {
-        ready = true;
-        broadcastQueuedMessages();
-    }
+        realtime;
 
     /**
      * Notify the viewer that new pages are available for loading
@@ -114,7 +73,8 @@ Crocodoc.addPlugin('realtime', function (scope) {
         var i, page;
         for (i = 0; i < pages.length; ++i) {
             page = pages[i];
-            broadcastMessageWhenReady('pageavailable', { page: page });
+            viewerAPI.fire('realtimeupdate', { page: page });
+            scope.broadcast('pageavailable', { page: page });
         }
     }
 
@@ -134,7 +94,7 @@ Crocodoc.addPlugin('realtime', function (scope) {
      * @returns {void}
      * @private
      */
-    function handleErrorEvent(event) {
+    function handleFailedEvent(event) {
         var data;
         try {
             data = util.parseJSON(event.data);
@@ -156,7 +116,7 @@ Crocodoc.addPlugin('realtime', function (scope) {
     function handleFinishedEvent() {
         // @NOTE: we can't use upto: numpages here, because we might not know
         // how many pages there are yet
-        broadcastMessageWhenReady('pageavailable', { all: true });
+        scope.broadcast('pageavailable', { all: true });
         viewerAPI.fire('realtimecomplete');
         realtime.destroy();
     }
@@ -171,27 +131,15 @@ Crocodoc.addPlugin('realtime', function (scope) {
         if (scope.getUtility('support').svg) {
             realtime.on('pageavailable.svg', handlePageAvailableEvent);
             realtime.on('finished.svg', handleFinishedEvent);
-            realtime.on('failed.svg', handleErrorEvent);
+            realtime.on('failed.svg', handleFailedEvent);
         } else {
             realtime.on('pageavailable.png', handlePageAvailableEvent);
             realtime.on('finished.png', handleFinishedEvent);
-            realtime.on('failed.png', handleErrorEvent);
+            realtime.on('failed.png', handleFailedEvent);
         }
     }
 
     return {
-        messages: ['ready'],
-
-        /**
-         * Handle messages from the viewer scope
-         * @returns {void}
-         */
-        onmessage: function () {
-            // @NOTE: we're only listening for one message type, so we don't
-            // need to check the name
-            handleReadyMessage();
-        },
-
         /**
          * Initialize the realtime plugin
          * @param   {Object} config     The config object
@@ -202,8 +150,6 @@ Crocodoc.addPlugin('realtime', function (scope) {
             var url = config.url;
             if (url) {
                 realtime = new Crocodoc.Realtime(url);
-
-                realtime.on('error', handleErrorEvent);
 
                 // force the viewer to think conversion is not complete
                 // @TODO: ideally this wouldn't have to make an extra trip to
@@ -224,7 +170,7 @@ Crocodoc.addPlugin('realtime', function (scope) {
                 realtime.destroy();
                 realtime = null;
             }
-            util = viewerAPI = viewerConfig = messageQueue = null;
+            util = viewerAPI = viewerConfig;
         }
     };
 });

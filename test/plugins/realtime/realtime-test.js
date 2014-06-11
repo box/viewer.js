@@ -67,10 +67,6 @@ test('pageavailable message should be broadcast with the correct pages when page
 
     this.fakeRealtime.fire('pageavailable.svg', '{ "pages": [1,2] }');
 
-    ok(spy.notCalled, 'pageavailable should not be broadcast');
-
-    this.plugin.onmessage('ready');
-
     ok(spy.calledWith('pageavailable', sinon.match({ page: 1 })), 'pageavailable should be broadcast');
     ok(spy.calledWith('pageavailable', sinon.match({ page: 2 })), 'pageavailable should be broadcast');
 
@@ -87,22 +83,19 @@ test('pageavailable message should be broadcast with all pages when conversion i
 
     this.fakeRealtime.fire('finished.svg');
 
-    ok(spy.notCalled, 'pageavailable should not be broadcast');
-
-    this.plugin.onmessage('ready');
-
     ok(spy.calledWith('pageavailable', sinon.match({ all: true })), 'pageavailable should be broadcast');
 });
 
-test('realtimeerror event should be fired when there is an error', function () {
+test('realtimeupdate event should be fired when a new page becomes available', function () {
     var spy = this.spy(this.viewerAPI, 'fire'),
-        error = '{ "error": "the error" }';
+        page = 3,
+        data = '{ "pages": ['+page+'] }';
     this.plugin.init({
         url: 'http://some.url/'
     });
 
-    this.fakeRealtime.fire('error', error);
-    ok(spy.calledWith('realtimeerror', sinon.match({ error: 'the error' })), 'realtimeerror should be fired');
+    this.fakeRealtime.fire('pageavailable.svg', data);
+    ok(spy.calledWith('realtimeupdate', sinon.match({ page: page })), 'realtimeupdate should be fired');
 });
 
 test('realtimeerror event should be fired when the document fails to convert', function () {
@@ -112,8 +105,8 @@ test('realtimeerror event should be fired when the document fails to convert', f
         url: 'http://some.url/'
     });
 
-    this.fakeRealtime.fire('failed.svg');
-    ok(spy.calledWith('realtimeerror', sinon.match.object), 'realtimeerror should be fired');
+    this.fakeRealtime.fire('failed.svg', error);
+    ok(spy.calledWith('realtimeerror', sinon.match({ error: 'the error' })), 'realtimeerror should be fired');
 });
 
 test('init should subscribe to .png channels when svg is not supported', function () {

@@ -23,7 +23,8 @@ Crocodoc.getScopeForTest = function (testContext) {
         },
         destroyComponent: function () {},
         broadcast: function () {},
-        destroy: function () {}
+        destroy: function () {},
+        ready: function () {}
     };
 };
 

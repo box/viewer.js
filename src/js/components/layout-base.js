@@ -105,7 +105,11 @@ Crocodoc.addComponent('layout-base', function (scope) {
     //--------------------------------------------------------------------------
 
     return {
-        messages: ['resize', 'scroll', 'scrollend'],
+        messages: [
+            'resize',
+            'scroll',
+            'scrollend'
+        ],
 
         /**
          * Handle framework messages
