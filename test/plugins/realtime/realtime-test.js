@@ -99,14 +99,33 @@ test('realtimeupdate event should be fired when a new page becomes available', f
 });
 
 test('realtimeerror event should be fired when the document fails to convert', function () {
-    var spy = this.spy(this.viewerAPI, 'fire'),
-        error = '{ "error": "the error" }';
+    var spy = this.spy(this.viewerAPI, 'fire');
     this.plugin.init({
         url: 'http://some.url/'
     });
 
-    this.fakeRealtime.fire('failed.svg', error);
+    this.fakeRealtime.fire('failed.svg');
+    ok(spy.calledWith('realtimeerror'), 'realtimeerror should be fired');
+});
+
+test('realtimeerror event should be fired when a realtime error occurs', function () {
+    var spy = this.spy(this.viewerAPI, 'fire'),
+        error = '{ "message": "the error" }';
+    this.plugin.init({
+        url: 'http://some.url/'
+    });
+
+    this.fakeRealtime.fire('error', error);
     ok(spy.calledWith('realtimeerror', sinon.match({ error: 'the error' })), 'realtimeerror should be fired');
+});
+
+test('Realtime connection should be destroyed when a realtime error occurs and the event data has close:true', function () {
+    var spy = this.spy(this.realtime, 'destroy');
+    this.plugin.init({
+        url: 'http://some.url/'
+    });
+    this.fakeRealtime.fire('error', '{ "message": "foo", "close": true }');
+    ok(spy.called, 'realtime should be destroyed');
 });
 
 test('init should subscribe to .png channels when svg is not supported', function () {

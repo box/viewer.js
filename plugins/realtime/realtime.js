@@ -64,6 +64,20 @@ Crocodoc.addPlugin('realtime', function (scope) {
         realtime;
 
     /**
+     * Try to parse event data as JSON, else return the original data
+     * @param   {Event} event The realtime event
+     * @returns {*}       The parsed data
+     * @private
+     */
+    function getData(event) {
+        try {
+            return util.parseJSON(event.data);
+        } catch (e) {
+            return event.data;
+        }
+    }
+
+    /**
      * Notify the viewer that new pages are available for loading
      * @param   {Array} pages Array of integer page numbers that are available
      * @returns {void}
@@ -85,7 +99,8 @@ Crocodoc.addPlugin('realtime', function (scope) {
      * @private
      */
     function handlePageAvailableEvent(event) {
-        updateAvailablePages(util.parseJSON(event.data).pages);
+        var data = getData(event);
+        updateAvailablePages(data.pages);
     }
 
     /**
@@ -95,15 +110,8 @@ Crocodoc.addPlugin('realtime', function (scope) {
      * @private
      */
     function handleFailedEvent(event) {
-        var data;
-        try {
-            data = util.parseJSON(event.data);
-        } catch (e) {
-            data = {
-                error: event.data
-            };
-        }
-        viewerAPI.fire('realtimeerror', { error: data.error || 'unspecified error' });
+        var data = getData(event);
+        viewerAPI.fire('realtimeerror', { error: data });
         realtime.destroy();
     }
 
@@ -122,6 +130,22 @@ Crocodoc.addPlugin('realtime', function (scope) {
     }
 
     /**
+     * Handle eventSource errors
+     * @param   {Event} event The event object
+     * @returns {void}
+     * @private
+     */
+    function handleErrorEvent(event) {
+        var data = getData(event);
+        if (data) {
+            viewerAPI.fire('realtimeerror', { error: data.message });
+            if (data.close) {
+                realtime.destroy();
+            }
+        }
+    }
+
+    /**
      * Registers event handlers for page streaming specific realtime events
      * @returns {void}
      * @private
@@ -137,6 +161,8 @@ Crocodoc.addPlugin('realtime', function (scope) {
             realtime.on('finished.png', handleFinishedEvent);
             realtime.on('failed.png', handleFailedEvent);
         }
+
+        realtime.on('error', handleErrorEvent);
     }
 
     return {
@@ -170,7 +196,7 @@ Crocodoc.addPlugin('realtime', function (scope) {
                 realtime.destroy();
                 realtime = null;
             }
-            util = viewerAPI = viewerConfig;
+            util = viewerAPI = viewerConfig = null;
         }
     };
 });
