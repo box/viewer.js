@@ -6,6 +6,7 @@ Crocodoc.addDataProvider('metadata', function(scope) {
     'use strict';
 
     var ajax = scope.getUtility('ajax'),
+        util = scope.getUtility('common'),
         config = scope.getConfig();
 
     /**
@@ -15,9 +16,7 @@ Crocodoc.addDataProvider('metadata', function(scope) {
      * @private
      */
     function processJSONContent(json) {
-        var metadata = $.parseJSON(json);
-
-        return metadata;
+        return util.parseJSON(json);
     }
 
     //--------------------------------------------------------------------------

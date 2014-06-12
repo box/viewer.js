@@ -10,6 +10,9 @@ module('Data Provider: metadata', {
         this.utilities = {
             ajax: {
                 fetch: function () {}
+            },
+            common: {
+                parseJSON: $.parseJSON
             }
         };
         this.config = {
