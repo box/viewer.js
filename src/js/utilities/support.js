@@ -59,6 +59,8 @@ Crocodoc.addUtility('support', function () {
     (function() {
         var lastTime = 0;
         var vendors = ['ms', 'moz', 'webkit', 'o'];
+        raf = window.requestAnimationFrame;
+        caf = window.cancelAnimationFrame;
         for (var x = 0; x < vendors.length && !raf; ++x) {
             raf = window[vendors[x] + 'RequestAnimationFrame'];
             caf = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
@@ -72,8 +74,6 @@ Crocodoc.addUtility('support', function () {
                 lastTime = currTime + timeToCall;
                 return id;
             };
-        }
-        if (!caf) {
             caf = function(id) {
                 clearTimeout(id);
             };
