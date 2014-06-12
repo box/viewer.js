@@ -13,9 +13,59 @@
      */
     Crocodoc.Scope = function Scope(config) {
 
+        //----------------------------------------------------------------------
+        // Private
+        //----------------------------------------------------------------------
+
         var util = Crocodoc.getUtility('common');
 
-        var instances = [];
+        var instances = [],
+            messageQueue = [],
+            ready = false;
+
+        /**
+         * Broadcast a message to all components in this scope that have registered
+         * a listener for the named message type
+         * @param  {string} messageName The message name
+         * @param  {any} data The message data
+         * @returns {void}
+         * @private
+         */
+        function broadcast(messageName, data) {
+            var i, len, instance, messages;
+            for (i = 0, len = instances.length; i < len; ++i) {
+                instance = instances[i];
+                if (!instance) {
+                    continue;
+                }
+                messages = instance.messages || [];
+
+                if (util.inArray(messageName, messages) !== -1) {
+                    if (typeof instance.onmessage === 'function') {
+                        instance.onmessage.call(instance, messageName, data);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Broadcasts any (pageavailable) messages that were queued up
+         * before the viewer was ready
+         * @returns {void}
+         * @private
+         */
+        function broadcastQueuedMessages() {
+            var message;
+            while (messageQueue.length) {
+                message = messageQueue.shift();
+                broadcast(message.name, message.data);
+            }
+            messageQueue = null;
+        }
+
+        //----------------------------------------------------------------------
+        // Public
+        //----------------------------------------------------------------------
 
         /**
          * Create and return an instance of the named component,
@@ -68,26 +118,16 @@
         };
 
         /**
-         * Broadcast a message to all components in this scope that have registered
-         * a listener for the named message type
-         * @param  {string} messageName The message name
-         * @param  {any} data The message data
+         * Broadcast a message or queue it until the viewer is ready
+         * @param   {string} name The name of the message
+         * @param   {*} data The message data
          * @returns {void}
          */
         this.broadcast = function (messageName, data) {
-            var i, len, instance, messages;
-            for (i = 0, len = instances.length; i < len; ++i) {
-                instance = instances[i];
-                if (!instance) {
-                    continue;
-                }
-                messages = instance.messages || [];
-
-                if (util.inArray(messageName, messages) !== -1) {
-                    if (typeof instance.onmessage === 'function') {
-                        instance.onmessage.call(instance, messageName, data);
-                    }
-                }
+            if (ready) {
+                broadcast(messageName, data);
+            } else {
+                messageQueue.push({ name: messageName, data: data });
             }
         };
 
@@ -106,6 +146,17 @@
          */
         this.getConfig = function () {
             return config;
+        };
+
+        /**
+         * Tell the scope that the viewer is ready and broadcast queued messages
+         * @returns {void}
+         */
+        this.ready = function () {
+            if (!ready) {
+                ready = true;
+                broadcastQueuedMessages();
+            }
         };
     };
 })();

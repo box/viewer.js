@@ -49,6 +49,8 @@
     "jquery": "^1.11.1",
     "qunitjs": "^1.14.0",
     "qunit-parameterize": "^0.4.0",
-    "blanket": "^1.1.6"
+    "blanket": "^1.1.6",
+    "event-source-polyfill": "0.0.1",
+    "grunt-parallel": "^0.3.1"
   }
 }

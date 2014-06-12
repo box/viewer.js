@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Include the appropriate CSS and JS files: -->
+    <link rel="stylesheet" href="../../build/crocodoc.viewer.css" />
+    <script src="../../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../../build/crocodoc.viewer.js"></script>
+    <script src="../../node_modules/event-source-polyfill/eventsource.js"></script>
+    <script src="../../plugins/realtime/realtime.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: #fafafa;
+        }
+        .viewer {
+            height: 100%;
+        }
+        /* Add a border and box-shadow to each page */
+        .crocodoc-page-inner {
+            border: 1px solid #ccc;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* Converting Indicator */
+        .conversion-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            visibility: hidden;
+            opacity: 0;
+            -webkit-transition: visibility 0s, opacity 0.5s;
+            -webkit-transition-delay: 0.5s, 0s;
+            transition: visibility 0s, opacity 0.5s;
+            transition-delay: 0.5s, 0s;
+        }
+        .converting .conversion-progress {
+            opacity: 1;
+            visibility: visible;
+        }
+        .conversion-progress-bar {
+            height: 2px;
+            box-shadow: 0 0 3px #1a74ba;
+            background: #2a88d0;
+            width: 0;
+            -webkit-transition: width 0.3s;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body class="converting">
+    <div class="viewer"></div>
+    <div class="conversion-progress"><div class="conversion-progress-bar"></div></div>
+    <script>
+        // replace this with any valid View API assets link
+        var assetsURL = 'https://view-api.box.com/1/sessions/5a34f299b35947b5ac1e0b4d83553392/assets';
+
+        // Ask the fake SSE server to create a stream for us
+        Crocodoc.getUtility('ajax').request('http://localhost:9001/create?url='+encodeURIComponent(assetsURL), {
+            success: function () {
+
+                var sseURL = 'http://localhost:9001' + this.responseText;
+
+                // Create a viewer instance on the body element
+                var viewer = Crocodoc.createViewer('.viewer', {
+                    // Specify where the viewer should find the assets for this doc
+                    url: assetsURL,
+
+                    plugins: {
+                        // Load the realtime plugin
+                        realtime: {
+                            // Specify a realtime SSE url (this would be available in the View API session response)
+                            url: sseURL
+                        }
+                    }
+                });
+                // Load the assets and render the document!
+                viewer.load();
+
+                var $progress = $('.conversion-progress-bar');
+                viewer.on('ready', function (event) {
+                    var numPages = event.data.numPages,
+                        lastHighest = 0;
+
+                    viewer.on('realtimeupdate', function (event) {
+                        var page = event.data.page;
+                        if (page > lastHighest) {
+                            $progress.css('width', (100 * page / numPages) + '%');
+                            lastHighest = page;
+                        }
+                    });
+                });
+
+                viewer.on('realtimecomplete', function () {
+                    $progress.css('width', '100%');
+                    setTimeout(function () {
+                        $('body').removeClass('converting');
+                    }, 1000);
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>

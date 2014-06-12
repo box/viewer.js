@@ -33,7 +33,12 @@ Crocodoc.addComponent('page', function (scope) {
     return {
         errorCount: 0,
 
-        messages: ['pageavailable', 'textenabledchange', 'pagefocus', 'zoom'],
+        messages: [
+            'pageavailable',
+            'pagefocus',
+            'textenabledchange',
+            'zoom'
+        ],
 
         /**
          * Handle framework messages
@@ -44,7 +49,7 @@ Crocodoc.addComponent('page', function (scope) {
         onmessage: function (name, data) {
             switch (name) {
                 case 'pageavailable':
-                    if (data.page === index + 1 || data.upto > index) {
+                    if (data.page === index + 1 || data.upto > index || data.all === true) {
                         if (status === Crocodoc.PAGE_STATUS_CONVERTING) {
                             status = Crocodoc.PAGE_STATUS_NOT_LOADED;
                         }

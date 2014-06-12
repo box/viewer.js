@@ -82,7 +82,9 @@ Crocodoc.addComponent('resizer', function (scope) {
 
     return {
 
-        messages: ['layoutchange'],
+        messages: [
+            'layoutchange'
+        ],
 
         /**
          * Handle framework messages

@@ -431,6 +431,9 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          */
         handlePageAvailable: function (data) {
             var i;
+            if (data.all === true) {
+                data.upto = numPages;
+            }
             if (data.page) {
                 this.queuePageToLoad(data.page - 1);
             } else if (data.upto) {

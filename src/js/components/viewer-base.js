@@ -246,6 +246,8 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             page: config.page || 1,
             numPages: config.numPages
         });
+
+        scope.ready();
     }
 
     /**

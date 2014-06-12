@@ -1,7 +1,8 @@
 module('Famework - Scope', {
     setup: function () {
         this.framework = Crocodoc;
-        this.scope = new Crocodoc.Scope(this.framework);
+        this.config = {};
+        this.scope = new Crocodoc.Scope(this.config);
     },
     teardown: function () {
         this.scope.destroy();
@@ -76,10 +77,62 @@ test('broadcast() should only call the onmessage() method on component instance 
     componentMock = this.mock(component);
     componentMock.expects('onmessage')
         .withArgs('test', data);
+
+    this.scope.ready();
+
     this.scope.broadcast('test', data);
 
     componentMock.expects('onmessage').never();
     this.scope.broadcast('test 2');
+});
+
+test('broadcast() should not broadcast messages before the viewer is ready', function () {
+    var component, componentMock,
+        data = { some: 'data' },
+        componentName = 'component 1',
+        testComponent = function () {
+            return {
+                messages: ['test'],
+                onmessage: function () {}
+            };
+        };
+
+    this.framework.addComponent(componentName, testComponent);
+    component = this.scope.createComponent(componentName);
+    componentMock = this.mock(component);
+    componentMock.expects('onmessage')
+        .never();
+
+    this.scope.broadcast('test', data);
+});
+
+test('ready() should broadcast queued messages when called', function () {
+    var component, spy,
+        data = { some: 'data' },
+        componentName = 'component 1',
+        testComponent = function () {
+            return {
+                messages: ['test'],
+                onmessage: function () {}
+            };
+        };
+
+    this.framework.addComponent(componentName, testComponent);
+    component = this.scope.createComponent(componentName);
+    spy = this.spy(component, 'onmessage');
+
+    this.scope.broadcast('test', data);
+    this.scope.broadcast('test', data);
+
+    ok(!spy.called, 'should not be broadcast yet');
+
+    this.scope.ready();
+
+    equal(spy.callCount, 2, 'queued messages should be broadcast');
+});
+
+test('getConfig() should return the config object when called', function () {
+    equal(this.scope.getConfig(), this.config, 'config should be returned');
 });
 
 test('getUtility() should call framework.getUtility() when called', function () {

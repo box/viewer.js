@@ -15,6 +15,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-jsdoc');
     grunt.loadNpmTasks('grunt-image-embed');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-parallel');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -127,7 +128,8 @@ module.exports = function (grunt) {
             files: ['Gruntfile.js', 'src/js/**/*.js', 'test/js/**/*.js', 'test/plugins/**/*.js']
         },
         qunit: {
-            files: ['test/index.html', 'test/plugins/index.html']
+            viewer: ['test/index.html'],
+            plugins: ['test/plugins/index.html']
         },
         jsdoc : {
             dist : {
@@ -158,6 +160,16 @@ module.exports = function (grunt) {
                     filter: 'isFile'
                 }]
             }
+        },
+        // this task allows us to run the connect and realtime servers in parallel
+        parallel: {
+            examples: {
+                options: { grunt: true },
+                tasks: [
+                    'connect:development',
+                    'realtime-example'
+                ]
+            }
         }
     });
 
@@ -169,10 +181,16 @@ module.exports = function (grunt) {
         defaultTasks.push('concat:css-no-logo');
     }
 
+    // task to run the realtime example sse server
+    grunt.registerTask('realtime-example', function () {
+        this.async();
+        require('./examples/realtime/server')(9001);
+    });
+
     grunt.registerTask('test', ['jshint', 'qunit']);
     grunt.registerTask('doc', ['test', 'jsdoc']);
     grunt.registerTask('default', defaultTasks);
     grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
-    grunt.registerTask('serve', ['default', 'configureRewriteRules', 'connect:development']);
+    grunt.registerTask('serve', ['default', 'configureRewriteRules', 'parallel:examples']);
     grunt.registerTask('release', ['build', 'copy']);
 };
