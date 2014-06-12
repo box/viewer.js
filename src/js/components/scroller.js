@@ -1,7 +1,7 @@
 /**
  * @fileoverview Scroller component used to watch an element and fire
  *               events `scrollstart`, `scroll`, and `scrollend`
- * @author clakenen
+ * @author lakenen
  */
 
 /*global setTimeout, clearTimeout */

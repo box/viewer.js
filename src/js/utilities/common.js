@@ -1,6 +1,6 @@
 /**
  * @fileoverview common utility definition
- * @author clakenen
+ * @author lakenen
  */
 
 /**

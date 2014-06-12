@@ -1,6 +1,6 @@
 /**
  * @fileoverview layout-base component definition
- * @author clakenen
+ * @author lakenen
  */
 
 /**

@@ -1,6 +1,6 @@
 /**
  * @fileoverview lazy-loader component definition
- * @author clakenen
+ * @author lakenen
  */
 
 /*global setTimeout, clearTimeout*/

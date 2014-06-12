@@ -1,6 +1,6 @@
 /**
  * @fileoverview Support utility for feature detection / browser support
- * @author clakenen
+ * @author lakenen
  */
 
 Crocodoc.addUtility('support', function () {

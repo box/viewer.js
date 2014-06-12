@@ -3,7 +3,7 @@
  * throughout the framework whenever custom events are used. It is intended to
  * be inherited from, either through the prototype or via mixin.
  * @author nzakas
- * @author clakenen
+ * @author lakenen
  */
 
 (function () {

@@ -1,6 +1,6 @@
 /**
  * @fileoverview Base namespaces for Crocodoc JavaScript.
- * @author clakenen
+ * @author lakenen
  */
 
 /*global Crocodoc:true*/

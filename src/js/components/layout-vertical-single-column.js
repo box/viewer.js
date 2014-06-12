@@ -1,6 +1,6 @@
 /**
  * @fileoverview layout-vertical-single-column component definition
- * @author clakenen
+ * @author lakenen
  */
 
 /**

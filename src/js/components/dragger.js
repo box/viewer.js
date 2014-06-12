@@ -1,6 +1,6 @@
 /**
  * @fileoverview Dragger component used to click-to-drag the document when enabled
- * @author clakenen
+ * @author lakenen
  */
 
 /**

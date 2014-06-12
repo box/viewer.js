@@ -1,6 +1,6 @@
 /**
  * @fileoverview ajax utility definition
- * @author clakenen
+ * @author lakenen
  */
 
 Crocodoc.addUtility('ajax', function (framework) {

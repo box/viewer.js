@@ -1,6 +1,6 @@
 /**
  * @fileoverview page-svg component
- * @author clakenen
+ * @author lakenen
  */
 
 /**

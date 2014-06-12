@@ -1,7 +1,7 @@
 /**
  * @fileoverview Resizer component used to watch an element and fire
  * an event when the object's width or height changes
- * @author clakenen
+ * @author lakenen
  */
 
 /**

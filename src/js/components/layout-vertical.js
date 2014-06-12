@@ -1,6 +1,6 @@
 /**
  * @fileoverview layout-vertical component definition
- * @author clakenen
+ * @author lakenen
  */
 
 /**

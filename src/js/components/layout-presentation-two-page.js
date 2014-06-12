@@ -1,6 +1,6 @@
 /**
  * @fileoverview layout-presentation-two-page component definition
- * @author clakenen
+ * @author lakenen
  */
 
 /**

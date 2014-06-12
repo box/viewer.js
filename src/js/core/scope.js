@@ -1,6 +1,6 @@
 /**
  * @fileoverview Scope class definition
- * @author clakenen
+ * @author lakenen
  */
 
  (function () {

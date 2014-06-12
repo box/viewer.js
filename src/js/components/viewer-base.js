@@ -1,6 +1,6 @@
 /**
  * @fileoverview viewer-base component
- * @author clakenen
+ * @author lakenen
  */
 
 Crocodoc.addComponent('viewer-base', function (scope) {

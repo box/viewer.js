@@ -1,6 +1,6 @@
 /**
  * @fileoverview Crocodoc.Viewer definition
- * @author clakenen
+ * @author lakenen
  */
 
 /**

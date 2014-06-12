@@ -1,6 +1,6 @@
 /**
  * @fileoverview page-text component
- * @author clakenen
+ * @author lakenen
  */
 
 /**

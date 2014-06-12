@@ -1,6 +1,6 @@
 /**
  * @fileoverview layout-horizontal component definition
- * @author clakenen
+ * @author lakenen
  */
 
 /**
