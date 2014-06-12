@@ -90,6 +90,8 @@ Crocodoc.addComponent('page-links', function (scope) {
          * Initialize the page-links component
          * @param  {Array} links Links configuration array
          * @returns {void}
+         * @TODO (possible): make a links data-provider instead of passing
+         * them in as an argument?
          */
         init: function (el, links) {
             $el = $(el);

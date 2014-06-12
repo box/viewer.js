@@ -170,45 +170,6 @@ test('unloadUnnecessaryPages() should unload pages outside the page load range r
     ok(spy.calledWith(99), 'unloadPage() was called with '+ 99);
 });
 
-test('page should be added to the queue and loaded again when the page load callback is called with an error', function () {
-    var $deferred = $.Deferred();
-    this.pages.push(this.pageComponent);
-    this.component.init(this.pages);
-    var loadStub = this.stub(this.pageComponent, 'load').returns($deferred);
-
-    $deferred.reject('error');
-
-    var loadPageSpy = this.spy(this.component, 'loadPage');
-    this.component.queuePageToLoad(0);
-
-    this.clock.tick(50);
-    ok(loadPageSpy.calledWith(0), 'page loaded first time');
-
-    this.clock.tick(50);
-    ok(loadPageSpy.calledWith(0), 'page loaded second time');
-    ok(loadPageSpy.calledTwice, 'loadPage called exactly twice');
-});
-
-test('loadPage() should call page.fail() when page fails to load after retry', function () {
-    var $deferred = $.Deferred();
-    this.pages.push(this.pageComponent);
-    this.component.init(this.pages);
-    var loadStub = this.stub(this.pageComponent, 'load').returns($deferred);
-
-    $deferred.reject('error');
-
-    this.mock(this.pageComponent)
-        .expects('fail');
-
-    var loadPageSpy = this.spy(this.component, 'loadPage');
-    this.component.queuePageToLoad(0);
-
-    this.clock.tick(50);
-    ok(loadPageSpy.calledWith(0), 'page loaded first time');
-
-    this.clock.tick(50);
-    ok(loadPageSpy.calledWith(0), 'page loaded second time');
-});
 
 test('loadPage() should be called as many times as queuePageToLoad()', function () {
     var $deferred = $.Deferred();

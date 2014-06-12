@@ -31,6 +31,9 @@ module('Framework - Crocodoc.Viewer', {
         this.utilities = {
             common: {
                 extend: $.extend
+            },
+            url: {
+                makeAbsolute: function () {}
             }
         };
 

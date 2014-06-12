@@ -59,8 +59,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     var DOCUMENT_100_PERCENT_WIDTH = 1024;
 
     var util = scope.getUtility('common'),
-        urlUtil = scope.getUtility('url'),
-        ajax = scope.getUtility('ajax'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support');
 
@@ -259,32 +257,19 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         var i,
             pages = [],
             page,
-            svgSrc,
-            imgSrc,
-            textSrc,
-            cssSrc,
             start = config.pageStart - 1,
             end = config.pageEnd,
-            url = urlUtil.makeAbsolute(config.url),
-            status = config.conversionIsComplete ? Crocodoc.PAGE_STATUS_NOT_LOADED : Crocodoc.PAGE_STATUS_CONVERTING,
-            links = sortPageLinks();
+            links = sortPageLinks(),
+            status = config.conversionIsComplete ?
+                Crocodoc.PAGE_STATUS_NOT_LOADED :
+                Crocodoc.PAGE_STATUS_CONVERTING;
 
         //initialize pages
         for (i = start; i < end; i++) {
-            svgSrc = url + util.template(config.template.svg, {page: i + 1});
-            textSrc = url + util.template(config.template.html, {page: i + 1});
-            imgSrc = url + util.template(config.template.img, {page: i + 1});
-            cssSrc = url + config.template.css;
             page = scope.createComponent('page');
             page.init(config.$pages.eq(i - start), {
                 index: i,
-                url: url,
-                imgSrc: imgSrc,
-                svgSrc: svgSrc,
-                textSrc: textSrc,
-                cssSrc: cssSrc,
                 status: status,
-                queryString: config.queryString,
                 enableLinks: config.enableLinks,
                 links: links[i],
                 pageScale: config.pageScale
@@ -349,60 +334,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function handleMouseUp() {
         updateSelectedPages();
-    }
-
-    /**
-     * Load the given resource via AJAX request, and retry if necessary
-     * @param {boolean} retry Whether to retry if the resource fails to load
-     * @returns {$.Promise}
-     * @private
-     */
-    function loadResource(url, retry) {
-        var $deferred = $.Deferred();
-
-        function retryOrFail(error) {
-            scope.broadcast('asseterror', error);
-            if (retry) {
-                // don't retry next time
-                loadResource(url, false)
-                    .then(function (responseText) {
-                        $deferred.resolve(responseText);
-                    })
-                    .fail(function (err) {
-                        $deferred.reject(err);
-                    });
-            } else {
-                $deferred.reject(error);
-            }
-        }
-
-        ajax.request(url, {
-            success: function () {
-                if (destroyed) {
-                    return;
-                }
-                if (!this.responseText) {
-                    retryOrFail({
-                        error: 'empty response',
-                        status: this.status,
-                        resource: url
-                    });
-                    return;
-                }
-                $deferred.resolve(this.responseText);
-            },
-            fail: function () {
-                if (destroyed) {
-                    return;
-                }
-                retryOrFail({
-                    error: this.statusText,
-                    status: this.status,
-                    resource: url
-                });
-            }
-        });
-        return $deferred.promise();
     }
 
     /**
@@ -633,19 +564,15 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {void}
          */
         loadAssets: function () {
-            var absolutePath = urlUtil.makeAbsolute(config.url),
-                stylesheetURL = absolutePath + config.template.css,
-                metadataURL = absolutePath + config.template.json,
-                $loadStylesheetPromise,
+            var $loadStylesheetPromise,
                 $loadMetadataPromise;
 
             validateQueryParams();
-            stylesheetURL += config.queryString;
-            metadataURL += config.queryString;
 
-            $loadMetadataPromise = loadResource(metadataURL, true);
-            $loadMetadataPromise.then(function handleMetadataResponse(responseText) {
-                config.metadata = $.parseJSON(responseText);
+            // @TODO: abort requests if the viewer is destroyed
+            $loadMetadataPromise = scope.get('metadata');
+            $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
+                config.metadata = metadata;
                 validateConfig();
             });
 
@@ -653,20 +580,12 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             if (browser.ielt9) {
                 stylesheetEl = util.insertCSS('');
                 config.stylesheet = stylesheetEl.styleSheet;
-                $loadStylesheetPromise = $.when();
+                $loadStylesheetPromise = null;
             } else {
-                $loadStylesheetPromise = loadResource(stylesheetURL, true);
-                $loadStylesheetPromise.then(function handleStylesheetResponse(responseText) {
-                    // @NOTE: There is a bug in IE that causes the text layer to
-                    // not render the font when loaded for a second time (i.e.,
-                    // destroy and recreate a viewer for the same document), so
-                    // namespace the font-family so there is no collision
-                    if (browser.ie) {
-                        responseText = responseText.replace(/font-family:[\s\"\']*([\w-]+)\b/g,
-                            '$0-' + config.id);
-                    }
-                    config.cssText = responseText;
-                    stylesheetEl = util.insertCSS(responseText);
+                $loadStylesheetPromise = scope.get('stylesheet');
+                $loadStylesheetPromise.then(function handleStylesheetResponse(cssText) {
+                    config.cssText = cssText;
+                    stylesheetEl = util.insertCSS(cssText);
                     config.stylesheet = stylesheetEl.sheet;
                 });
             }
@@ -674,6 +593,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // when both metatadata and stylesheet are done or if either fails...
             $.when($loadMetadataPromise, $loadStylesheetPromise)
                 .fail(function (error) {
+                    scope.broadcast('asseterror', error);
                     scope.broadcast('fail', error);
                 })
                 .then(completeInit);

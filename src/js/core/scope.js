@@ -21,6 +21,7 @@
 
         var instances = [],
             messageQueue = [],
+            dataProviders = {},
             ready = false;
 
         /**
@@ -66,6 +67,8 @@
         //----------------------------------------------------------------------
         // Public
         //----------------------------------------------------------------------
+
+        config.dataProviders = config.dataProviders || {};
 
         /**
          * Create and return an instance of the named component,
@@ -115,6 +118,7 @@
                 }
             }
             instances = [];
+            dataProviders = {};
         };
 
         /**
@@ -157,6 +161,42 @@
                 ready = true;
                 broadcastQueuedMessages();
             }
+        };
+
+        /**
+         * Get a model object from a data provider. If the objectType is listed
+         * in config.dataProviders, this will get the value from the data
+         * provider that is specified in that map instead.
+         * @param {string} objectType The type of object to retrieve ('page-svg', 'page-text', etc)
+         * @param {string} objectKey  The key of the object to retrieve
+         * @returns {$.Promise}
+         */
+        this.get = function(objectType, objectKey) {
+            var newObjectType = config.dataProviders[objectType] || objectType;
+
+            var provider = this.getDataProvider(newObjectType);
+            if (provider) {
+                return provider.get(objectType, objectKey);
+            }
+            return $.Deferred().reject('data-provider not found').promise();
+        };
+
+        /**
+         * Get an instance of a data provider. Ignores config.dataProviders
+         * overrides.
+         * @param {string} objectType The type of object to retrieve a data provider for ('page-svg', 'page-text', etc)
+         * @returns {Object} The data provider
+         */
+        this.getDataProvider = function (objectType) {
+            var provider;
+            if (dataProviders[objectType]) {
+                provider = dataProviders[objectType];
+            } else {
+                provider = this.createComponent('data-provider-' + objectType);
+                dataProviders[objectType] = provider;
+            }
+
+            return provider;
         };
     };
 })();

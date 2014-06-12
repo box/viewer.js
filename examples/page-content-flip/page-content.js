@@ -72,7 +72,7 @@ Crocodoc.addPlugin('page-content', function (scope) {
                     $viewport.on('mousedown', handleMousedown);
                     break;
                 case 'pageload':
-                    if ($pages.eq(data.page - 1).find('page-content').length === 0) {
+                    if ($pages.eq(data.page - 1).find('.page-content').length === 0) {
                         insertContent(data.page);
                     }
                     break;

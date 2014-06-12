@@ -32,8 +32,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
             visiblePages: [1]
         };
 
-    var PAGE_LOAD_ERROR_MAX_RETRIES = 1,
-        PAGE_LOAD_INTERVAL = (browser.mobile || browser.ielt10) ? 100 : 50, //ms between initiating page loads
+    var PAGE_LOAD_INTERVAL = (browser.mobile || browser.ielt10) ? 100 : 50, //ms between initiating page loads
         MAX_PAGE_LOAD_RANGE = (browser.mobile || browser.ielt10) ? 8 : 32;
 
     /**
@@ -65,7 +64,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
             // found a page to load
             index = pageLoadQueue.shift();
             // page exists and not reached max errors?
-            if (pages[index] && pages[index].errorCount <= PAGE_LOAD_ERROR_MAX_RETRIES) {
+            if (pages[index]) {
                 api.loadPage(index, function loadPageCallback(pageIsLoading) {
                     if (pageIsLoading === false) {
                         // don't wait if the page is not loading
@@ -381,19 +380,6 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          */
         loadPage: function (index, callback) {
             $.when(pages[index] && pages[index].load())
-                .fail(function handlePageLoadFail(err) {
-                    pages[index].errorCount = pages[index].errorCount || 0;
-                    // the page failed for some reason...
-                    // put it back in the queue to be loaded again immediately
-                    // try reloading a page PAGE_LOAD_ERROR_MAX_RETRIES times before giving up
-                    if (pages[index].errorCount < PAGE_LOAD_ERROR_MAX_RETRIES) {
-                        pageLoadQueue.unshift(index);
-                    } else {
-                        // the page failed to load after retry
-                        pages[index].fail(err);
-                    }
-                    pages[index].errorCount++;
-                })
                 .always(callback);
         },
 

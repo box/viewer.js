@@ -73,6 +73,9 @@
                 return;
             }
 
+            // make the url absolute
+            config.url = scope.getUtility('url').makeAbsolute(config.url);
+
             viewerBase.loadAssets();
         };
 
@@ -256,6 +259,15 @@
             html: 'text-{{page}}.html',
             css: 'stylesheet.css',
             json: 'info.json'
+        },
+
+        // default data-providers
+        dataProviders: {
+            metadata: 'metadata',
+            stylesheet: 'stylesheet',
+            'page-svg': 'page-svg',
+            'page-text': 'page-text',
+            'page-img': 'page-img'
         },
 
         // page to start/end on (pages outside this range will not be shown)

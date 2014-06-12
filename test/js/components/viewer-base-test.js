@@ -53,9 +53,6 @@ module('Component - viewer-base', {
                 template: sinon.stub().returnsArg(0),
                 calculatePtSize: sinon.stub().returns(1.33)
             },
-            url: {
-                makeAbsolute: function () {},
-            },
             ajax: {
                 request: function () {}
             }
@@ -78,19 +75,17 @@ module('Component - viewer-base', {
     }
 });
 
-test('loadAssets() should make an AJAX request when config.url is set', function () {
-    var spy = this.spy(this.utilities.ajax, 'request');
-    this.stub(this.utilities.url, 'makeAbsolute').returnsArg(0);
+test('loadAssets() should request metadata when called', function () {
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
 
     this.component.init();
     this.component.loadAssets();
-    ok(spy.calledWith(this.config.url + 'info.json', sinon.match.object), 'ajax request was made');
+    ok(spy.calledWith('metadata'), 'metadata was requested');
 });
 
 test('loadAssets() should broadcast an asseterror message when loading metadata or stylesheet fails', function () {
     var err = '404 not found';
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('fail', { statusText: err });
+    this.stub(this.scope, 'get').returns($.Deferred().reject({ error: err }).promise());
 
     var broadcastSpy = this.spy(this.scope, 'broadcast');
 
@@ -100,10 +95,9 @@ test('loadAssets() should broadcast an asseterror message when loading metadata 
     ok(broadcastSpy.calledWith('asseterror', sinon.match({ error: sinon.match(err) })), 'asseterror was broadcast');
 });
 
-test('loadAssets() should fire a fail event when loading metadata or stylesheet fails', function () {
+test('loadAssets() should broadcast a fail message when loading metadata or stylesheet fails', function () {
     var err = '404 not found';
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('fail', { statusText: err });
+    this.stub(this.scope, 'get').returns($.Deferred().reject({ error: err }).promise());
 
     var broadcastSpy = this.spy(this.scope, 'broadcast');
 
@@ -113,11 +107,10 @@ test('loadAssets() should fire a fail event when loading metadata or stylesheet 
     ok(broadcastSpy.calledWith('fail', sinon.match({ error: sinon.match(err) })), 'fail was broadcast');
 });
 
-test('loadAssets() should create and init a lazy-loader component when called', function () {
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('success', {
-            responseText: JSON.stringify(this.metadata)
-        });
+test('loadAssets() should create and init a lazy-loader component when loading metadata and stylesheet succeeds', function () {
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
     this.mock(this.components['lazy-loader'])
         .expects('init')
@@ -127,12 +120,11 @@ test('loadAssets() should create and init a lazy-loader component when called', 
     this.component.loadAssets();
 });
 
-test('loadAssets() should create and init a scroller component when called', function () {
+test('loadAssets() should create and init a scroller component when loading metadata and stylesheet succeeds', function () {
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
     this.stub(this.component, 'setLayout');
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('success', {
-            responseText: JSON.stringify(this.metadata)
-        });
 
     this.mock(this.components.scroller)
         .expects('init')
@@ -142,11 +134,10 @@ test('loadAssets() should create and init a scroller component when called', fun
     this.component.loadAssets();
 });
 
-test('loadAssets() should create and init a resizer component when called', function () {
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('success', {
-            responseText: JSON.stringify(this.metadata)
-        });
+test('loadAssets() should create and init a resizer component when loading metadata and stylesheet succeeds', function () {
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
     this.mock(this.components.resizer)
         .expects('init')
@@ -156,13 +147,12 @@ test('loadAssets() should create and init a resizer component when called', func
     this.component.loadAssets();
 });
 
-test('loadAssets() should set the appropriate layout when called', function () {
-    this.config.layout = Crocodoc.LAYOUT_PRESENTATION;
+test('loadAssets() should set the appropriate layout when loading metadata and stylesheet succeeds', function () {
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('success', {
-            responseText: JSON.stringify(this.metadata)
-        });
+    this.config.layout = Crocodoc.LAYOUT_PRESENTATION;
 
     this.mock(this.viewerAPI)
         .expects('setLayout')
@@ -172,7 +162,7 @@ test('loadAssets() should set the appropriate layout when called', function () {
     this.component.loadAssets();
 });
 
-test('loadAssets() should create and init `numpages` page components with appropriate status when called', function () {
+test('loadAssets() should create and init `numpages` page components with appropriate status when loading metadata and stylesheet succeeds', function () {
     var metadata = {
         numpages: 5,
         dimensions: {
@@ -180,10 +170,9 @@ test('loadAssets() should create and init `numpages` page components with approp
             height: 100
         }
     };
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('success', {
-            responseText: JSON.stringify(metadata)
-        });
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
     this.component.init();
 
@@ -200,9 +189,7 @@ test('loadAssets() should create and init `numpages` page components with approp
     ok(createComponentSpy.withArgs('page').callCount === metadata.numpages, 'created correct number of page components');
 });
 
-test('loadAssets() should init page components with appropriate status when called and the conversion is not complete', function () {
-    this.config.conversionIsComplete = false;
-
+test('loadAssets() should init page components with appropriate status when called and the conversion is not complete and loading metadata and stylesheet succeeds', function () {
     var metadata = {
         numpages: 5,
         dimensions: {
@@ -210,11 +197,11 @@ test('loadAssets() should init page components with appropriate status when call
             height: 100
         }
     };
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('success', {
-            responseText: JSON.stringify(metadata)
-        });
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
+    this.config.conversionIsComplete = false;
     this.component.init();
 
     this.mock(this.components.page)
@@ -227,11 +214,10 @@ test('loadAssets() should init page components with appropriate status when call
     this.component.loadAssets();
 });
 
-test('loadAssets() should broadcast "ready" when called', function () {
-    this.stub(this.utilities.ajax, 'request')
-        .yieldsToOn('success', {
-            responseText: JSON.stringify(this.metadata)
-        });
+test('loadAssets() should broadcast "ready" when loading metadata and stylesheet succeeds', function () {
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
     this.component.init();
     this.mock(this.scope)
@@ -302,6 +288,15 @@ test('setLayout() should broadcast a layoutchange message when called and the la
         .expects('broadcast')
         .withArgs('layoutchange', sinon.match.object);
     this.component.setLayout(Crocodoc.LAYOUT_VERTICAL);
+});
+
+test('setLayout() should throw an error when called with an invalid layout', function () {
+    this.component.init();
+
+    this.stub(this.scope,'createComponent').returns(null);
+    throws(function () {
+        this.component.setLayout(Crocodoc.LAYOUT_VERTICAL);
+    }, 'an error should be thrown');
 });
 
 test('onmessage() should call fire() when called with all subscribed messages except scroll, afterscroll', function () {
