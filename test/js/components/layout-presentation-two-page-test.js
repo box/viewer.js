@@ -11,7 +11,10 @@ module('Component - layout-presentation-two-page', {
             'layout-presentation': {
                 init: function () {},
                 calculatePreviousPage: function () {},
-                calculateNextPage: function () {}
+                calculateNextPage: function () {},
+                extend: function (obj) {
+                    return Crocodoc.getUtility('common').extend({}, this, obj);
+                }
             }
         };
 

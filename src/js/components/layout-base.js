@@ -865,6 +865,15 @@ Crocodoc.addComponent('layout-base', function (scope) {
         updateLayout: function () {},
         calculateZoomAutoValue: function () { return 1; },
         calculateNextPage: function () { return 1; },
-        calculatePreviousPage: function () { return 1; }
+        calculatePreviousPage: function () { return 1; },
+
+        /**
+         * Shortcut method to extend this layout
+         * @param   {Object} layout The layout mixins
+         * @returns {Object}        The extended layout
+         */
+        extend: function (layout) {
+            return util.extend({}, this, layout);
+        }
     };
 });

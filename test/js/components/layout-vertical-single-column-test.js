@@ -9,7 +9,10 @@ module('Component - layout-vertical-single-column', {
         this.scope = Crocodoc.getScopeForTest(this);
         this.mixins = {
             'layout-vertical': {
-                init: function () {}
+                init: function () {},
+                extend: function (obj) {
+                    return Crocodoc.getUtility('common').extend({}, this, obj);
+                }
             }
         };
 

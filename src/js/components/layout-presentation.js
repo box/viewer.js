@@ -37,7 +37,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
     // Public
     //--------------------------------------------------------------------------
 
-    return util.extend({}, base, {
+    return base.extend({
         /**
          * Initialize the presentation layout component
          * @returns {void}

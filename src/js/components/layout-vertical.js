@@ -21,7 +21,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
     // Public
     //--------------------------------------------------------------------------
 
-    return util.extend({}, base, {
+    return base.extend({
 
         /**
          * Calculate the numeric value for zoom 'auto' for this layout mode

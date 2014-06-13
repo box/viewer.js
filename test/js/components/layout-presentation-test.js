@@ -14,7 +14,10 @@ module('Component - layout-presentation', {
                 init: function () {},
                 updateCurrentPage: function () {},
                 updatePageMargins: function () {},
-                updatePageClasses: function () {}
+                updatePageClasses: function () {},
+                extend: function (obj) {
+                    return Crocodoc.getUtility('common').extend({}, this, obj);
+                }
             }
         };
 
