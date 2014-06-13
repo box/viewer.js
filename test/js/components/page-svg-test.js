@@ -9,11 +9,10 @@ module('Component - page-svg', {
             },
             ajax: {
                 request: function () {}
-            }
+            },
+            browser: Crocodoc.getUtility('browser')
         };
-        this.config =  {
-            embedStrategy: 1 //EMBED_STRATEGY_IFRAME_INNERHTML
-        };
+        this.config = {};
         this.scope = Crocodoc.getScopeForTest(this);
 
         this.component = Crocodoc.getComponentForTest('page-svg', this.scope);
@@ -57,7 +56,7 @@ test('load() should embed the SVG when the load succeeds', function () {
 
     this.component.init(this.$el, pageNum);
     this.component.load();
-    ok(this.$el.find('iframe').length > 0, 'the SVG has been embedded');
+    ok(this.$el.find('*').length > 0, 'the SVG has been embedded');
 });
 
 test('load() should broadcast an asseterror when the load fails', function () {

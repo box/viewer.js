@@ -10,11 +10,11 @@
  * @param {string} url The realtime URL to connect to
  * @constructor
  */
-function Realtime(url) {
-    if (!window.EventSource) {
+function Realtime(url, EventSource) {
+    if (!EventSource) {
         throw new Error('Realtime plugin requires EventSource support');
     }
-    this.eventSource = new window.EventSource(url);
+    this.eventSource = new EventSource(url);
 }
 
 Realtime.prototype = {
@@ -175,7 +175,7 @@ Crocodoc.addPlugin('realtime', function (scope) {
         init: function (config) {
             var url = config.url;
             if (url) {
-                realtime = new Crocodoc.Realtime(url);
+                realtime = new Crocodoc.Realtime(url, window.EventSource);
 
                 // force the viewer to think conversion is not complete
                 // @TODO: ideally this wouldn't have to make an extra trip to

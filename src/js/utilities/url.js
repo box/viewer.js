@@ -26,6 +26,7 @@ Crocodoc.addUtility('url', function (framework) {
          * Make the given path absolute
          *  - if path doesn't contain protocol and domain, prepend the current protocol and domain
          *  - if the path is relative (eg. doesn't begin with /), also fill in the current path
+         * @NOTE: does not work properly in IE7
          * @param   {string} path The path to make absolute
          * @returns {string}      The absolute path
          */
@@ -71,6 +72,7 @@ Crocodoc.addUtility('url', function (framework) {
 
         /**
          * Parse a URL into protocol, host, port, etc
+         * @NOTE: does not work properly in IE7
          * @param   {string} url The URL to parse
          * @returns {object}     The parsed URL parts
          */
