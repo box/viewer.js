@@ -15,6 +15,8 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
     - [Viewer Methods](#viewer-methods)
     - [Event Handling](#event-handling)
     - [Setting the Layout Mode](#setting-the-layout-mode)
+        + [Built-in Layout Modes](#built-in-layout-modes)
+        + [Other Layout Modes](#other-layout-modes)
     - [Realtime Page Streaming](#realtime-page-streaming)
     - [Plugins](#plugins)
 * [Browser Support](#browser-support)
@@ -296,6 +298,9 @@ viewer.on('ready', function (event) {
 
 ### Setting the Layout Mode
 
+
+#### Built-in Layout Modes
+
 You can set a layout initially via the configuration object:
 
 ```js
@@ -316,10 +321,20 @@ The currently supported layouts are:
 * `Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN` Pages are scrolled vertically and arranged into a single column even when zoomed out.
 * `Crocodoc.LAYOUT_HORIZONTAL` Pages within the viewer are horizontally and arranged into a single row.
 * `Crocodoc.LAYOUT_PRESENTATION` One page is shown at a time with no scrolling. Custom transitions may be used to switch between pages.
+* `Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE` Two pages are shown at a time, side by side, with no scrolling. Custom transitions may be used to switch between pages.
 
 NOTE: `.crocodoc-page` and `.crocodoc-page-inner` classes can be used to style pages, but there are some important restrictions:
 * `.crocodoc-page`: padding should be used to adjust page spacing (never use margin for this)
 * `.crocodoc-page`: background should be transparent, unless you want the background to also appear as a border (based on the padding size) - use `.crocodoc-page-inner` for changing the background of pages
+
+
+#### Other Layout Modes
+
+The above list are the modes that are included as part of the bundled viewer.js library. Here are some other layout modes that can be included alongside the library to add new layout functionality:
+
+* `'vertical-two-page'` Behaves like `Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE` for zooming and `Crocodoc.LAYOUT_VERTICAL` for scrolling ([gist](https://gist.github.com/lakenen/bfd2dd12b8b89489ff7f)).
+* `'presentation-vertical'` Behaves like `Crocodoc.LAYOUT_PRESENTATION` for page layout (e.g., one page visible at a time) and `Crocodoc.LAYOUT_VERTICAL` for zooming ([gist](https://gist.github.com/lakenen/16136477a57c84eff224)).
+* **\[Your layout here!\]** - if you have a layout you'd like to contribute, create a gist like the examples above, and we'd be happy to include it.
 
 
 ### Realtime Page Streaming
