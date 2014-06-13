@@ -17,6 +17,7 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
     - [Setting the Layout Mode](#setting-the-layout-mode)
         + [Built-in Layout Modes](#built-in-layout-modes)
         + [Other Layout Modes](#other-layout-modes)
+    - [Styling Pages](#styling-pages)
     - [Realtime Page Streaming](#realtime-page-streaming)
     - [Plugins](#plugins)
 * [Browser Support](#browser-support)
@@ -323,11 +324,6 @@ The currently supported layouts are:
 * `Crocodoc.LAYOUT_PRESENTATION` One page is shown at a time with no scrolling. Custom transitions may be used to switch between pages.
 * `Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE` Two pages are shown at a time, side by side, with no scrolling. Custom transitions may be used to switch between pages.
 
-NOTE: `.crocodoc-page` and `.crocodoc-page-inner` classes can be used to style pages, but there are some important restrictions:
-* `.crocodoc-page`: padding should be used to adjust page spacing (never use margin for this)
-* `.crocodoc-page`: background should be transparent, unless you want the background to also appear as a border (based on the padding size) - use `.crocodoc-page-inner` for changing the background of pages
-
-
 #### Other Layout Modes
 
 The above list are the modes that are included as part of the bundled viewer.js library. Here are some other layout modes that can be included alongside the library to add new layout functionality:
@@ -336,6 +332,52 @@ The above list are the modes that are included as part of the bundled viewer.js 
 * `'presentation-vertical'` Behaves like `Crocodoc.LAYOUT_PRESENTATION` for page layout (e.g., one page visible at a time) and `Crocodoc.LAYOUT_VERTICAL` for zooming ([gist](https://gist.github.com/lakenen/16136477a57c84eff224)).
 * **\[Your layout here!\]** - if you have a layout you'd like to contribute, create a gist like the examples above, and we'd be happy to include it.
 
+
+### Styling Pages
+
+`.crocodoc-page` and `.crocodoc-page-content` classes can be used to style pages, but there are some important restrictions:
+* `.crocodoc-page`: padding should be used to adjust page spacing (never use margin for this)
+* `.crocodoc-page`: background should be transparent, unless you want the background to also appear as a border (based on the padding size) - use `.crocodoc-page-content` for changing the background of pages
+
+Examples:
+```css
+.crocodoc-page {
+    /* 40px padding around all sides of every page */
+    padding: 40px;
+}
+.crocodoc-page {
+    /* 40px padding around the left and right sides of every page */
+    padding: 0 40px;
+}
+
+/* the following can be used in a layout with pages that are side-by-side to remove padding in the middle (e.g., custom layout 'vertical-two-page') */
+.crocodoc-page {
+    padding: 20px;
+}
+.crocodoc-page:nth-child(even) {
+    padding-left: 0;
+}
+.crocodoc-page:nth-child(odd) {
+    padding-right: 0;
+}
+
+/* add a box-shadow to pages */
+.crocodoc-page-content {
+    box-shadow: 1px 1px 2px #000;
+}
+
+/* change the background color of pages */
+.crocodoc-page-content {
+    background-color: papayawhip;
+}
+
+/* mirror all pages horizontally (?!) */
+.crocodoc-page-content {
+    -webkit-transform: scale(-1, 1);
+    -ms-transform: scale(-1, 1);
+    transform: scale(-1, 1);
+}
+```
 
 ### Realtime Page Streaming
 
