@@ -13,7 +13,10 @@ module('Component - layout-vertical', {
                 init: function () {},
                 handleResize: function () {},
                 handleScroll: function () {},
-                updateCurrentPage: function () {}
+                updateCurrentPage: function () {},
+                extend: function (obj) {
+                    return Crocodoc.getUtility('common').extend({}, this, obj);
+                }
             }
         };
         this.config = {
