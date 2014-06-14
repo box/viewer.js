@@ -2,6 +2,10 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.5.0**
+  * Add realtime plugin
+  * Add data providers
+  * Fixed some browser warnings 
 * **0.4.5**
   * Fix [#49](https://github.com/box/viewer.js/issues/49) - Centering broken if Bootstrap css loaded
   * Fix [#40](https://github.com/box/viewer.js/issues/40) - Hidden document viewer does not load pages in Firefox

@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.4.5 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.5.0 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 
@@ -56,6 +56,9 @@ var Crocodoc = (function () {
         PAGE_STATUS_LOADING:            'loading',
         PAGE_STATUS_LOADED:             'loaded',
         PAGE_STATUS_ERROR:              'error',
+
+        // The number of times to retry loading an asset before giving up
+        ASSET_REQUEST_RETRIES: 1,
 
         // exposed for testing purposes only
         // should not be accessed directly otherwise
@@ -124,6 +127,15 @@ var Crocodoc = (function () {
         },
 
         /**
+         * Register a new Crocodoc data provider
+         * @param {string} modelName The model name this data provider provides
+         * @param {Function} creator Factory function used to create an instance of the data provider.
+         */
+        addDataProvider: function(modelName, creator) {
+            this.addComponent('data-provider-' + modelName, creator);
+        },
+
+        /**
          * Register a new utility
          * @param  {string} name    The (unique) name of the utility
          * @param  {Function} creator Factory function used to create an instance of the utility
@@ -167,9 +179,62 @@ var Crocodoc = (function () {
      */
     Crocodoc.Scope = function Scope(config) {
 
+        //----------------------------------------------------------------------
+        // Private
+        //----------------------------------------------------------------------
+
         var util = Crocodoc.getUtility('common');
 
-        var instances = [];
+        var instances = [],
+            messageQueue = [],
+            dataProviders = {},
+            ready = false;
+
+        /**
+         * Broadcast a message to all components in this scope that have registered
+         * a listener for the named message type
+         * @param  {string} messageName The message name
+         * @param  {any} data The message data
+         * @returns {void}
+         * @private
+         */
+        function broadcast(messageName, data) {
+            var i, len, instance, messages;
+            for (i = 0, len = instances.length; i < len; ++i) {
+                instance = instances[i];
+                if (!instance) {
+                    continue;
+                }
+                messages = instance.messages || [];
+
+                if (util.inArray(messageName, messages) !== -1) {
+                    if (typeof instance.onmessage === 'function') {
+                        instance.onmessage.call(instance, messageName, data);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Broadcasts any (pageavailable) messages that were queued up
+         * before the viewer was ready
+         * @returns {void}
+         * @private
+         */
+        function broadcastQueuedMessages() {
+            var message;
+            while (messageQueue.length) {
+                message = messageQueue.shift();
+                broadcast(message.name, message.data);
+            }
+            messageQueue = null;
+        }
+
+        //----------------------------------------------------------------------
+        // Public
+        //----------------------------------------------------------------------
+
+        config.dataProviders = config.dataProviders || {};
 
         /**
          * Create and return an instance of the named component,
@@ -219,29 +284,20 @@ var Crocodoc = (function () {
                 }
             }
             instances = [];
+            dataProviders = {};
         };
 
         /**
-         * Broadcast a message to all components in this scope that have registered
-         * a listener for the named message type
-         * @param  {string} messageName The message name
-         * @param  {any} data The message data
+         * Broadcast a message or queue it until the viewer is ready
+         * @param   {string} name The name of the message
+         * @param   {*} data The message data
          * @returns {void}
          */
         this.broadcast = function (messageName, data) {
-            var i, len, instance, messages;
-            for (i = 0, len = instances.length; i < len; ++i) {
-                instance = instances[i];
-                if (!instance) {
-                    continue;
-                }
-                messages = instance.messages || [];
-
-                if (util.inArray(messageName, messages) !== -1) {
-                    if (typeof instance.onmessage === 'function') {
-                        instance.onmessage.call(instance, messageName, data);
-                    }
-                }
+            if (ready) {
+                broadcast(messageName, data);
+            } else {
+                messageQueue.push({ name: messageName, data: data });
             }
         };
 
@@ -260,6 +316,53 @@ var Crocodoc = (function () {
          */
         this.getConfig = function () {
             return config;
+        };
+
+        /**
+         * Tell the scope that the viewer is ready and broadcast queued messages
+         * @returns {void}
+         */
+        this.ready = function () {
+            if (!ready) {
+                ready = true;
+                broadcastQueuedMessages();
+            }
+        };
+
+        /**
+         * Get a model object from a data provider. If the objectType is listed
+         * in config.dataProviders, this will get the value from the data
+         * provider that is specified in that map instead.
+         * @param {string} objectType The type of object to retrieve ('page-svg', 'page-text', etc)
+         * @param {string} objectKey  The key of the object to retrieve
+         * @returns {$.Promise}
+         */
+        this.get = function(objectType, objectKey) {
+            var newObjectType = config.dataProviders[objectType] || objectType;
+
+            var provider = this.getDataProvider(newObjectType);
+            if (provider) {
+                return provider.get(objectType, objectKey);
+            }
+            return $.Deferred().reject('data-provider not found').promise();
+        };
+
+        /**
+         * Get an instance of a data provider. Ignores config.dataProviders
+         * overrides.
+         * @param {string} objectType The type of object to retrieve a data provider for ('page-svg', 'page-text', etc)
+         * @returns {Object} The data provider
+         */
+        this.getDataProvider = function (objectType) {
+            var provider;
+            if (dataProviders[objectType]) {
+                provider = dataProviders[objectType];
+            } else {
+                provider = this.createComponent('data-provider-' + objectType);
+                dataProviders[objectType] = provider;
+            }
+
+            return provider;
         };
     };
 })();
@@ -447,8 +550,6 @@ var Crocodoc = (function () {
         var util = Crocodoc.getUtility('common');
         var layout,
             $el = $(el),
-            ready = false,
-            messageQueue = [],
             config = util.extend(true, {}, Crocodoc.Viewer.defaults, options),
             scope = new Crocodoc.Scope(config),
             viewerBase = scope.createComponent('viewer-base');
@@ -462,42 +563,6 @@ var Crocodoc = (function () {
         config.api = this;
         config.$el = $el;
         viewerBase.init();
-
-        /**
-         * Broadcast a message or queue it until the viewer is ready
-         * @param   {string} name The name of the message
-         * @param   {*} data The message data
-         * @returns {void}
-         */
-        function broadcastMessageWhenReady(name, data) {
-            if (ready) {
-                scope.broadcast(name, data);
-            } else {
-                messageQueue.push({ name: name, data: data });
-            }
-        }
-
-        /**
-         * Broadcasts any (pageavailable) messages that were queued up
-         * before the viewer was ready
-         * @returns {void}
-         */
-        function broadcastQueuedMessages() {
-            var message;
-            while (messageQueue.length) {
-                message = messageQueue.shift();
-                scope.broadcast(message.name, message.data);
-            }
-        }
-
-        /**
-         * Handle ready message from the viewer
-         * @returns {void}
-         */
-        function handleReadyMessage() {
-            ready = true;
-            broadcastQueuedMessages();
-        }
 
         //--------------------------------------------------------------------------
         // Public
@@ -529,6 +594,9 @@ var Crocodoc = (function () {
                 scope.broadcast('fail', { error: 'no URL given for assets' });
                 return;
             }
+
+            // make the url absolute
+            config.url = scope.getUtility('url').makeAbsolute(config.url);
 
             viewerBase.loadAssets();
         };
@@ -657,42 +725,6 @@ var Crocodoc = (function () {
                 layout.setZoom();
             }
         };
-
-        /**
-         * Notify the viewer that a page is available (ie., it's finished converting)
-         * @param  {int} page The page that's available
-         * @returns {void}
-         * @TODO(clakenen): maybe come up with a better name for this?
-         * @TODO(clakenen): if this is called before the viewer has recieved document metadata
-         * it will be ignored; perhaps we should cache these messages in that condition?
-         */
-        this.setPageAvailable = function (page) {
-            broadcastMessageWhenReady('pageavailable',  { page: page });
-        };
-
-        /**
-         * Notify the viewer that all pages up to a given page are available
-         * @param  {int} page The page that is (and all pages up to are) available
-         * @returns {void}
-         * @TODO(clakenen): see TODOs on setPageAvailable
-         */
-        this.setPagesAvailableUpTo = function (page) {
-            broadcastMessageWhenReady('pageavailable',  { upto: page });
-        };
-
-        /**
-         * Notify the viewer that all pages are available
-         * @returns {void}
-         */
-        this.setAllPagesAvailable = function () {
-            if (!ready) {
-                config.conversionIsComplete = true;
-            } else {
-                scope.broadcast('pageavailable', { upto: config.numPages });
-            }
-        };
-
-        this.one('ready', handleReadyMessage);
     };
 
     Crocodoc.Viewer.prototype = new Crocodoc.EventTarget();
@@ -751,6 +783,15 @@ var Crocodoc = (function () {
             json: 'info.json'
         },
 
+        // default data-providers
+        dataProviders: {
+            metadata: 'metadata',
+            stylesheet: 'stylesheet',
+            'page-svg': 'page-svg',
+            'page-text': 'page-text',
+            'page-img': 'page-img'
+        },
+
         // page to start/end on (pages outside this range will not be shown)
         pageStart: null,
         pageEnd: null,
@@ -761,6 +802,352 @@ var Crocodoc = (function () {
     };
 })();
 
+
+Crocodoc.addDataProvider('metadata', function(scope) {
+    'use strict';
+
+    var ajax = scope.getUtility('ajax'),
+        util = scope.getUtility('common'),
+        config = scope.getConfig();
+
+    /**
+     * Process metadata json and return the result
+     * @param   {string} json The original JSON text
+     * @returns {string}      The processed JSON text
+     * @private
+     */
+    function processJSONContent(json) {
+        return util.parseJSON(json);
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+        /**
+         * Retrieve the info.json asset from the server
+         * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
+         */
+        get: function() {
+            var url = this.getURL(),
+                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+
+            // @NOTE: promise.then() creates a new promise, which does not copy
+            // custom properties, so we need to create a futher promise and add
+            // an object with the abort method as the new target
+            return $promise.then(processJSONContent).promise({
+                abort: $promise.abort
+            });
+        },
+
+        /**
+         * Build and return the URL to the metadata JSON
+         * @returns {string}         The URL
+         */
+        getURL: function () {
+            var jsonPath = config.template.json;
+            return config.url + jsonPath + config.queryString;
+        }
+    };
+});
+
+Crocodoc.addDataProvider('page-img', function(scope) {
+    'use strict';
+
+    var util = scope.getUtility('common'),
+        config = scope.getConfig();
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+        /**
+         * Retrieve the page image asset from the server
+         * @param {string} objectType The type of data being requested
+         * @param {number} pageNum The page number for which to request the page image
+         * @returns {$.Promise}    A promise with an additional abort() method that will abort the img request.
+         */
+        get: function(objectType, pageNum) {
+            var img = this.getImage(),
+                retries = Crocodoc.ASSET_REQUEST_RETRIES,
+                loaded = false,
+                url = this.getURL(pageNum),
+                $deferred = $.Deferred();
+
+            function loadImage() {
+                img.setAttribute('src', url);
+            }
+
+            function abortImage() {
+                img.removeAttribute('src');
+            }
+
+            // add load and error handlers
+            img.onload = function () {
+                loaded = true;
+                $deferred.resolve(img);
+            };
+
+            img.onerror = function () {
+                if (retries > 0) {
+                    retries--;
+                    abortImage();
+                    loadImage();
+                } else {
+                    img = null;
+                    loaded = false;
+                    $deferred.reject({
+                        error: 'image failed to load',
+                        resource: url
+                    });
+                }
+            };
+
+            // load the image
+            loadImage();
+
+            return $deferred.promise({
+                abort: function () {
+                    if (!loaded) {
+                        abortImage();
+                        $deferred.reject();
+                    }
+                }
+            });
+        },
+
+        /**
+         * Build and return the URL to the PNG asset for the specified page
+         * @param   {number} pageNum The page number
+         * @returns {string}         The URL
+         */
+        getURL: function (pageNum) {
+            var imgPath = util.template(config.template.img, { page: pageNum });
+            return config.url + imgPath + config.queryString;
+        },
+
+        /**
+         * Create and return a new image element (used for testing purporses)
+         * @returns {Image}
+         */
+        getImage: function () {
+            return new Image();
+        }
+    };
+});
+
+Crocodoc.addDataProvider('page-svg', function(scope) {
+    'use strict';
+
+    var MAX_DATA_URLS = 1000;
+
+    var util = scope.getUtility('common'),
+        ajax = scope.getUtility('ajax'),
+        browser = scope.getUtility('browser'),
+        subpx = scope.getUtility('subpx'),
+        config = scope.getConfig();
+
+    /**
+     * Process SVG text and return the embeddable result
+     * @param   {string} text The original SVG text
+     * @returns {string}      The processed SVG text
+     * @private
+     */
+    function processSVGContent(text) {
+        var query = config.queryString.replace('&', '&#38;'),
+            dataUrlCount,
+            stylesheetHTML;
+
+        dataUrlCount = util.countInStr(text, 'xlink:href="data:image');
+        // remove data:urls from the SVG content if the number exceeds MAX_DATA_URLS
+        if (dataUrlCount > MAX_DATA_URLS) {
+            // remove all data:url images that are smaller than 5KB
+            text = text.replace(/<image[\s\w-_="]*xlink:href="data:image\/[^"]{0,5120}"[^>]*>/ig, '');
+        }
+
+        // @TODO: remove this, because we no longer use any external assets in this way
+        // modify external asset urls for absolute path
+        text = text.replace(/href="([^"#:]*)"/g, function (match, group) {
+            return 'href="' + config.url + group + query + '"';
+        });
+
+        // CSS text
+        stylesheetHTML = '<style>' + config.cssText + '</style>';
+
+        // If using Firefox with no subpx support, add "text-rendering" CSS.
+        // @NOTE(plai): We are not adding this to Chrome because Chrome supports "textLength"
+        // on tspans and because the "text-rendering" property slows Chrome down significantly.
+        // In Firefox, we're waiting on this bug: https://bugzilla.mozilla.org/show_bug.cgi?id=890692
+        // @TODO: Use feature detection instead (textLength)
+        if (browser.firefox && !subpx.isSubpxSupported()) {
+            stylesheetHTML += '<style>text { text-rendering: geometricPrecision; }</style>';
+        }
+
+        // inline the CSS!
+        text = text.replace(/<xhtml:link[^>]*>/, stylesheetHTML);
+
+        return text;
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+        /**
+         * Retrieve a SVG asset from the server
+         * @param {string} objectType The type of data being requested
+         * @param {number} pageNum The page number for which to request the SVG
+         * @returns {$.Promise}    A promise with an additional abort() method that will abort the XHR request.
+         */
+        get: function(objectType, pageNum) {
+            var url = this.getURL(pageNum),
+                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+
+            // @NOTE: promise.then() creates a new promise, which does not copy
+            // custom properties, so we need to create a futher promise and add
+            // an object with the abort method as the new target
+            return $promise.then(processSVGContent).promise({
+                abort: $promise.abort
+            });
+        },
+
+        /**
+         * Build and return the URL to the SVG asset for the specified page
+         * @param   {number} pageNum The page number
+         * @returns {string}         The URL
+         */
+        getURL: function (pageNum) {
+            var svgPath = util.template(config.template.svg, { page: pageNum });
+            return config.url + svgPath + config.queryString;
+        }
+    };
+});
+
+Crocodoc.addDataProvider('page-text', function(scope) {
+    'use strict';
+
+    var MAX_TEXT_BOXES = 256;
+
+    var util = scope.getUtility('common'),
+        ajax = scope.getUtility('ajax'),
+        config = scope.getConfig();
+
+    /**
+     * Process HTML text and return the embeddable result
+     * @param   {string} text The original HTML text
+     * @returns {string}      The processed HTML text
+     * @private
+     */
+    function processTextContent(text) {
+        // in the text layer, divs are only used for text boxes, so
+        // they should provide an accurate count
+        var numTextBoxes = util.countInStr(text, '<div');
+        // too many textboxes... don't load this page for performance reasons
+        if (numTextBoxes > MAX_TEXT_BOXES) {
+            return '';
+        }
+
+        // remove reference to the styles
+        text = text.replace(/<link rel="stylesheet".*/, '');
+
+        return text;
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+        /**
+         * Retrieve a text asset from the server
+         * @param {string} objectType The type of data being requested
+         * @param {number} pageNum The page number for which to request the text HTML
+         * @returns {$.Promise}    A promise with an additional abort() method that will abort the XHR request.
+         */
+        get: function(objectType, pageNum) {
+            var url = this.getURL(pageNum),
+                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+
+            // @NOTE: promise.then() creates a new promise, which does not copy
+            // custom properties, so we need to create a futher promise and add
+            // an object with the abort method as the new target
+            return $promise.then(processTextContent).promise({
+                abort: $promise.abort
+            });
+        },
+
+        /**
+         * Build and return the URL to the HTML asset for the specified page
+         * @param   {number} pageNum The page number
+         * @returns {string}         The URL
+         */
+        getURL: function (pageNum) {
+            var textPath = util.template(config.template.html, { page: pageNum });
+            return config.url + textPath + config.queryString;
+        }
+    };
+});
+
+Crocodoc.addDataProvider('stylesheet', function(scope) {
+    'use strict';
+
+    var ajax = scope.getUtility('ajax'),
+        browser = scope.getUtility('browser'),
+        config = scope.getConfig();
+
+    /**
+     * Process stylesheet text and return the embeddable result
+     * @param   {string} text The original CSS text
+     * @returns {string}      The processed CSS text
+     * @private
+     */
+    function processStylesheetContent(text) {
+        // @NOTE: There is a bug in IE that causes the text layer to
+        // not render the font when loaded for a second time (i.e.,
+        // destroy and recreate a viewer for the same document), so
+        // namespace the font-family so there is no collision
+        if (browser.ie) {
+            text = text.replace(/font-family:[\s\"\']*([\w-]+)\b/g,
+                '$0-' + config.id);
+        }
+
+        return text;
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+        /**
+         * Retrieve the stylesheet.css asset from the server
+         * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
+         */
+        get: function() {
+            var url = this.getURL(),
+                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+
+            // @NOTE: promise.then() creates a new promise, which does not copy
+            // custom properties, so we need to create a futher promise and add
+            // an object with the abort method as the new target
+            return $promise.then(processStylesheetContent).promise({
+                abort: $promise.abort
+            });
+        },
+
+        /**
+         * Build and return the URL to the stylesheet CSS
+         * @returns {string}         The URL
+         */
+        getURL: function () {
+            var cssPath = config.template.css;
+            return config.url + cssPath + config.queryString;
+        }
+    };
+});
 
 Crocodoc.addUtility('ajax', function (framework) {
 
@@ -827,7 +1214,7 @@ Crocodoc.addUtility('ajax', function (framework) {
 
     return {
         /**
-         * Basic AJAX request
+         * Make a raw AJAX request
          * @param   {string}     url               request URL
          * @param   {Object}     [options]         AJAX request options
          * @param   {string}     [options.method]  request method, eg. 'GET', 'POST' (defaults to 'GET')
@@ -926,6 +1313,79 @@ Crocodoc.addUtility('ajax', function (framework) {
             }
 
             return req;
+        },
+
+        /**
+         * Fetch an asset, retrying if necessary
+         * @param {string} url      A url for the desired asset
+         * @param {number} retries  The number of times to retry if the request fails
+         * @returns {$.Promise}     A promise with an additional abort() method that will abort the XHR request.
+         */
+        fetch: function (url, retries) {
+            var req,
+                aborted = false,
+                ajax = framework.getUtility('ajax'),
+                $deferred = $.Deferred();
+
+            /**
+             * If there are retries remaining, make another attempt, otherwise
+             * give up and reject the deferred
+             * @param   {Object} error The error object
+             * @returns {void}
+             * @private
+             */
+            function retryOrFail(error) {
+                if (retries > 0) {
+                    // if we have retries remaining, make another request
+                    retries--;
+                    req = request();
+                } else {
+                    // finally give up
+                    $deferred.reject(error);
+                }
+            }
+
+            /**
+             * Make an AJAX request for the asset
+             * @returns {XMLHttpRequest|XDomainRequest} Request object
+             * @private
+             */
+            function request() {
+                return ajax.request(url, {
+                    success: function () {
+                        if (!aborted) {
+                            if (this.responseText) {
+                                $deferred.resolve(this.responseText);
+                            } else {
+                                // the response was empty, so consider this a
+                                // failed request
+                                retryOrFail({
+                                    error: 'empty response',
+                                    status: this.status,
+                                    resource: url
+                                });
+                            }
+                        }
+                    },
+                    fail: function () {
+                        if (!aborted) {
+                            retryOrFail({
+                                error: this.statusText,
+                                status: this.status,
+                                resource: url
+                            });
+                        }
+                    }
+                });
+            }
+
+            req = request();
+            return $deferred.promise({
+                abort: function() {
+                    aborted = true;
+                    req.abort();
+                }
+            });
         }
     };
 });
@@ -1483,6 +1943,8 @@ Crocodoc.addUtility('support', function () {
     (function() {
         var lastTime = 0;
         var vendors = ['ms', 'moz', 'webkit', 'o'];
+        raf = window.requestAnimationFrame;
+        caf = window.cancelAnimationFrame;
         for (var x = 0; x < vendors.length && !raf; ++x) {
             raf = window[vendors[x] + 'RequestAnimationFrame'];
             caf = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
@@ -1496,8 +1958,6 @@ Crocodoc.addUtility('support', function () {
                 lastTime = currTime + timeToCall;
                 return id;
             };
-        }
-        if (!caf) {
             caf = function(id) {
                 clearTimeout(id);
             };
@@ -1799,7 +2259,11 @@ Crocodoc.addComponent('layout-base', function (scope) {
     //--------------------------------------------------------------------------
 
     return {
-        messages: ['resize', 'scroll', 'scrollend'],
+        messages: [
+            'resize',
+            'scroll',
+            'scrollend'
+        ],
 
         /**
          * Handle framework messages
@@ -2555,7 +3019,16 @@ Crocodoc.addComponent('layout-base', function (scope) {
         updateLayout: function () {},
         calculateZoomAutoValue: function () { return 1; },
         calculateNextPage: function () { return 1; },
-        calculatePreviousPage: function () { return 1; }
+        calculatePreviousPage: function () { return 1; },
+
+        /**
+         * Shortcut method to extend this layout
+         * @param   {Object} layout The layout mixins
+         * @returns {Object}        The extended layout
+         */
+        extend: function (layout) {
+            return util.extend({}, this, layout);
+        }
     };
 });
 
@@ -2577,7 +3050,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_HORIZONTAL, ['layout-base'], f
     // Public
     //--------------------------------------------------------------------------
 
-    return util.extend({}, base, {
+    return base.extend({
 
         /**
          * Calculate the numeric value for zoom 'auto' for this layout mode
@@ -2695,7 +3168,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE, ['layou
     // Public
     //--------------------------------------------------------------------------
 
-    return util.extend({}, presentation, {
+    return presentation.extend({
         /**
          * Initialize the presentation-two-page layout component
          * @returns {void}
@@ -2800,7 +3273,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
     // Public
     //--------------------------------------------------------------------------
 
-    return util.extend({}, base, {
+    return base.extend({
         /**
          * Initialize the presentation layout component
          * @returns {void}
@@ -3094,7 +3567,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
     // Public
     //--------------------------------------------------------------------------
 
-    return util.extend({}, base, {
+    return base.extend({
 
         /**
          * Calculate the numeric value for zoom 'auto' for this layout mode
@@ -3249,8 +3722,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
             visiblePages: [1]
         };
 
-    var PAGE_LOAD_ERROR_MAX_RETRIES = 1,
-        PAGE_LOAD_INTERVAL = (browser.mobile || browser.ielt10) ? 100 : 50, //ms between initiating page loads
+    var PAGE_LOAD_INTERVAL = (browser.mobile || browser.ielt10) ? 100 : 50, //ms between initiating page loads
         MAX_PAGE_LOAD_RANGE = (browser.mobile || browser.ielt10) ? 8 : 32;
 
     /**
@@ -3282,7 +3754,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
             // found a page to load
             index = pageLoadQueue.shift();
             // page exists and not reached max errors?
-            if (pages[index] && pages[index].errorCount <= PAGE_LOAD_ERROR_MAX_RETRIES) {
+            if (pages[index]) {
                 api.loadPage(index, function loadPageCallback(pageIsLoading) {
                     if (pageIsLoading === false) {
                         // don't wait if the page is not loading
@@ -3598,19 +4070,6 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          */
         loadPage: function (index, callback) {
             $.when(pages[index] && pages[index].load())
-                .fail(function handlePageLoadFail(err) {
-                    pages[index].errorCount = pages[index].errorCount || 0;
-                    // the page failed for some reason...
-                    // put it back in the queue to be loaded again immediately
-                    // try reloading a page PAGE_LOAD_ERROR_MAX_RETRIES times before giving up
-                    if (pages[index].errorCount < PAGE_LOAD_ERROR_MAX_RETRIES) {
-                        pageLoadQueue.unshift(index);
-                    } else {
-                        // the page failed to load after retry
-                        pages[index].fail(err);
-                    }
-                    pages[index].errorCount++;
-                })
                 .always(callback);
         },
 
@@ -3648,6 +4107,9 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          */
         handlePageAvailable: function (data) {
             var i;
+            if (data.all === true) {
+                data.upto = numPages;
+            }
             if (data.page) {
                 this.queuePageToLoad(data.page - 1);
             } else if (data.upto) {
@@ -3731,8 +4193,9 @@ Crocodoc.addComponent('page-img', function (scope) {
     var browser = scope.getUtility('browser');
 
     var $img, $el,
-        imgSrc,
-        loading = false,
+        $loadImgPromise,
+        page,
+        imageLoaded = false,
         removeOnUnload = browser.mobile;
 
     //--------------------------------------------------------------------------
@@ -3742,12 +4205,13 @@ Crocodoc.addComponent('page-img', function (scope) {
     return {
         /**
          * Initialize the page-img component
-         * @param  {Object} config Configuration object
+         * @param  {Element} el     The element to insert the image into
+         * @param  {number} pageNum The page number
          * @returns {void}
          */
-        init: function (el, config) {
+        init: function (el, pageNum) {
             $el = $(el);
-            imgSrc = config.imgSrc + (config.queryString || '');
+            page = pageNum;
         },
 
         /**
@@ -3755,49 +4219,45 @@ Crocodoc.addComponent('page-img', function (scope) {
          * @returns {void}
          */
         destroy: function () {
+            removeOnUnload = true;
+            this.unload();
             $el.empty();
         },
 
         /**
-         * Preload does nothing in this component -- it's here for
-         * consistency with the page-svg component API
+         * Preload the image
          * @returns {void}
          */
-        preload: function () { /* noop */ },
+        preload: function () {
+            if (!$loadImgPromise) {
+                $loadImgPromise = scope.get('page-img', page);
+            }
+        },
 
         /**
          * Load the image
-         * @returns {$.Deferred}    A jQuery Deferred object
+         * @returns {$.Promise}    A jQuery Promise object
          */
         load: function () {
-            var $deferred = $.Deferred();
-            if (!$img) {
-                // image hasn't been loaded yet, so create an image
-                var img = new window.Image();
-                loading = true;
-                // add load and error handlers
-                img.onload = function () {
-                    loading = false;
-                    $deferred.resolve();
-                };
-                img.onerror = function () {
-                    $img = null;
-                    $deferred.reject({
-                        error: 'failed to load image'
-                    });
-                };
-                // load the image
-                img.src = imgSrc;
-                // insert into the DOM
-                $img = $(img);
-                $el.html($img);
-            } else {
-                if (!loading) {
-                    $deferred.resolve();
+            this.preload();
+
+            $loadImgPromise.done(function loadImgSuccess(img) {
+                if (!imageLoaded) {
+                    imageLoaded = true;
+                    $img = $(img).appendTo($el);
                 }
-            }
-            $img.show();
-            return $deferred;
+                // always show the image
+                $img.show();
+            });
+
+            $loadImgPromise.fail(function loadImgFail(error) {
+                imageLoaded = false;
+                if (error) {
+                    scope.broadcast('asseterror', error);
+                }
+            });
+
+            return $loadImgPromise;
         },
 
         /**
@@ -3805,10 +4265,16 @@ Crocodoc.addComponent('page-img', function (scope) {
          * @returns {void}
          */
         unload: function () {
-            loading = false;
-            if ($img && removeOnUnload) {
-                $img.remove();
-                $img = null;
+            if ($loadImgPromise) {
+                $loadImgPromise.abort();
+                $loadImgPromise = null;
+            }
+            if (removeOnUnload) {
+                if ($img) {
+                    $img.remove();
+                    $img = null;
+                }
+                imageLoaded = false;
             } else if ($img) {
                 $img.hide();
             }
@@ -3903,6 +4369,8 @@ Crocodoc.addComponent('page-links', function (scope) {
          * Initialize the page-links component
          * @param  {Array} links Links configuration array
          * @returns {void}
+         * @TODO (possible): make a links data-provider instead of passing
+         * them in as an argument?
          */
         init: function (el, links) {
             $el = $(el);
@@ -3952,8 +4420,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
 
     // @NOTE: MAX_DATA_URLS is the maximum allowed number of data-urls in svg
     // content before we give up and stop rendering them
-    var MAX_DATA_URLS = 1000,
-        SVG_MIME_TYPE = 'image/svg+xml',
+    var SVG_MIME_TYPE = 'image/svg+xml',
         HTML_TEMPLATE = '<style>html,body{width:100%;height:100%;margin:0;overflow:hidden;}</style>',
         SVG_CONTAINER_TEMPLATE = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><script><![CDATA[('+proxySVG+')()]]></script></svg>',
 
@@ -4004,19 +4471,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
         // @NOTE: this method seems to be more performant on IE
         EMBED_STRATEGY_DATA_URL_IMG = 8;
 
-    var util = scope.getUtility('common'),
-        ajax    = scope.getUtility('ajax'),
-        browser = scope.getUtility('browser'),
-        subpx = scope.getUtility('subpx'),
+    var browser = scope.getUtility('browser'),
         DOMParser = window.DOMParser;
 
     var $svg, $svgLayer,
-        $loadSVGTextPromise,
-        request,
-        config,
-        baseURL,
-        queryString,
-        svgSrc,
+        $loadSVGPromise,
+        page,
         svgText,
         destroyed = false,
         unloaded = false,
@@ -4078,107 +4538,34 @@ Crocodoc.addComponent('page-svg', function (scope) {
     }
 
     /**
-     * Process SVG text and return the embeddable result
-     * @param   {string} text The original SVG text
-     * @returns {string}      The processed SVG text
-     */
-    function processSVGText(text) {
-        var query = queryString.replace('&', '&#38;'),
-            dataUrlCount,
-            stylesheetHTML;
-
-        dataUrlCount = util.countInStr(text, 'xlink:href="data:image');
-        // remove data:urls from the SVG content if the number exceeds MAX_DATA_URLS
-        if (dataUrlCount > MAX_DATA_URLS) {
-            // remove all data:url images that are smaller than 5KB
-            text = text.replace(/<image[\s\w-_="]*xlink:href="data:image\/[^"]{0,5120}"[^>]*>/ig, '');
-        }
-
-        // @TODO: remove this, because we no longer use any external assets in this way
-        // modify external asset urls for absolute path
-        text = text.replace(/href="([^"#:]*)"/g, function (match, group) {
-            return 'href="' + baseURL + group + query + '"';
-        });
-
-        // CSS text
-        stylesheetHTML = '<style>' + viewerConfig.cssText + '</style>';
-
-        // If using Firefox with no subpx support, add "text-rendering" CSS.
-        // @NOTE(plai): We are not adding this to Chrome because Chrome supports "textLength"
-        // on tspans and because the "text-rendering" property slows Chrome down significantly.
-        // In Firefox, we're waiting on this bug: https://bugzilla.mozilla.org/show_bug.cgi?id=890692
-        // @TODO: Use feature detection instead (textLength)
-        if (browser.firefox && !subpx.isSubpxSupported()) {
-            stylesheetHTML += '<style>text { text-rendering: geometricPrecision; }</style>';
-        }
-
-        // inline the CSS!
-        text = text.replace(/<xhtml:link[^>]*>/, stylesheetHTML);
-
-        return text;
-    }
-
-    /**
      * Load svg text if necessary
      * @returns {$.Promise}
      * @private
      */
     function loadSVGText() {
-        // already load(ed|ing)?
-        if ($loadSVGTextPromise) {
-            return $loadSVGTextPromise;
-        }
-        var url = svgSrc + queryString,
-            $deferred = $.Deferred();
-
         if (!$svg) {
-            $deferred.reject({
+            // If the svg element is not available, bypass asset loading
+            // and return something that mimics a data-provider promise.
+            return $.Deferred().reject({
                 error: 'Error creating SVG element',
                 status: 200,
                 resource: url
+            }).promise({
+                abort: function() {}
             });
-            return;
         }
 
-        request = ajax.request(url, {
-            success: function () {
-                if (destroyed) {
-                    return;
-                }
-                // we need to replace & characters in the query string, because they are invalid in SVG
-                var text = this.responseText;
-
-                // if the response comes back empty,
-                if (!text) {
-                    $deferred.reject({
-                        error: 'Response was empty',
-                        status: 200,
-                        resource: url
-                    });
-                    return;
-                }
-
-                text = processSVGText(text);
-
-                svgText = text;
-
-                $deferred.resolve();
-            },
-            fail: function () {
-                if (destroyed) {
-                    return;
-                }
-                svgText = null;
-                $deferred.reject({
-                    error: this.statusText,
-                    status: this.status,
-                    resource: url
-                });
-            }
-        });
-
-        $loadSVGTextPromise = $deferred.promise();
-        return $loadSVGTextPromise;
+        if (embedStrategy === EMBED_STRATEGY_BASIC_OBJECT ||
+            embedStrategy === EMBED_STRATEGY_BASIC_IMG)
+        {
+            // don't load the SVG text, just embed the object with
+            // the source pointed at the correct location
+            return $.Deferred().resolve().promise({
+                abort: function() {}
+            });
+        } else {
+            return scope.get('page-svg', page);
+        }
     }
 
     /**
@@ -4295,14 +4682,14 @@ Crocodoc.addComponent('page-svg', function (scope) {
             case EMBED_STRATEGY_BASIC_OBJECT:
                 $svg.attr({
                     type: SVG_MIME_TYPE,
-                    data: svgSrc + queryString
+                    data: scope.getDataProvider('page-svg').getURL(page)
                 });
                 svgEl = $svg[0];
                 break;
 
             case EMBED_STRATEGY_BASIC_IMG:
                 svgEl = $svg[0];
-                svgEl.src = svgSrc + queryString;
+                svgEl.src = scope.getDataProvider('page-svg').getURL(page);
                 break;
 
             case EMBED_STRATEGY_DATA_URL_IMG:
@@ -4350,26 +4737,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
         };
     }
 
-    /**
-     * Function to call when loading is complete (success or not)
-     * @param   {*} error Error param; if truthy, assume there was an error
-     * @returns {void}
-     * @private
-     */
-    function completeLoad(error) {
-        if (error) {
-            scope.broadcast('asseterror', error);
-            svgLoaded = false;
-            $loadSVGTextPromise = null;
-        } else {
-            if ($svg.parent().length === 0) {
-                $svg.appendTo($svgLayer);
-            }
-            $svg.show();
-            svgLoaded = true;
-        }
-    }
-
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -4379,15 +4746,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
         /**
          * Initialize the page-svg component
          * @param {jQuery} $el The element to load SVG layer into
-         * @param  {Object} conf Configuration object
+         * @param  {number} pageNum The page number
          * @returns {void}
          */
-        init: function ($el, conf) {
+        init: function ($el, pageNum) {
             $svgLayer = $el;
-            config = conf;
-            baseURL = config.url;
-            svgSrc = config.svgSrc;
-            queryString = config.queryString || '';
+            page = pageNum;
             embedStrategy = viewerConfig.embedStrategy || embedStrategy;
         },
 
@@ -4397,6 +4761,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
          */
         destroy: function () {
             destroyed = true;
+            removeOnUnload = true;
             this.unload();
             $svgLayer.empty();
         },
@@ -4407,52 +4772,44 @@ Crocodoc.addComponent('page-svg', function (scope) {
          */
         preload: function () {
             prepareSVGContainer();
-            loadSVGText();
+
+            if (!$loadSVGPromise) {
+                $loadSVGPromise = loadSVGText();
+            }
         },
 
         /**
          * Load the SVG and call callback when complete.
          * If there was an error, callback's first argument will be
          * an error message, and falsy otherwise.
-         * @returns {$.Deferred}    A jQuery Deferred object
+         * @returns {$.Promise}    A jQuery promise object
          */
         load: function () {
             unloaded = false;
-            var $deferred = $.Deferred();
+            this.preload();
 
-            if (svgLoaded) {
-                completeLoad();
-                $deferred.resolve();
-            } else {
-                prepareSVGContainer();
-                if (embedStrategy === EMBED_STRATEGY_BASIC_OBJECT ||
-                    embedStrategy === EMBED_STRATEGY_BASIC_IMG)
-                {
-                    // don't load the SVG text, just embed the object with
-                    // the source pointed at the correct location
-                    embedSVG();
-                    completeLoad();
-                    $deferred.resolve();
-                } else {
-                    loadSVGText()
-                        .then(function loadSVGTextSuccess() {
-                            if (destroyed || unloaded) {
-                                return;
-                            }
-                            embedSVG();
-                            completeLoad();
-                            $deferred.resolve();
-                        })
-                        .fail(function loadSVGTextFail(error) {
-                            completeLoad(error);
-                            $deferred.reject(error);
-                        })
-                        .always(function loadSVGAlways() {
-                            request = null;
-                        });
+            $loadSVGPromise.done(function loadSVGSuccess(text) {
+                if (!destroyed && !unloaded) {
+                    if (!svgLoaded) {
+                        svgLoaded = true;
+                        svgText = text;
+                        embedSVG();
+                    }
+                    // always insert and show the svg el when load was successful
+                    if ($svg.parent().length === 0) {
+                        $svg.appendTo($svgLayer);
+                    }
+                    $svg.show();
                 }
-            }
-            return $deferred;
+            });
+
+            $loadSVGPromise.fail(function loadSVGFail(error) {
+                scope.broadcast('asseterror', error);
+                svgLoaded = false;
+                $loadSVGPromise = null;
+            });
+
+            return $loadSVGPromise;
         },
 
         /**
@@ -4462,12 +4819,11 @@ Crocodoc.addComponent('page-svg', function (scope) {
         unload: function () {
             unloaded = true;
             // stop loading the page if it hasn't finished yet
-            if (request && request.abort) {
-                request.abort();
-                request = null;
-                $loadSVGTextPromise = null;
+            if ($loadSVGPromise) {
+                $loadSVGPromise.abort();
             }
             if (removeOnUnload) {
+                $loadSVGPromise = null;
                 if ($svg) {
                     $svg.remove();
                     $svg = null;
@@ -4493,20 +4849,16 @@ Crocodoc.addComponent('page-text', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_TEXT = 'crocodoc-page-text',
-        MAX_TEXT_BOXES = 256;
+    var CSS_CLASS_PAGE_TEXT = 'crocodoc-page-text';
 
     var browser = scope.getUtility('browser'),
-        subpx   = scope.getUtility('subpx'),
-        ajax    = scope.getUtility('ajax'),
-        util    = scope.getUtility('common');
+        subpx   = scope.getUtility('subpx');
 
     var destroyed = false,
         loaded = false,
         $textLayer,
-        request,
-        $loadTextLayerHTMLPromise,
-        textSrc,
+        $loadTextPromise,
+        page,
         viewerConfig = scope.getConfig();
 
     /**
@@ -4527,23 +4879,11 @@ Crocodoc.addComponent('page-text', function (scope) {
     function completeLoad(text) {
         var doc, textEl;
 
-        if (!text || loaded) {
+        if (!text || loaded || destroyed) {
             return;
         }
 
         loaded = true;
-
-        // in the text layer, divs are only used for text boxes, so
-        // they should provide an accurate count
-        var numTextBoxes = util.countInStr(text, '<div');
-        // too many textboxes... don't load this page for performance reasons
-        if (numTextBoxes > MAX_TEXT_BOXES) {
-            return;
-        }
-
-        // remove reference to the styles
-        // @TODO: stylesheet should not be referenced in text layer html
-        text = text.replace(/<link rel="stylesheet".*/, '');
 
         // create a document to parse the html text
         doc = document.implementation.createHTMLDocument('');
@@ -4558,65 +4898,23 @@ Crocodoc.addComponent('page-text', function (scope) {
     }
 
     /**
-     * Handle failure loading HTML text
-     * @returns {void}
-     * @private
-     */
-    function handleHTMLTextFail(error) {
-        scope.broadcast('asseterror', error);
-    }
-
-    /**
      * Load text html if necessary and insert it into the element
      * @returns {$.Promise}
      * @private
      */
     function loadTextLayerHTML() {
         // already load(ed|ing)?
-        if ($loadTextLayerHTMLPromise) {
-            return $loadTextLayerHTMLPromise;
-        }
-        var $deferred = $.Deferred();
-
-        request = ajax.request(textSrc, {
-            success: function () {
-                if (destroyed) {
-                    return;
-                }
-
-                request = null;
-                if (this.responseText.length === 0) {
-                    handleHTMLTextFail({
-                        error: 'empty response',
-                        status: this.status,
-                        resource: textSrc
-                    });
-                }
-
-                // always reslove, because text layer failure shouldn't
-                // prevent a page from being viewed
-                $deferred.resolve(this.responseText);
-            },
-            fail: function () {
-                if (destroyed) {
-                    return;
-                }
-
-                request = null;
-                handleHTMLTextFail({
-                    error: this.statusText,
-                    status: this.status,
-                    resource: textSrc
+        if (!$loadTextPromise) {
+            if (shouldUseTextLayer()) {
+                $loadTextPromise = scope.get('page-text', page);
+            } else {
+                $loadTextPromise = $.Deferred().resolve().promise({
+                    abort: function () {}
                 });
-
-                // always reslove, because text layer failure shouldn't
-                // prevent a page from being viewed
-                $deferred.resolve();
             }
-        });
+        }
 
-        $loadTextLayerHTMLPromise = $deferred.promise();
-        return $loadTextLayerHTMLPromise;
+        return $loadTextPromise;
     }
 
     //--------------------------------------------------------------------------
@@ -4627,12 +4925,11 @@ Crocodoc.addComponent('page-text', function (scope) {
         /**
          * Initialize the page-text component
          * @param {jQuery} $el The jQuery element to load the text layer into
-         * @param  {Object} config Configuration options
          * @returns {void}
          */
-        init: function ($el, config) {
+        init: function ($el, pageNum) {
             $textLayer = $el;
-            textSrc = config.textSrc + config.queryString;
+            page = pageNum;
         },
 
         /**
@@ -4641,6 +4938,7 @@ Crocodoc.addComponent('page-text', function (scope) {
          */
         destroy: function () {
             destroyed = true;
+            this.unload();
             $textLayer.empty();
         },
 
@@ -4657,15 +4955,18 @@ Crocodoc.addComponent('page-text', function (scope) {
         /**
          * Load the html text for the text layer and insert it into the element
          * if text layer is enabled and is not loading/has not already been loaded
-         * @returns {$.Promise} A promise to load the text layer or false if the
-         * text layer should not be loaded
+         * @returns {$.Promise} A promise to load the text layer
          */
         load: function () {
-            if (shouldUseTextLayer()) {
-                return loadTextLayerHTML()
-                    .then(completeLoad);
-            }
-            return false;
+            return loadTextLayerHTML()
+                .done(function loadTextLayerHTMLSuccess(text) {
+                    completeLoad(text);
+                })
+                .fail(function loadTextLayerHTMLFail(error) {
+                    if (error) {
+                        scope.broadcast('asseterror', error);
+                    }
+                });
         },
 
         /**
@@ -4673,10 +4974,9 @@ Crocodoc.addComponent('page-text', function (scope) {
          * @returns {void}
          */
         unload: function () {
-            if (request && request.abort) {
-                request.abort();
-                request = null;
-                $loadTextLayerHTMLPromise = null;
+            if ($loadTextPromise) {
+                $loadTextPromise.abort();
+                $loadTextPromise = null;
             }
         },
 
@@ -4686,6 +4986,12 @@ Crocodoc.addComponent('page-text', function (scope) {
          */
         enable: function () {
             $textLayer.css('display', '');
+            // we created an empty promise if text selection was previously disabled,
+            // so we can scrap it so a new promise will be created next time this
+            // page is requested
+            if ($loadTextPromise && !loaded) {
+                $loadTextPromise = null;
+            }
         },
 
         /**
@@ -4726,9 +5032,12 @@ Crocodoc.addComponent('page', function (scope) {
         loadRequested = false;
 
     return {
-        errorCount: 0,
-
-        messages: ['pageavailable', 'textenabledchange', 'pagefocus', 'zoom'],
+        messages: [
+            'pageavailable',
+            'pagefocus',
+            'textenabledchange',
+            'zoom'
+        ],
 
         /**
          * Handle framework messages
@@ -4739,7 +5048,7 @@ Crocodoc.addComponent('page', function (scope) {
         onmessage: function (name, data) {
             switch (name) {
                 case 'pageavailable':
-                    if (data.page === index + 1 || data.upto > index) {
+                    if (data.page === index + 1 || data.upto > index || data.all === true) {
                         if (status === Crocodoc.PAGE_STATUS_CONVERTING) {
                             status = Crocodoc.PAGE_STATUS_NOT_LOADED;
                         }
@@ -4773,24 +5082,24 @@ Crocodoc.addComponent('page', function (scope) {
             $text = $pageEl.find('.' + CSS_CLASS_PAGE_TEXT);
             $links = $pageEl.find('.' + CSS_CLASS_PAGE_LINKS);
 
+            status = config.status || Crocodoc.PAGE_STATUS_NOT_LOADED;
+            index = config.index;
+            pageNum = index + 1;
+            this.config = config;
+
             config.url = config.url || '';
             pageText = scope.createComponent('page-text');
             pageContent = support.svg ?
                     scope.createComponent('page-svg') :
                     scope.createComponent('page-img');
 
-            pageText.init($text, config);
-            pageContent.init($svg, config);
+            pageText.init($text, pageNum);
+            pageContent.init($svg, pageNum);
 
             if (config.enableLinks && config.links.length) {
                 pageLinks = scope.createComponent('page-links');
                 pageLinks.init($links, config.links);
             }
-
-            status = config.status || Crocodoc.PAGE_STATUS_NOT_LOADED;
-            index = config.index;
-            pageNum = index + 1;
-            this.config = config;
         },
 
         /**
@@ -4817,20 +5126,13 @@ Crocodoc.addComponent('page', function (scope) {
          * @returns {$.Promise}    jQuery Promise object or false if the page is not loading
          */
         load: function () {
-            var page = this,
-                $pageTextPromise;
+            var pageComponent = this;
+
             loadRequested = true;
 
-            if (status === Crocodoc.PAGE_STATUS_LOADED || status === Crocodoc.PAGE_STATUS_LOADING) {
-                // try to load the text layer even though status is loaded,
-                // because it might have been disabled the last time page
-                // load was requested
-                $pageTextPromise = pageText.load();
-                // if the page is not loading, return false
-                if ($pageTextPromise && $pageTextPromise.state() !== 'pending') {
-                    return false;
-                }
-                return $pageTextPromise;
+            // the page has failed to load for good... don't try anymore
+            if (status === Crocodoc.PAGE_STATUS_ERROR) {
+                return false;
             }
 
             // don't actually load if the page is converting
@@ -4838,37 +5140,28 @@ Crocodoc.addComponent('page', function (scope) {
                 return false;
             }
 
-            $el.removeClass(CSS_CLASS_PAGE_ERROR);
-
-            //load page
-            status = Crocodoc.PAGE_STATUS_LOADING;
+            // request assets to be loaded... but only ACTUALLY load if it is
+            // not loaded already
+            if (status !== Crocodoc.PAGE_STATUS_LOADED) {
+                status = Crocodoc.PAGE_STATUS_LOADING;
+            }
             return $.when(pageContent.load(), pageText.load())
                 .done(function handleLoadDone() {
                     if (loadRequested) {
-                        status = Crocodoc.PAGE_STATUS_LOADED;
-                        $el.removeClass(CSS_CLASS_PAGE_LOADING);
-                        scope.broadcast('pageload', { page: pageNum });
+                        if (status !== Crocodoc.PAGE_STATUS_LOADED) {
+                            $el.removeClass(CSS_CLASS_PAGE_LOADING);
+                            status = Crocodoc.PAGE_STATUS_LOADED;
+                            scope.broadcast('pageload', { page: pageNum });
+                        }
                     } else {
-                        page.unload();
+                        pageComponent.unload();
                     }
                 })
-                .fail(function handleLoadFail() {
-                    status = Crocodoc.PAGE_STATUS_NOT_LOADED;
-                    $el.removeClass(CSS_CLASS_PAGE_LOADING);
+                .fail(function handleLoadFail(error) {
+                    status = Crocodoc.PAGE_STATUS_ERROR;
+                    $el.addClass(CSS_CLASS_PAGE_ERROR);
+                    scope.broadcast('pagefail', { page: index + 1, error: error });
                 });
-        },
-
-
-        /**
-         * Mark the page as failed, i.e., loading will not be retried again for this page
-         * and broadcast a pagefail event for this page
-         * @param {Object} error The error object
-         * @returns {void}
-         */
-        fail: function (error) {
-            status = Crocodoc.PAGE_STATUS_ERROR;
-            $el.addClass(CSS_CLASS_PAGE_ERROR);
-            scope.broadcast('pagefail', { page: index + 1, error: error });
         },
 
         /**
@@ -4988,7 +5281,9 @@ Crocodoc.addComponent('resizer', function (scope) {
 
     return {
 
-        messages: ['layoutchange'],
+        messages: [
+            'layoutchange'
+        ],
 
         /**
          * Handle framework messages
@@ -5251,8 +5546,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     var DOCUMENT_100_PERCENT_WIDTH = 1024;
 
     var util = scope.getUtility('common'),
-        urlUtil = scope.getUtility('url'),
-        ajax = scope.getUtility('ajax'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support');
 
@@ -5438,6 +5731,8 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             page: config.page || 1,
             numPages: config.numPages
         });
+
+        scope.ready();
     }
 
     /**
@@ -5449,32 +5744,19 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         var i,
             pages = [],
             page,
-            svgSrc,
-            imgSrc,
-            textSrc,
-            cssSrc,
             start = config.pageStart - 1,
             end = config.pageEnd,
-            url = urlUtil.makeAbsolute(config.url),
-            status = config.conversionIsComplete ? Crocodoc.PAGE_STATUS_NOT_LOADED : Crocodoc.PAGE_STATUS_CONVERTING,
-            links = sortPageLinks();
+            links = sortPageLinks(),
+            status = config.conversionIsComplete ?
+                Crocodoc.PAGE_STATUS_NOT_LOADED :
+                Crocodoc.PAGE_STATUS_CONVERTING;
 
         //initialize pages
         for (i = start; i < end; i++) {
-            svgSrc = url + util.template(config.template.svg, {page: i + 1});
-            textSrc = url + util.template(config.template.html, {page: i + 1});
-            imgSrc = url + util.template(config.template.img, {page: i + 1});
-            cssSrc = url + config.template.css;
             page = scope.createComponent('page');
             page.init(config.$pages.eq(i - start), {
                 index: i,
-                url: url,
-                imgSrc: imgSrc,
-                svgSrc: svgSrc,
-                textSrc: textSrc,
-                cssSrc: cssSrc,
                 status: status,
-                queryString: config.queryString,
                 enableLinks: config.enableLinks,
                 links: links[i],
                 pageScale: config.pageScale
@@ -5539,60 +5821,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function handleMouseUp() {
         updateSelectedPages();
-    }
-
-    /**
-     * Load the given resource via AJAX request, and retry if necessary
-     * @param {boolean} retry Whether to retry if the resource fails to load
-     * @returns {$.Promise}
-     * @private
-     */
-    function loadResource(url, retry) {
-        var $deferred = $.Deferred();
-
-        function retryOrFail(error) {
-            scope.broadcast('asseterror', error);
-            if (retry) {
-                // don't retry next time
-                loadResource(url, false)
-                    .then(function (responseText) {
-                        $deferred.resolve(responseText);
-                    })
-                    .fail(function (err) {
-                        $deferred.reject(err);
-                    });
-            } else {
-                $deferred.reject(error);
-            }
-        }
-
-        ajax.request(url, {
-            success: function () {
-                if (destroyed) {
-                    return;
-                }
-                if (!this.responseText) {
-                    retryOrFail({
-                        error: 'empty response',
-                        status: this.status,
-                        resource: url
-                    });
-                    return;
-                }
-                $deferred.resolve(this.responseText);
-            },
-            fail: function () {
-                if (destroyed) {
-                    return;
-                }
-                retryOrFail({
-                    error: this.statusText,
-                    status: this.status,
-                    resource: url
-                });
-            }
-        });
-        return $deferred.promise();
     }
 
     /**
@@ -5823,19 +6051,15 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {void}
          */
         loadAssets: function () {
-            var absolutePath = urlUtil.makeAbsolute(config.url),
-                stylesheetURL = absolutePath + config.template.css,
-                metadataURL = absolutePath + config.template.json,
-                $loadStylesheetPromise,
+            var $loadStylesheetPromise,
                 $loadMetadataPromise;
 
             validateQueryParams();
-            stylesheetURL += config.queryString;
-            metadataURL += config.queryString;
 
-            $loadMetadataPromise = loadResource(metadataURL, true);
-            $loadMetadataPromise.then(function handleMetadataResponse(responseText) {
-                config.metadata = $.parseJSON(responseText);
+            // @TODO: abort requests if the viewer is destroyed
+            $loadMetadataPromise = scope.get('metadata');
+            $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
+                config.metadata = metadata;
                 validateConfig();
             });
 
@@ -5843,20 +6067,12 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             if (browser.ielt9) {
                 stylesheetEl = util.insertCSS('');
                 config.stylesheet = stylesheetEl.styleSheet;
-                $loadStylesheetPromise = $.when();
+                $loadStylesheetPromise = null;
             } else {
-                $loadStylesheetPromise = loadResource(stylesheetURL, true);
-                $loadStylesheetPromise.then(function handleStylesheetResponse(responseText) {
-                    // @NOTE: There is a bug in IE that causes the text layer to
-                    // not render the font when loaded for a second time (i.e.,
-                    // destroy and recreate a viewer for the same document), so
-                    // namespace the font-family so there is no collision
-                    if (browser.ie) {
-                        responseText = responseText.replace(/font-family:[\s\"\']*([\w-]+)\b/g,
-                            '$0-' + config.id);
-                    }
-                    config.cssText = responseText;
-                    stylesheetEl = util.insertCSS(responseText);
+                $loadStylesheetPromise = scope.get('stylesheet');
+                $loadStylesheetPromise.then(function handleStylesheetResponse(cssText) {
+                    config.cssText = cssText;
+                    stylesheetEl = util.insertCSS(cssText);
                     config.stylesheet = stylesheetEl.sheet;
                 });
             }
@@ -5864,6 +6080,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // when both metatadata and stylesheet are done or if either fails...
             $.when($loadMetadataPromise, $loadStylesheetPromise)
                 .fail(function (error) {
+                    scope.broadcast('asseterror', error);
                     scope.broadcast('fail', error);
                 })
                 .then(completeInit);
