@@ -71,7 +71,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         scroller,
         resizer,
         dragger,
-        destroyed = false;
+        $assetsPromise;
 
     /**
      * Add CSS classes to the element for necessary feature/support flags
@@ -514,7 +514,9 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // remove the stylesheet
             $(stylesheetEl).remove();
 
-            destroyed = true;
+            if ($assetsPromise) {
+                $assetsPromise.abort();
+            }
         },
 
         /**
@@ -578,9 +580,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          */
         loadAssets: function () {
             var $loadStylesheetPromise,
-                $loadMetadataPromise;
+                $loadMetadataPromise,
+                $pageOneSVGPromise,
+                $pageOneTextPromise;
 
-            // @TODO: abort requests if the viewer is destroyed
             $loadMetadataPromise = scope.get('metadata');
             $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
                 config.metadata = metadata;
@@ -591,7 +594,9 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             if (browser.ielt9) {
                 stylesheetEl = util.insertCSS('');
                 config.stylesheet = stylesheetEl.styleSheet;
-                $loadStylesheetPromise = null;
+                $loadStylesheetPromise = $.when('').promise({
+                    abort: function () {}
+                });
             } else {
                 $loadStylesheetPromise = scope.get('stylesheet');
                 $loadStylesheetPromise.then(function handleStylesheetResponse(cssText) {
@@ -600,21 +605,33 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 });
             }
 
+            // load page 1 assets immediately if necessary
+            if (!config.pageStart || config.pageStart === 1) {
+                $pageOneSVGPromise = scope.get('page-svg', 1);
+                if (config.enableTextSelection) {
+                    $pageOneTextPromise = scope.get('page-text', 1);
+                }
+            }
+
             // when both metatadata and stylesheet are done or if either fails...
-            $.when($loadMetadataPromise, $loadStylesheetPromise)
+            $assetsPromise = $.when($loadMetadataPromise, $loadStylesheetPromise)
                 .fail(function (error) {
                     scope.broadcast('asseterror', error);
                     scope.broadcast('fail', error);
                 })
-                .then(completeInit);
-
-            // load page 1 assets immediately if necessary
-            if (!config.pageStart || config.pageStart === 1) {
-                scope.get('page-svg', 1);
-                if (config.enableTextSelection) {
-                    scope.get('page-text', 1);
-                }
-            }
+                .then(completeInit)
+                .promise({
+                    abort: function () {
+                        $loadMetadataPromise.abort();
+                        $loadStylesheetPromise.abort();
+                        if ($pageOneSVGPromise) {
+                            $pageOneSVGPromise.abort();
+                        }
+                        if ($pageOneTextPromise) {
+                            $pageOneTextPromise.abort();
+                        }
+                    }
+                });
         }
     };
 });
