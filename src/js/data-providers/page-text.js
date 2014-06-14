@@ -10,7 +10,8 @@ Crocodoc.addDataProvider('page-text', function(scope) {
 
     var util = scope.getUtility('common'),
         ajax = scope.getUtility('ajax'),
-        config = scope.getConfig();
+        config = scope.getConfig(),
+        cache = {};
 
     /**
      * Process HTML text and return the embeddable result
@@ -46,14 +47,24 @@ Crocodoc.addDataProvider('page-text', function(scope) {
          */
         get: function(objectType, pageNum) {
             var url = this.getURL(pageNum),
-                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+                $promise;
+
+            if (cache[pageNum]) {
+                return cache[pageNum];
+            }
+
+            $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
 
             // @NOTE: promise.then() creates a new promise, which does not copy
             // custom properties, so we need to create a futher promise and add
             // an object with the abort method as the new target
-            return $promise.then(processTextContent).promise({
-                abort: $promise.abort
+            cache[pageNum] = $promise.then(processTextContent).promise({
+                abort: function () {
+                    $promise.abort();
+                    delete cache[pageNum];
+                }
             });
+            return cache[pageNum];
         },
 
         /**
@@ -64,6 +75,15 @@ Crocodoc.addDataProvider('page-text', function(scope) {
         getURL: function (pageNum) {
             var textPath = util.template(config.template.html, { page: pageNum });
             return config.url + textPath + config.queryString;
+        },
+
+        /**
+         * Cleanup the data-provider
+         * @returns {void}
+         */
+        destroy: function () {
+            util = ajax = config = null;
+            cache = null;
         }
     };
 });

@@ -26,6 +26,7 @@ module('Data Provider: stylesheet', {
     },
     teardown: function () {
         this.scope.destroy();
+        this.dataProvider.destroy();
     }
 });
 
@@ -37,6 +38,11 @@ test('creator should return an object with a get function', function(){
 test('get() should return a $.Promise with an abort() function', function() {
     this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
     propEqual(this.dataProvider.get(), $.Deferred().promise({abort:function(){}}));
+});
+
+test('get() should return a cached promise when called a second time', function() {
+    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
+    equal(this.dataProvider.get(), this.dataProvider.get());
 });
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {

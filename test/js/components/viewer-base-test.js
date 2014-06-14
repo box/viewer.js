@@ -55,6 +55,9 @@ module('Component - viewer-base', {
             },
             ajax: {
                 request: function () {}
+            },
+            url: {
+                makeAbsolute: sinon.stub().returnsArg(0)
             }
         };
 
@@ -64,15 +67,21 @@ module('Component - viewer-base', {
             fire: function () {}
         };
 
-        this.config = $.extend(true, {
-                $el: $('<div>'),
-                api: this.viewerAPI,
-                url: '/some/url'
-            }, Crocodoc.Viewer.defaults);
+        this.config = $.extend(true, {}, Crocodoc.Viewer.defaults);
+        this.config.$el = $('<div>');
+        this.config.api = this.viewerAPI;
+        this.config.url = '/some/url';
 
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('viewer-base', this.scope);
     }
+});
+
+test('init() should throw an error when called url.config is not defined', function () {
+    var spy = this.spy(this.viewerAPI, 'fire');
+
+    this.config.url = null;
+    throws(function (){ this.component.init(); }, 'error should be thrown');
 });
 
 test('loadAssets() should request metadata when called', function () {

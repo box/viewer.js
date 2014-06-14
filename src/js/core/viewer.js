@@ -63,19 +63,6 @@
          * @returns {void}
          */
         this.load = function () {
-            // add a / to the end of the base url if necessary
-            if (config.url) {
-                if (!/\/$/.test(config.url)) {
-                    config.url += '/';
-                }
-            } else {
-                scope.broadcast('fail', { error: 'no URL given for assets' });
-                return;
-            }
-
-            // make the url absolute
-            config.url = scope.getUtility('url').makeAbsolute(config.url);
-
             viewerBase.loadAssets();
         };
 

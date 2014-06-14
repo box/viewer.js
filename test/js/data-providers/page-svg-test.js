@@ -33,6 +33,7 @@ module('Data Provider: page-svg', {
     },
     teardown: function () {
         this.scope.destroy();
+        this.dataProvider.destroy();
     }
 });
 
@@ -44,6 +45,11 @@ test('creator should return an object with a get function', function(){
 test('get() should return a $.Promise with an abort() function', function() {
     this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
     propEqual(this.dataProvider.get('page-svg', 1), $.Deferred().promise({abort:function(){}}));
+});
+
+test('get() should return a cached promise when called a second time', function() {
+    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
+    equal(this.dataProvider.get('page-svg', 1), this.dataProvider.get('page-svg', 1));
 });
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {
@@ -63,6 +69,7 @@ test('getURL() should return the correct URL to the svg file when called', funct
 test('get() should apply the subpx hack if the browser is firefox and subpixel rendering is not supported', function () {
     var svgText = '<svg>\n<xhtml:link href="stylesheet.css" type="text/css" rel="stylesheet" />\n</svg>';
 
+    this.stub(this.scope, 'get').withArgs('stylesheet').returns(this.$deferred.promise());
     this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
 
     this.utilities.browser.firefox = true;

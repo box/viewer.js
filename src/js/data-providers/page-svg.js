@@ -12,34 +12,18 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
         ajax = scope.getUtility('ajax'),
         browser = scope.getUtility('browser'),
         subpx = scope.getUtility('subpx'),
-        config = scope.getConfig();
+        config = scope.getConfig(),
+        cache = {};
 
     /**
-     * Process SVG text and return the embeddable result
-     * @param   {string} text The original SVG text
-     * @returns {string}      The processed SVG text
-     * @private
+     * Interpolate CSS text into the SVG text
+     * @param   {string} text    The SVG text
+     * @param   {string} cssText The CSS text
+     * @returns {string}         The full SVG text
      */
-    function processSVGContent(text) {
-        var query = config.queryString.replace('&', '&#38;'),
-            dataUrlCount,
-            stylesheetHTML;
-
-        dataUrlCount = util.countInStr(text, 'xlink:href="data:image');
-        // remove data:urls from the SVG content if the number exceeds MAX_DATA_URLS
-        if (dataUrlCount > MAX_DATA_URLS) {
-            // remove all data:url images that are smaller than 5KB
-            text = text.replace(/<image[\s\w-_="]*xlink:href="data:image\/[^"]{0,5120}"[^>]*>/ig, '');
-        }
-
-        // @TODO: remove this, because we no longer use any external assets in this way
-        // modify external asset urls for absolute path
-        text = text.replace(/href="([^"#:]*)"/g, function (match, group) {
-            return 'href="' + config.url + group + query + '"';
-        });
-
+    function interpolateCSSText(text, cssText) {
         // CSS text
-        stylesheetHTML = '<style>' + config.cssText + '</style>';
+        var stylesheetHTML = '<style>' + cssText + '</style>';
 
         // If using Firefox with no subpx support, add "text-rendering" CSS.
         // @NOTE(plai): We are not adding this to Chrome because Chrome supports "textLength"
@@ -56,6 +40,34 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
         return text;
     }
 
+    /**
+     * Process SVG text and return the embeddable result
+     * @param   {string} text The original SVG text
+     * @returns {string}      The processed SVG text
+     * @private
+     */
+    function processSVGContent(text) {
+        var query = config.queryString.replace('&', '&#38;'),
+            dataUrlCount;
+
+        dataUrlCount = util.countInStr(text, 'xlink:href="data:image');
+        // remove data:urls from the SVG content if the number exceeds MAX_DATA_URLS
+        if (dataUrlCount > MAX_DATA_URLS) {
+            // remove all data:url images that are smaller than 5KB
+            text = text.replace(/<image[\s\w-_="]*xlink:href="data:image\/[^"]{0,5120}"[^>]*>/ig, '');
+        }
+
+        // @TODO: remove this, because we no longer use any external assets in this way
+        // modify external asset urls for absolute path
+        text = text.replace(/href="([^"#:]*)"/g, function (match, group) {
+            return 'href="' + config.url + group + query + '"';
+        });
+
+        return scope.get('stylesheet').then(function (cssText) {
+            return interpolateCSSText(text, cssText);
+        });
+    }
+
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -69,14 +81,24 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
          */
         get: function(objectType, pageNum) {
             var url = this.getURL(pageNum),
-                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+                $promise;
+
+            if (cache[pageNum]) {
+                return cache[pageNum];
+            }
+
+            $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
 
             // @NOTE: promise.then() creates a new promise, which does not copy
             // custom properties, so we need to create a futher promise and add
             // an object with the abort method as the new target
-            return $promise.then(processSVGContent).promise({
-                abort: $promise.abort
+            cache[pageNum] = $promise.then(processSVGContent).promise({
+                abort: function () {
+                    $promise.abort();
+                    delete cache[pageNum];
+                }
             });
+            return cache[pageNum];
         },
 
         /**
@@ -87,6 +109,15 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
         getURL: function (pageNum) {
             var svgPath = util.template(config.template.svg, { page: pageNum });
             return config.url + svgPath + config.queryString;
+        },
+
+        /**
+         * Cleanup the data-provider
+         * @returns {void}
+         */
+        destroy: function () {
+            util = ajax = subpx = browser = config = null;
+            cache = null;
         }
     };
 });

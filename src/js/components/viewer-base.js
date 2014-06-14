@@ -480,6 +480,19 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             $el.addClass(CSS_CLASS_VIEWER);
             $el.addClass(config.namespace);
 
+            // add a / to the end of the base url if necessary
+            if (config.url) {
+                if (!/\/$/.test(config.url)) {
+                    config.url += '/';
+                }
+            } else {
+                throw new Error('no URL given for viewer assets');
+            }
+
+            // make the url absolute
+            config.url = scope.getUtility('url').makeAbsolute(config.url);
+
+            validateQueryParams();
             initViewerHTML();
             initPlugins();
         },
@@ -567,8 +580,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             var $loadStylesheetPromise,
                 $loadMetadataPromise;
 
-            validateQueryParams();
-
             // @TODO: abort requests if the viewer is destroyed
             $loadMetadataPromise = scope.get('metadata');
             $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
@@ -584,7 +595,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             } else {
                 $loadStylesheetPromise = scope.get('stylesheet');
                 $loadStylesheetPromise.then(function handleStylesheetResponse(cssText) {
-                    config.cssText = cssText;
                     stylesheetEl = util.insertCSS(cssText);
                     config.stylesheet = stylesheetEl.sheet;
                 });
@@ -597,6 +607,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                     scope.broadcast('fail', error);
                 })
                 .then(completeInit);
+
+            // load page 1 assets immediately if necessary
+            if (!config.pageStart || config.pageStart === 1) {
+                scope.get('page-svg', 1);
+                if (config.enableTextSelection) {
+                    scope.get('page-text', 1);
+                }
+            }
         }
     };
 });

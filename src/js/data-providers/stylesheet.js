@@ -7,7 +7,8 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
 
     var ajax = scope.getUtility('ajax'),
         browser = scope.getUtility('browser'),
-        config = scope.getConfig();
+        config = scope.getConfig(),
+        $cachedPromise;
 
     /**
      * Process stylesheet text and return the embeddable result
@@ -38,15 +39,22 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
          * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
          */
         get: function() {
-            var url = this.getURL(),
-                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+            if ($cachedPromise) {
+                return $cachedPromise;
+            }
+
+            var $promise = ajax.fetch(this.getURL(), Crocodoc.ASSET_REQUEST_RETRIES);
 
             // @NOTE: promise.then() creates a new promise, which does not copy
             // custom properties, so we need to create a futher promise and add
             // an object with the abort method as the new target
-            return $promise.then(processStylesheetContent).promise({
-                abort: $promise.abort
+            $cachedPromise = $promise.then(processStylesheetContent).promise({
+                abort: function () {
+                    $promise.abort();
+                    $cachedPromise = null;
+                }
             });
+            return $cachedPromise;
         },
 
         /**
@@ -56,6 +64,15 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
         getURL: function () {
             var cssPath = config.template.css;
             return config.url + cssPath + config.queryString;
+        },
+
+        /**
+         * Cleanup the data-provider
+         * @returns {void}
+         */
+        destroy: function () {
+            ajax = browser = config = null;
+            $cachedPromise = null;
         }
     };
 });
