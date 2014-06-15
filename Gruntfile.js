@@ -2,7 +2,7 @@
 /*jshint node: true*/
 
 function getFileInfoString(i) {
-    return '[{{= filename(src[' + i + ']) }} v{{= config("pkg.version") }}]' +
+    return '* [{{= filename(src[' + i + ']) }}]' +
            '({{= config("file_info.all.srcPrefix") }}/{{= src[' + i + '] }}) ' +
            '{{= sizeText(size(src[' + i + '])) }} ' +
            '({{= sizeText(gzipSize(src[' + i + '])) }} gzipped)';
@@ -237,16 +237,16 @@ module.exports = function (grunt) {
                     stdout: false,
                     inject: {
                         dest: 'README.md',
-                        text: '**Development**' +
+                        text: '#### v{{= config("pkg.version") }}' +
                             grunt.util.linefeed + grunt.util.linefeed +
-                            getFileInfoString(0) +
+                            '**Development**' +
                             grunt.util.linefeed + grunt.util.linefeed +
+                            getFileInfoString(0) + grunt.util.linefeed +
                             getFileInfoString(1) +
                             grunt.util.linefeed + grunt.util.linefeed +
                             '**Production**' +
                             grunt.util.linefeed + grunt.util.linefeed +
-                            getFileInfoString(2) +
-                            grunt.util.linefeed + grunt.util.linefeed +
+                            getFileInfoString(2) + grunt.util.linefeed +
                             getFileInfoString(3)
                     }
                 }
