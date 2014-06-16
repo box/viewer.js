@@ -249,6 +249,18 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     }
 
     /**
+     * Return the expected conversion status of the given page index
+     * @param   {int} pageIndex The page index
+     * @returns {string}        The page status
+     */
+    function getPageStatus(pageIndex) {
+        if (pageIndex === 0 || config.conversionIsComplete) {
+            return Crocodoc.PAGE_STATUS_NOT_LOADED;
+        }
+        return Crocodoc.PAGE_STATUS_CONVERTING;
+    }
+
+    /**
      * Create and init all necessary page component instances
      * @returns {void}
      * @private
@@ -259,17 +271,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             page,
             start = config.pageStart - 1,
             end = config.pageEnd,
-            links = sortPageLinks(),
-            status = config.conversionIsComplete ?
-                Crocodoc.PAGE_STATUS_NOT_LOADED :
-                Crocodoc.PAGE_STATUS_CONVERTING;
+            links = sortPageLinks();
 
         //initialize pages
         for (i = start; i < end; i++) {
             page = scope.createComponent('page');
             page.init(config.$pages.eq(i - start), {
                 index: i,
-                status: status,
+                status: getPageStatus(i),
                 enableLinks: config.enableLinks,
                 links: links[i],
                 pageScale: config.pageScale

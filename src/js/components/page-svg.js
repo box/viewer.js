@@ -381,11 +381,19 @@ Crocodoc.addComponent('page-svg', function (scope) {
         },
 
         /**
+         * Prepare the element for loading
+         * @returns {void}
+         */
+        prepare: function () {
+            prepareSVGContainer();
+        },
+
+        /**
          * Prepare the SVG object to be loaded and start loading SVG text
          * @returns {void}
          */
         preload: function () {
-            prepareSVGContainer();
+            this.prepare();
 
             if (!$loadSVGPromise) {
                 $loadSVGPromise = loadSVGText();

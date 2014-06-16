@@ -114,6 +114,7 @@ Crocodoc.addComponent('page', function (scope) {
          * @returns {void}
          */
         preload: function () {
+            pageContent.prepare();
             if (status === Crocodoc.PAGE_STATUS_NOT_LOADED) {
                 pageContent.preload();
                 pageText.preload();

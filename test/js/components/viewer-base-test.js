@@ -213,12 +213,19 @@ test('loadAssets() should init page components with appropriate status when call
     this.config.conversionIsComplete = false;
     this.component.init();
 
-    this.mock(this.components.page)
-        .expects('init')
+    var mock = this.mock(this.components.page);
+
+    mock.expects('init')
+        .withArgs(sinon.match.object, sinon.match({
+            status: Crocodoc.PAGE_STATUS_NOT_LOADED
+        }))
+        .once();
+
+    mock.expects('init')
         .withArgs(sinon.match.object, sinon.match({
             status: Crocodoc.PAGE_STATUS_CONVERTING
         }))
-        .exactly(metadata.numpages);
+        .exactly(metadata.numpages - 1);
 
     this.component.loadAssets();
 });
