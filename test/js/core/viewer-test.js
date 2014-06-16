@@ -73,17 +73,6 @@ test('constructor should throw an error when the container element is invalid', 
     }, 'init threw when element was invalid');
 });
 
-test('load() should broadcast a fail message when called without a url to load', function () {
-    this.stub(Crocodoc, 'Scope').returns(this.scope);
-    var viewer = new Crocodoc.Viewer('body', {});
-
-    var broadcastSpy = this.spy(this.scope, 'broadcast');
-
-    viewer.load();
-
-    ok(broadcastSpy.calledWith('fail', sinon.match({ error: sinon.match.string })), 'fail was broadcast');
-});
-
 test('load() should load assets when called', function () {
     this.stub(Crocodoc, 'Scope').returns(this.scope);
     var viewer = new Crocodoc.Viewer('body', { url: 'someurl' });

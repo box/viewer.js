@@ -73,7 +73,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
     var $svg, $svgLayer,
         $loadSVGPromise,
         page,
-        svgText,
         destroyed = false,
         unloaded = false,
         svgLoaded = false,
@@ -103,8 +102,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 });
 
             case EMBED_STRATEGY_INLINE_SVG:
-                // just return a div with 100% w/h and the svg will be inserted on load
-                return $('<div style="width:100%; height:100%;">');
+                return $('<div>');
 
             case EMBED_STRATEGY_BASIC_OBJECT:
                 return $('<object>');
@@ -139,23 +137,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
      * @private
      */
     function loadSVGText() {
-        if (!$svg) {
-            // If the svg element is not available, bypass asset loading
-            // and return something that mimics a data-provider promise.
-            return $.Deferred().reject({
-                error: 'Error creating SVG element',
-                status: 200,
-                resource: url
-            }).promise({
-                abort: function() {}
-            });
-        }
-
-        if (embedStrategy === EMBED_STRATEGY_BASIC_OBJECT ||
+        if (svgLoaded ||
+            // @NOTE: these embed strategies don't require svg text to be loaded
+            embedStrategy === EMBED_STRATEGY_BASIC_OBJECT ||
             embedStrategy === EMBED_STRATEGY_BASIC_IMG)
         {
-            // don't load the SVG text, just embed the object with
-            // the source pointed at the correct location
+            // don't load the SVG text, just return an empty promise
             return $.Deferred().resolve().promise({
                 abort: function() {}
             });
@@ -192,7 +179,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
      * @returns {void}
      * @private
      */
-    function embedSVG() {
+    function embedSVG(svgText) {
         var domParser,
             svgDoc,
             svgEl,
@@ -241,15 +228,9 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 head.insertBefore(script, head.firstChild);
                 if (contentDocument.readyState === 'complete') {
                     contentWindow.loadSVG(svgText);
-                    if (!removeOnUnload) {
-                        svgText = null;
-                    }
                 } else {
                     contentWindow.onload = function () {
                         this.loadSVG(svgText);
-                        if (!removeOnUnload) {
-                            svgText = null;
-                        }
                     };
                 }
                 // NOTE: return is necessary here because we are waiting for a callback
@@ -300,9 +281,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
 
             // no default
         }
-        if (!removeOnUnload) {
-            svgText = null;
-        }
 
         // make sure the svg width/height are explicity set to 100%
         svgEl.setAttribute('width', '100%');
@@ -331,6 +309,46 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 document.documentElement.appendChild(svgEl);
             }
         };
+    }
+
+    /**
+     * handle SVG load success
+     * @param   {string} text The SVG text
+     * @returns {void}
+     */
+    function loadSVGSuccess(text) {
+        if (!destroyed && !unloaded) {
+            if (!svgLoaded && text) {
+                embedSVG(text);
+                svgLoaded = true;
+                if (!removeOnUnload) {
+                    // cleanup the promise (abort will remove the svg text from
+                    // the in-memory cache as well)
+                    $loadSVGPromise.abort();
+                    $loadSVGPromise = null;
+                }
+            }
+            // always insert and show the svg el when load was successful
+            if ($svg.parent().length === 0) {
+                $svg.appendTo($svgLayer);
+            }
+            $svg.show();
+        }
+    }
+
+    /**
+     * Handle SVG load failure
+     * @param   {*} error The error
+     * @returns {void}
+     */
+    function loadSVGFail(error) {
+        scope.broadcast('asseterror', error);
+        svgLoaded = false;
+        if ($loadSVGPromise) {
+            $loadSVGPromise.abort();
+        }
+        // don't set the promise to null, because when it fails it should fail
+        // for good...
     }
 
     //--------------------------------------------------------------------------
@@ -363,11 +381,19 @@ Crocodoc.addComponent('page-svg', function (scope) {
         },
 
         /**
+         * Prepare the element for loading
+         * @returns {void}
+         */
+        prepare: function () {
+            prepareSVGContainer();
+        },
+
+        /**
          * Prepare the SVG object to be loaded and start loading SVG text
          * @returns {void}
          */
         preload: function () {
-            prepareSVGContainer();
+            this.prepare();
 
             if (!$loadSVGPromise) {
                 $loadSVGPromise = loadSVGText();
@@ -384,27 +410,9 @@ Crocodoc.addComponent('page-svg', function (scope) {
             unloaded = false;
             this.preload();
 
-            $loadSVGPromise.done(function loadSVGSuccess(text) {
-                if (!destroyed && !unloaded) {
-                    if (!svgLoaded) {
-                        svgLoaded = true;
-                        svgText = text;
-                        embedSVG();
-                    }
-                    // always insert and show the svg el when load was successful
-                    if ($svg.parent().length === 0) {
-                        $svg.appendTo($svgLayer);
-                    }
-                    $svg.show();
-                }
-            });
-
-            $loadSVGPromise.fail(function loadSVGFail(error) {
-                scope.broadcast('asseterror', error);
-                svgLoaded = false;
-                $loadSVGPromise = null;
-            });
-
+            $loadSVGPromise
+                .done(loadSVGSuccess)
+                .fail(loadSVGFail);
             return $loadSVGPromise;
         },
 
@@ -415,19 +423,20 @@ Crocodoc.addComponent('page-svg', function (scope) {
         unload: function () {
             unloaded = true;
             // stop loading the page if it hasn't finished yet
-            if ($loadSVGPromise) {
+            if ($loadSVGPromise && $loadSVGPromise.state() !== 'resolved') {
                 $loadSVGPromise.abort();
-            }
-            if (removeOnUnload) {
                 $loadSVGPromise = null;
+            }
+
+            // remove the svg element if necessary
+            if (removeOnUnload) {
                 if ($svg) {
                     $svg.remove();
                     $svg = null;
                 }
                 svgLoaded = false;
-            } else if (svgLoaded) {
-                // @NOTE: still consider SVG to be loaded here,
-                // since we're merely hiding the DOM element
+            } else if ($svg) {
+                // just hide the svg element
                 $svg.hide();
             }
         }

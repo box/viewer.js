@@ -53,7 +53,7 @@ test('load() should embed the SVG when the load succeeds', function () {
     this.mock(this.scope)
         .expects('get')
         .withArgs('page-svg', pageNum)
-        .returns($deferred.promise());
+        .returns($deferred.promise({ abort: function () {} }));
 
     this.component.init(this.$el, pageNum);
     this.component.load();
@@ -68,7 +68,7 @@ test('load() should broadcast an asseterror when the load fails', function () {
 
     mock.expects('get')
         .withArgs('page-svg', pageNum)
-        .returns($deferred.promise());
+        .returns($deferred.promise({ abort: function () {} }));
 
     mock.expects('broadcast')
         .withArgs('asseterror', error);
@@ -79,7 +79,7 @@ test('load() should broadcast an asseterror when the load fails', function () {
 
 test('unload() should abort the request if there is one when called', function () {
     var pageNum = 3,
-        $deferred = $.Deferred().resolve(this.svgText);
+        $deferred = $.Deferred();
 
     var spy = this.spy();
 

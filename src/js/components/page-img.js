@@ -50,6 +50,12 @@ Crocodoc.addComponent('page-img', function (scope) {
         },
 
         /**
+         * Prepare the element for loading
+         * @returns {void}
+         */
+        prepare: function () { /* noop */ },
+
+        /**
          * Preload the image
          * @returns {void}
          */

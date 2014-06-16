@@ -17,7 +17,8 @@ module('Component - page', {
                 init: function () {},
                 load: function () {},
                 preload: function () {},
-                unload: function () {}
+                unload: function () {},
+                prepare: function () {}
             }
         };
         //@TODO: write tests for when SVG is not supported

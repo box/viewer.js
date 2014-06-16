@@ -28,6 +28,7 @@ module('Data Provider: page-text', {
     },
     teardown: function () {
         this.scope.destroy();
+        this.dataProvider.destroy();
     }
 });
 
@@ -40,6 +41,12 @@ test('get() should return a $.Promise with an abort() function', function() {
     this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
     propEqual(this.dataProvider.get('page-text', 1), $.Deferred().promise({abort:function(){}}));
 });
+
+test('get() should return a cached promise when called a second time', function() {
+    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
+    equal(this.dataProvider.get('page-text', 1), this.dataProvider.get('page-text', 1));
+});
+
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {
     this.stub(this.utilities.ajax, 'fetch').returns(this.promise);

@@ -41,7 +41,7 @@ Crocodoc.addComponent('page-text', function (scope) {
      * @returns {void}
      * @private
      */
-    function completeLoad(text) {
+    function loadTextLayerHTMLSuccess(text) {
         var doc, textEl;
 
         if (!text || loaded || destroyed) {
@@ -60,6 +60,12 @@ Crocodoc.addComponent('page-text', function (scope) {
         $textLayer.attr('class', textEl.getAttribute('class'));
         $textLayer.html(textEl.innerHTML);
         subpx.fix($textLayer);
+    }
+
+    function loadTextLayerHTMLFail(error) {
+        if (error) {
+            scope.broadcast('asseterror', error);
+        }
     }
 
     /**
@@ -112,9 +118,7 @@ Crocodoc.addComponent('page-text', function (scope) {
          * @returns {void}
          */
         preload: function () {
-            if (shouldUseTextLayer()) {
-                loadTextLayerHTML();
-            }
+            loadTextLayerHTML();
         },
 
         /**
@@ -124,14 +128,8 @@ Crocodoc.addComponent('page-text', function (scope) {
          */
         load: function () {
             return loadTextLayerHTML()
-                .done(function loadTextLayerHTMLSuccess(text) {
-                    completeLoad(text);
-                })
-                .fail(function loadTextLayerHTMLFail(error) {
-                    if (error) {
-                        scope.broadcast('asseterror', error);
-                    }
-                });
+                .done(loadTextLayerHTMLSuccess)
+                .fail(loadTextLayerHTMLFail);
         },
 
         /**
@@ -139,7 +137,7 @@ Crocodoc.addComponent('page-text', function (scope) {
          * @returns {void}
          */
         unload: function () {
-            if ($loadTextPromise) {
+            if ($loadTextPromise && $loadTextPromise.state() !== 'resolved') {
                 $loadTextPromise.abort();
                 $loadTextPromise = null;
             }
