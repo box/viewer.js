@@ -13,6 +13,9 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-image-embed');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-parallel');
+    grunt.loadNpmTasks('grunt-bump');
+    grunt.loadNpmTasks('grunt-git');
+    grunt.loadNpmTasks('grunt-publish');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -158,6 +161,38 @@ module.exports = function (grunt) {
                 }
             }
         },
+        release: {},
+        bump: {
+            options: {
+                files: ['package.json', 'bower.json'],
+                updateConfigs: ['pkg'],
+                commit: false,
+                createTag: false,
+                push: false
+            }
+        },
+        gitcommit: {
+            release: {
+                options: {
+                    message: 'v<%= pkg.version %>',
+                    // the tests will be run already in the release task, so no
+                    // need to run them again in the git pre-commit hook
+                    noVerify: true
+                },
+                files: [{ src: ['.'] }]
+            }
+        },
+        gittag: {
+            release: {
+                options: {
+                    tag: 'v<%= pkg.version %>',
+                    message: 'Crocodoc Viewer v<%= pkg.version %>'
+                }
+            }
+        },
+        publish: {
+            src: ['./']
+        },
         copy: {
             dist: {
                 files: [{
@@ -200,5 +235,23 @@ module.exports = function (grunt) {
     grunt.registerTask('default', defaultTasks);
     grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'parallel:examples']);
-    grunt.registerTask('release', ['build', 'copy:dist']);
+
+    grunt.registerTask('release', function () {
+        var type = grunt.option('type') || 'patch',
+            types = ['patch', 'minor', 'major'];
+
+        if (types.indexOf(type) === -1) {
+            grunt.fail.fatal(type + ' not a valid release type');
+            return;
+        }
+
+        grunt.task.run([
+            'bump:' + type,
+            'build',
+            'copy:dist',
+            'gitcommit',
+            'gittag',
+            'publish'
+        ]);
+    });
 };

@@ -52,6 +52,9 @@
     "qunitjs": "^1.14.0",
     "qunit-parameterize": "^0.4.0",
     "event-source-polyfill": "0.0.1",
-    "grunt-parallel": "^0.3.1"
+    "grunt-parallel": "^0.3.1",
+    "grunt-bump": "0.0.14",
+    "grunt-publish": "0.0.3",
+    "grunt-git": "^0.2.12"
   }
 }
