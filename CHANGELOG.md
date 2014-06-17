@@ -2,6 +2,9 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.5.1**
+  * Preload page 1 assets ASAP to reduce time to view page 1.
+  * Fix a bug where requests for text layer assets could be duplicated unnecessarily
 * **0.5.0**
   * Add realtime plugin
   * Add data providers
