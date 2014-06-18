@@ -58,6 +58,10 @@ module('Component - viewer-base', {
             },
             url: {
                 makeAbsolute: sinon.stub().returnsArg(0)
+            },
+            browser: {},
+            support: {
+                svg: true
             }
         };
 
@@ -89,7 +93,53 @@ test('loadAssets() should request metadata when called', function () {
 
     this.component.init();
     this.component.loadAssets();
-    ok(spy.calledWith('metadata'), 'metadata was requested');
+    ok(spy.calledWith('metadata'), 'metadata should be requested');
+});
+
+test('loadAssets() should request stylesheet when called', function () {
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.calledWith('stylesheet'), 'stylesheet should be requested');
+});
+
+test('loadAssets() should not request stylesheet when browser is IE < 9', function () {
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+
+    this.utilities.browser.ielt9 = true;
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.withArgs('stylesheet').notCalled, 'stylesheet should not be requested');
+});
+
+test('loadAssets() should prefetch correct page 1 assets when called', function () {
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.calledWith('page-svg', 1), 'page svg should be requested');
+    ok(spy.calledWith('page-text', 1), 'page html should be requested');
+    ok(spy.withArgs('page-img', 1).notCalled, 'page img should not be requested');
+});
+
+test('loadAssets() should prefetch correct page 1 assets when called in non-svg browser', function () {
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+
+    this.utilities.support.svg = false;
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.withArgs('page-svg', 1).notCalled, 'page svg should not be requested');
+    ok(spy.calledWith('page-img', 1), 'page img should be requested');
+});
+
+test('loadAssets() should not prefetch page text when text selection is disabled', function () {
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+
+    this.config.enableTextSelection = false;
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.withArgs('page-html', 1).notCalled, 'page html should not be requested');
 });
 
 test('loadAssets() should broadcast an asseterror message when loading metadata or stylesheet fails', function () {
@@ -249,6 +299,18 @@ test('destroy() should remove all Crocodoc-namespaced CSS classes from and empty
     this.component.destroy();
     ok($el.html().length === 0, 'HTML was emptied');
     ok($el.attr('class').indexOf('crocodoc') < 0, 'namespaced CSS classes were removed');
+});
+
+test('destroy() should abort all asset requests when called', function () {
+    var abortSpy = this.spy();
+    var promiseSpy = this.stub(this.scope, 'get').returns($.Deferred().promise({
+        abort: abortSpy
+    }));
+
+    this.component.init();
+    this.component.loadAssets();
+    this.component.destroy();
+    equal(abortSpy.callCount, promiseSpy.callCount, 'all requests should be aborted');
 });
 
 test('setLayout() should create and init a layout component instance when called with a valid layout type', function () {
