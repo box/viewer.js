@@ -16,6 +16,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-bump');
     grunt.loadNpmTasks('grunt-git');
     grunt.loadNpmTasks('grunt-publish');
+    grunt.loadNpmTasks('grunt-text-replace');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -161,7 +162,6 @@ module.exports = function (grunt) {
                 }
             }
         },
-        release: {},
         bump: {
             options: {
                 files: ['package.json', 'bower.json'],
@@ -169,6 +169,20 @@ module.exports = function (grunt) {
                 commit: false,
                 createTag: false,
                 push: false
+            }
+        },
+        gitlog: {
+            changelog: {
+                options: {
+                    from: 'v<%= pkg.version %>'
+                }
+            }
+        },
+        replace: {
+            changelog: {
+                src: ['CHANGELOG.md'],
+                overwrite: true,
+                replacements: [{ from: '----\n', to: '----\n<%= changelog.formatted %>' }]
             }
         },
         gitcommit: {
@@ -236,6 +250,16 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'parallel:examples']);
 
+    grunt.registerTask('changelog', function () {
+        var logs = grunt.config('gitlog.changelog.result');
+        var formatted = '* **' + grunt.config('pkg.version') + '**\n';
+        var issuesURL = grunt.config('pkg.bugs.url');
+        formatted += logs.map(function (l) {
+            return '  * ' + l.subject.replace(/#(\d+)/, '[#$1](' + issuesURL + '/$1)');
+        }).join('\n');
+        grunt.config('changelog.formatted', formatted + '\n');
+    });
+
     grunt.registerTask('release', function () {
         var type = grunt.option('type') || 'patch',
             types = ['patch', 'minor', 'major'];
@@ -246,12 +270,15 @@ module.exports = function (grunt) {
         }
 
         grunt.task.run([
+            'gitlog:changelog',
             'bump:' + type,
+            'changelog',
+            'replace:changelog',
             'build',
             'copy:dist',
-            'gitcommit',
-            'gittag',
-            'publish'
+            // 'gitcommit',
+            // 'gittag',
+            // 'publish'
         ]);
     });
 };
