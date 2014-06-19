@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.5.1 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.5.2 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 
@@ -6054,6 +6054,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 throw new Error('no URL given for viewer assets');
             }
 
+            if (browser.ielt9) {
+                config.enableTextSelection = false;
+            }
+
             // make the url absolute
             config.url = scope.getUtility('url').makeAbsolute(config.url);
 
@@ -6146,7 +6150,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         loadAssets: function () {
             var $loadStylesheetPromise,
                 $loadMetadataPromise,
-                $pageOneSVGPromise,
+                $pageOneContentPromise,
                 $pageOneTextPromise;
 
             $loadMetadataPromise = scope.get('metadata');
@@ -6172,7 +6176,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
 
             // load page 1 assets immediately if necessary
             if (!config.pageStart || config.pageStart === 1) {
-                $pageOneSVGPromise = scope.get('page-svg', 1);
+                if (support.svg) {
+                    $pageOneContentPromise = scope.get('page-svg', 1);
+                } else if (config.conversionIsComplete) {
+                    // unfortunately, page-1.png is not necessarily available
+                    // on View API's document.viewable event, so we can only
+                    // prefetch page-1.png if conversion is complete
+                    $pageOneContentPromise = scope.get('page-img', 1);
+                }
                 if (config.enableTextSelection) {
                     $pageOneTextPromise = scope.get('page-text', 1);
                 }
@@ -6189,8 +6200,8 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                     abort: function () {
                         $loadMetadataPromise.abort();
                         $loadStylesheetPromise.abort();
-                        if ($pageOneSVGPromise) {
-                            $pageOneSVGPromise.abort();
+                        if ($pageOneContentPromise) {
+                            $pageOneContentPromise.abort();
                         }
                         if ($pageOneTextPromise) {
                             $pageOneTextPromise.abort();
