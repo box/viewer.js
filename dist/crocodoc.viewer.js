@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.5.2 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.5.3 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 
@@ -3767,18 +3767,22 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
         pages,
         numPages,
         pagefocusTriggerLoadingTID,
+        readyTriggerLoadingTID,
         pageLoadTID,
         pageLoadQueue = [],
         pageLoadRange = 1,
         pageLoadingStopped = true,
         scrollDirection = 1,
+        ready = false,
         layoutState = {
             page: 1,
             visiblePages: [1]
         };
 
     var PAGE_LOAD_INTERVAL = (browser.mobile || browser.ielt10) ? 100 : 50, //ms between initiating page loads
-        MAX_PAGE_LOAD_RANGE = (browser.mobile || browser.ielt10) ? 8 : 32;
+        MAX_PAGE_LOAD_RANGE = (browser.mobile || browser.ielt10) ? 8 : 32,
+        // the delay in ms to wait before triggering preloading after `ready`
+        READY_TRIGGER_PRELOADING_DELAY = 1000;
 
     /**
      * Create and return a range object (eg., { min: x, max: y })
@@ -3970,6 +3974,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
             'beforezoom',
             'pageavailable',
             'pagefocus',
+            'ready',
             'scroll',
             'scrollend',
             'zoom'
@@ -3992,11 +3997,14 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
                 case 'pagefocus':
                     this.handlePageFocus(data);
                     break;
+                case 'ready':
+                    this.handleReady();
+                    break;
                 case 'scroll':
-                    this.handleScroll(data);
+                    this.handleScroll();
                     break;
                 case 'scrollend':
-                    this.handleScrollEnd(data);
+                    this.handleScrollEnd();
                     break;
                 case 'zoom':
                     this.handleZoom(data);
@@ -4113,6 +4121,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          * @returns {void}
          */
         cancelAllLoading: function () {
+            clearTimeout(readyTriggerLoadingTID);
             clearTimeout(pagefocusTriggerLoadingTID);
             clearPageLoadQueue();
         },
@@ -4156,11 +4165,26 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
         },
 
         /**
+         * Handle ready messages
+         * @returns {void}
+         */
+        handleReady: function () {
+            ready = true;
+            this.loadVisiblePages();
+            readyTriggerLoadingTID = setTimeout(function () {
+                api.loadNecessaryPages();
+            }, READY_TRIGGER_PRELOADING_DELAY);
+        },
+
+        /**
          * Handle pageavailable messages
          * @param   {Object} data The message data
          * @returns {void}
          */
         handlePageAvailable: function (data) {
+            if (!ready) {
+                return;
+            }
             var i;
             if (data.all === true) {
                 data.upto = numPages;
@@ -4180,7 +4204,11 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          * @returns {void}
          */
         handlePageFocus: function (data) {
+            // NOTE: update layout state before `ready`
             this.updateLayoutState(data);
+            if (!ready) {
+                return;
+            }
             this.cancelAllLoading();
             // set a timeout to trigger loading so we dont cause unnecessary layouts while scrolling
             pagefocusTriggerLoadingTID = setTimeout(function () {
@@ -4194,6 +4222,9 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          * @returns {void}
          */
         handleBeforeZoom: function (data) {
+            if (!ready) {
+                return;
+            }
             this.cancelAllLoading();
             // @NOTE: for performance reasons, we unload as many pages as possible just before zooming
             // so we don't have to layout as many pages at a time immediately after the zoom.
@@ -4208,7 +4239,11 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          * @returns {void}
          */
         handleZoom: function (data) {
+            // NOTE: update layout state before `ready`
             this.updateLayoutState(data);
+            if (!ready) {
+                return;
+            }
             this.loadNecessaryPages();
         },
 
@@ -4227,6 +4262,9 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          * @returns {void}
          */
         handleScrollEnd: function () {
+            if (!ready) {
+                return;
+            }
             this.loadNecessaryPages();
             this.unloadUnnecessaryPages(pageLoadRange);
         }
