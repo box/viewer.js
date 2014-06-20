@@ -5,9 +5,9 @@
 
 /* prevent sizing issues from bootstrap (and others) that change global defaults */
 .crocodoc-viewer * {
-    -webkit-box-sizing: initial;
-    -moz-box-sizing: initial;
-    box-sizing: initial;
+    -webkit-box-sizing: content-box !important;
+    -moz-box-sizing: content-box !important;
+    box-sizing: content-box !important;
 }
 
 .crocodoc-viewer-fullscreen {
