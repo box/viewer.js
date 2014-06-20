@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.5.3 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.5.4 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 
@@ -4581,9 +4581,11 @@ Crocodoc.addComponent('page-svg', function (scope) {
         svgLoaded = false,
         viewerConfig = scope.getConfig(),
         removeOnUnload = browser.mobile || browser.ielt10,
-        embedStrategy = browser.ie ? EMBED_STRATEGY_DATA_URL_IMG :
-                        browser.firefox ? EMBED_STRATEGY_DATA_URL_IMG :
-                        browser.safari ? EMBED_STRATEGY_IFRAME_INNERHTML :
+        // * IE 9-10 and firefox perform better with <img> elements
+        // * IE 11 crashes when using img elements for some reason
+        // * Everything else is happy with iframe + innerhtml
+        embedStrategy = browser.ielt11 || browser.firefox ?
+                        EMBED_STRATEGY_DATA_URL_IMG :
                         EMBED_STRATEGY_IFRAME_INNERHTML;
 
     /**

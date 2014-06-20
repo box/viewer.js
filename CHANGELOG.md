@@ -2,6 +2,8 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.5.4**
+  * Fix [#70](https://github.com/box/viewer.js/issues/70) - IE 11 crashes when unloading pages
 * **0.5.3**
   * Fix IE9 issue with box-sizing: initial
   * LazyLader: only load visible pages initially to improve initial load performance
