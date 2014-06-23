@@ -23,6 +23,7 @@ Crocodoc.addComponent('resizer', function (scope) {
     var $window = $(window),
         $document = $(document),
         element,
+        frameWidth = 0,
         currentClientWidth,
         currentClientHeight,
         currentOffsetWidth,
@@ -68,6 +69,19 @@ Crocodoc.addComponent('resizer', function (scope) {
     function checkResize () {
         var newOffsetHeight = element.offsetHeight,
             newOffsetWidth = element.offsetWidth;
+
+        // check if we're in a frame
+        if (window.frameElement) {
+            // firefox has an issue where styles aren't calculated in hidden iframes
+            // if the iframe was hidden and is now visible, broadcast a
+            // layoutchange event
+            if (frameWidth === 0 && window.frameElement.offsetWidth !== 0) {
+                frameWidth = window.frameElement.offsetWidth;
+                scope.broadcast('layoutchange');
+                return;
+            }
+        }
+
         //on touch devices, the offset height is sometimes zero as content is loaded
         if (newOffsetHeight) {
             if (newOffsetHeight !== currentOffsetHeight || newOffsetWidth !== currentOffsetWidth) {
@@ -120,7 +134,7 @@ Crocodoc.addComponent('resizer', function (scope) {
             } else {
                 loop();
             }
-           $document.on(FULLSCREENCHANGE_EVENT, broadcast);
+           $document.on(FULLSCREENCHANGE_EVENT, checkResize);
         },
 
         /**
@@ -128,7 +142,7 @@ Crocodoc.addComponent('resizer', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            $document.off(FULLSCREENCHANGE_EVENT, broadcast);
+            $document.off(FULLSCREENCHANGE_EVENT, checkResize);
             $window.off('resize', checkResize);
             support.cancelAnimationFrame(resizeFrameID);
         }

@@ -412,6 +412,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             'dragend',
             'dragstart',
             'fail',
+            'layoutchange',
             'linkclick',
             'pagefail',
             'pagefocus',
@@ -432,6 +433,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          */
         onmessage: function (name, data) {
             switch (name) {
+                case 'layoutchange':
+                    api.updateLayout();
+                    break;
+
                 case 'linkclick':
                     handleLinkClick(data);
                     break;
