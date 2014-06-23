@@ -68,7 +68,8 @@ module('Component - viewer-base', {
         this.viewerAPI = {
             setLayout: function () {},
             disableLinks: function () {},
-            fire: function () {}
+            fire: function () {},
+            updateLayout: function () {}
         };
 
         this.config = $.extend(true, {}, Crocodoc.Viewer.defaults);
@@ -377,19 +378,36 @@ test('setLayout() should throw an error when called with an invalid layout', fun
     }, 'an error should be thrown');
 });
 
-test('onmessage() should call fire() when called with all subscribed messages except scroll, afterscroll', function () {
+QUnit.cases([
+    { name: 'asseterror', data: {} },
+    { name: 'destroy', data: {} },
+    { name: 'dragend', data: {} },
+    { name: 'dragstart', data: {} },
+    { name: 'fail', data: {} },
+    { name: 'linkclick', data: {} },
+    { name: 'pagefail', data: {} },
+    { name: 'pagefocus', data: {} },
+    { name: 'pageload', data: {} },
+    { name: 'pageunload', data: {} },
+    { name: 'ready', data: {} },
+    { name: 'resize', data: {} },
+    { name: 'scrollstart', data: {} },
+    { name: 'scrollend', data: {} },
+    { name: 'zoom', data: {} }
+]).test('onmessage() should call fire() when called with the subscribed message', function (params) {
     this.component.init($('<div>'), { });
-    var spy = this.stub(this.viewerAPI, 'fire').returns({
-        preventDefault: function () {},
-        isDefaultPrevented: function () {}
-    });
-    for (var i = 0; i < this.component.messages.length; ++i) {
-        var m = this.component.messages[i];
-        this.component.onmessage(m, {});
-        if (m === 'scroll' || m === 'afterscroll') {
-            ok(spy.neverCalledWith(m), 'fire was not called with '+m);
-        } else {
-            ok(spy.calledWith(m), 'fire was called with '+m);
-        }
-    }
+    this.mock(this.viewerAPI)
+        .expects('fire')
+        .withArgs(params.name, params.data).returns({
+            preventDefault: function () {},
+            isDefaultPrevented: function () {}
+        });
+    this.component.onmessage(params.name, params.data);
+});
+
+test('onmessage() should call updateLayout() when called with the layoutchange message', function (params) {
+    this.component.init($('<div>'), { });
+    this.mock(this.viewerAPI)
+        .expects('updateLayout');
+    this.component.onmessage('layoutchange');
 });
