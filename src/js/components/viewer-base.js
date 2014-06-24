@@ -394,7 +394,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 // strip '?' if it's there, because we add it below
                 queryString = config.queryParams.replace(/^\?/, '');
             } else {
-                queryString = $.param(config.queryParams);
+                queryString = util.param(config.queryParams);
             }
         }
         config.queryString = queryString ? '?' + queryString : '';

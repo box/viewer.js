@@ -18,6 +18,7 @@ Crocodoc.addUtility('common', function () {
     util.each = $.each;
     util.map = $.map;
     util.parseJSON = $.parseJSON;
+    util.param = $.param;
 
     return $.extend(util, {
 
