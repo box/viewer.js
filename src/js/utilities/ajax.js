@@ -8,6 +8,7 @@ Crocodoc.addUtility('ajax', function (framework) {
     'use strict';
 
     var util = framework.getUtility('common'),
+        support = framework.getUtility('support'),
         urlUtil = framework.getUtility('url');
 
     /**
@@ -37,24 +38,6 @@ Crocodoc.addUtility('ajax', function (framework) {
     }
 
     /**
-     * Get a XHR object
-     * @returns {XMLHttpRequest} An XHR object
-     * @private
-     */
-    function getXMLHttpRequest() {
-        if (window.XMLHttpRequest) {
-            return new window.XMLHttpRequest();
-        } else {
-            try {
-                return new ActiveXObject('MSXML2.XMLHTTP.3.0');
-            }
-            catch(ex) {
-                return null;
-            }
-        }
-    }
-
-    /**
     * Returns true if a request made to a local file has a status equals zero (0)
     * and if it has a response text
     * @param   {string}  url The URL
@@ -66,30 +49,146 @@ Crocodoc.addUtility('ajax', function (framework) {
                request.responseText !== '';
     }
 
+    /**
+     * Parse AJAX options
+     * @param   {Object} options The options
+     * @returns {Object}         The parsed options
+     */
+    function parseOptions(options) {
+        options = util.extend(true, {}, options || {});
+        options.method = options.method || 'GET';
+        options.headers = options.headers || [];
+        options.data = options.data || '';
+
+        if (typeof options.data !== 'string') {
+            options.data = $.param(options.data);
+            if (options.method !== 'GET') {
+                options.data = options.data;
+                options.headers.push(['Content-Type', 'application/x-www-form-urlencoded']);
+            }
+        }
+        return options;
+    }
+
+    /**
+     * Set XHR headers
+     * @param {XMLHttpRequest} req The request object
+     * @param {Array} headers      Array of headers to set
+     */
+    function setHeaders(req, headers) {
+        var i;
+        for (i = 0; i < headers.length; ++i) {
+            req.setRequestHeader(headers[i][0], headers[i][1]);
+        }
+    }
+
+    /**
+     * Make an XHR request
+     * @param   {string}   url     request URL
+     * @param   {string}   method  request method
+     * @param   {*}        data    request data to send
+     * @param   {Array}    headers request headers
+     * @param   {Function} success success callback function
+     * @param   {Function} fail    fail callback function
+     * @returns {XMLHttpRequest}   Request object
+     * @private
+     */
+    function doXHR(url, method, data, headers, success, fail) {
+        var req = support.getXHR();
+        req.open(method, url, true);
+        req.onreadystatechange = function () {
+            var status;
+            if (req.readyState === 4) { // DONE
+                // remove the onreadystatechange handler,
+                // because it could be called again
+                // @NOTE: we replace it with a noop function, because
+                // IE8 will throw an error if the value is not of type
+                // 'function' when using ActiveXObject
+                req.onreadystatechange = function () {};
+
+                try {
+                    status = req.status;
+                } catch (e) {
+                    // NOTE: IE (9?) throws an error when the request is aborted
+                    fail(req);
+                    return;
+                }
+
+                if (status === 200 || isRequestToLocalFileOk(url, req)) {
+                    success(req);
+                } else {
+                    fail(req);
+                }
+            }
+        };
+        setHeaders(req, headers);
+        req.send(data);
+        return req;
+    }
+
+    /**
+     * Make an XDR request
+     * @param   {string}   url     request URL
+     * @param   {string}   method  request method
+     * @param   {*}        data    request data to send
+     * @param   {Function} success success callback function
+     * @param   {Function} fail    fail callback function
+     * @returns {XDomainRequest} Request object
+     * @private
+     */
+    function doXDR(url, method, data, success, fail) {
+        var req = support.getXDR();
+        try {
+            req.open(method, url);
+            req.onload = function () { success(req); };
+            // NOTE: IE (8/9) requires onerror, ontimeout, and onprogress
+            // to be defined when making XDR to https servers
+            req.onerror = function () { fail(req); };
+            req.ontimeout = function () { fail(req); };
+            req.onprogress = function () {};
+            req.send(data);
+        } catch (e) {
+            return fail({
+                status: 0,
+                statusText: e.message
+            });
+        }
+        return req;
+    }
+
     return {
         /**
          * Make a raw AJAX request
          * @param   {string}     url               request URL
          * @param   {Object}     [options]         AJAX request options
          * @param   {string}     [options.method]  request method, eg. 'GET', 'POST' (defaults to 'GET')
+         * @param   {Array}      [options.headers] request headers (defaults to [])
+         * @param   {*}          [options.data]    request data to send (defaults to null)
          * @param   {Function}   [options.success] success callback function
          * @param   {Function}   [options.fail]    fail callback function
          * @returns {XMLHttpRequest|XDomainRequest} Request object
          */
         request: function (url, options) {
-            options = options || {};
-            var method = options.method || 'GET',
-                req = getXMLHttpRequest();
+            var opt = parseOptions(options),
+                method = opt.method,
+                data = opt.data,
+                headers = opt.headers;
+
+            if (method === 'GET' && data) {
+                url = urlUtil.appendQueryParams(url, data);
+                data = '';
+            }
 
             /**
              * Function to call on successful AJAX request
              * @returns {void}
              * @private
              */
-            function ajaxSuccess() {
-                if (util.isFn(options.success)) {
-                    options.success.call(createRequestWrapper(req));
+            function ajaxSuccess(req) {
+                if (util.isFn(opt.success)) {
+                    opt.success.call(createRequestWrapper(req));
                 }
+                return req;
             }
 
             /**
@@ -97,76 +196,29 @@ Crocodoc.addUtility('ajax', function (framework) {
              * @returns {void}
              * @private
              */
-            function ajaxFail() {
-                if (util.isFn(options.fail)) {
-                    options.fail.call(createRequestWrapper(req));
+            function ajaxFail(req) {
+                if (util.isFn(opt.fail)) {
+                    opt.fail.call(createRequestWrapper(req));
                 }
+                return req;
             }
 
-            if (urlUtil.isCrossDomain(url) && !('withCredentials' in req)) {
-                if ('XDomainRequest' in window) {
-                    req = new window.XDomainRequest();
-                    try {
-                        req.open(method, url);
-                        req.onload = ajaxSuccess;
-                        // NOTE: IE (8/9) requires onerror, ontimeout, and onprogress
-                        // to be defined when making XDR to https servers
-                        req.onerror = ajaxFail;
-                        req.ontimeout = ajaxFail;
-                        req.onprogress = function () {};
-                        req.send();
-                    } catch (e) {
-                        req = {
-                            status: 0,
-                            statusText: e.message
-                        };
-                        ajaxFail();
-                    }
-                } else {
-                    // CORS is not supported!
-                    req = {
-                        status: 0,
-                        statusText: 'CORS not supported'
-                    };
-                    ajaxFail();
-                }
-            } else if (req) {
-                req.open(method, url, true);
-                req.onreadystatechange = function () {
-                    var status;
-                    if (req.readyState === 4) { // DONE
-                        // remove the onreadystatechange handler,
-                        // because it could be called again
-                        // @NOTE: we replace it with a noop function, because
-                        // IE8 will throw an error if the value is not of type
-                        // 'function' when using ActiveXObject
-                        req.onreadystatechange = function () {};
-
-                        try {
-                            status = req.status;
-                        } catch (e) {
-                            // NOTE: IE (9?) throws an error when the request is aborted
-                            ajaxFail();
-                            return;
-                        }
-
-                        if (status === 200 || isRequestToLocalFileOk(url, req)) {
-                            ajaxSuccess();
-                        } else {
-                            ajaxFail();
-                        }
-                    }
-                };
-                req.send();
-            } else {
-                req = {
+            // is XHR supported at all?
+            if (!support.isXHRSupported()) {
+                return opt.fail({
                     status: 0,
                     statusText: 'AJAX not supported'
-                };
-                ajaxFail();
+                });
             }
 
-            return req;
+            // cross-domain request? check if CORS is supported...
+            if (urlUtil.isCrossDomain(url) && !support.isCORSSupported()) {
+                // the browser supports XHR, but not XHR+CORS, so (try to) use XDR
+                return doXDR(url, method, data, ajaxSuccess, ajaxFail);
+            } else {
+                // the browser supports XHR and XHR+CORS, so just do a regular XHR
+                return doXHR(url, method, data, headers, ajaxSuccess, ajaxFail);
+            }
         },
 
         /**

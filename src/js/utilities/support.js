@@ -6,7 +6,9 @@
 Crocodoc.addUtility('support', function () {
 
     'use strict';
-    var prefixes = ['Moz', 'Webkit', 'O', 'ms'];
+    var prefixes = ['Moz', 'Webkit', 'O', 'ms'],
+        xhrSupported = null,
+        xhrCORSSupported = null;
 
     /**
      * Helper function to get the proper vendor property name
@@ -86,6 +88,65 @@ Crocodoc.addUtility('support', function () {
         csstransform: getVendorCSSPropertyName('transform'),
         csstransition: getVendorCSSPropertyName('transition'),
         csszoom: getVendorCSSPropertyName('zoom'),
+
+        /**
+         * Return true if XHR is supported
+         * @returns {boolean}
+         */
+        isXHRSupported: function () {
+            if (xhrSupported === null) {
+                xhrSupported = !!this.getXHR();
+            }
+            return xhrSupported;
+        },
+
+        /**
+         * Return true if XHR is supported and is CORS-enabled
+         * @returns {boolean}
+         */
+        isCORSSupported: function () {
+            if (xhrCORSSupported === null) {
+                xhrCORSSupported = this.isXHRSupported() &&
+                                   ('withCredentials' in this.getXHR());
+            }
+            return xhrCORSSupported;
+        },
+
+        /**
+         * Return true if XDR is supported
+         * @returns {boolean}
+         */
+        isXDRSupported: function () {
+            return typeof window.XDomainRequest !== 'undefined';
+        },
+
+        /**
+         * Get a XHR object
+         * @returns {XMLHttpRequest} An XHR object
+         */
+        getXHR: function () {
+            if (window.XMLHttpRequest) {
+                return new window.XMLHttpRequest();
+            } else {
+                try {
+                    return new ActiveXObject('MSXML2.XMLHTTP.3.0');
+                }
+                catch(ex) {
+                    return null;
+                }
+            }
+        },
+
+        /**
+         * Get a CORS-enabled request object
+         * @returns {XMLHttpRequest|XDomainRequest} The request object
+         */
+        getXDR: function () {
+            if (this.isXDRSupported()) {
+                return new window.XDomainRequest();
+            }
+            return null;
+        },
 
         /**
          * Request an animation frame with the given arguments
