@@ -2,7 +2,7 @@
 
 module('Utility - common', {
     setup: function () {
-        this.util = Crocodoc.getUtility('common');
+        this.util = Crocodoc.getUtilityForTest('common');
     }
 });
 

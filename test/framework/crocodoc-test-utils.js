@@ -33,6 +33,22 @@ Crocodoc.getScopeForTest = function (testContext) {
     };
 };
 
+
+/**
+ * Get a framework for testing
+ * @param   {object} [testContext] Optional map of utilities use in getUtility
+ * @returns {object}               The framework
+ */
+Crocodoc.getFrameworkForTest = function (testContext) {
+    testContext = testContext || {};
+    testContext.utilities = testContext.utilities || {};
+    return {
+        getUtility: function (name) {
+            return testContext.utilities[name] || (testContext.utilities[name] = {});
+        }
+    };
+};
+
 /**
  * Get a module for testing
  * @param   {string} name     The module name
@@ -55,6 +71,19 @@ Crocodoc.getComponentForTest = function (name, scope, mixins) {
     return null;
 };
 
+/**
+ * Get a utility for testing
+ * @param   {string} name        The utility name
+ * @param   {object} [framework] A mock framework
+ * @returns {object?}            The utility or null
+ */
+Crocodoc.getUtilityForTest = function (name, framework) {
+    var util = Crocodoc.utilities[name];
+    if (util) {
+        return util.creator(framework || Crocodoc);
+    }
+    return null;
+};
 
 /**
  * Get a plugin for testing

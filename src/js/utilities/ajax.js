@@ -178,7 +178,7 @@ Crocodoc.addUtility('ajax', function (framework) {
         fetch: function (url, retries) {
             var req,
                 aborted = false,
-                ajax = framework.getUtility('ajax'),
+                ajax = this,
                 $deferred = $.Deferred();
 
             /**

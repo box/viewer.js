@@ -10,7 +10,7 @@ module('Component - resizer', {
                 },
                 cancelAnimationFrame: function () {}
             },
-            common: Crocodoc.getUtility('common')
+            common: Crocodoc.getUtilityForTest('common')
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('resizer', this.scope);

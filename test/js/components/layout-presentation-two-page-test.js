@@ -1,7 +1,7 @@
 module('Component - layout-presentation-two-page', {
     setup: function () {
         this.utilities = {
-            common: Crocodoc.getUtility('common')
+            common: Crocodoc.getUtilityForTest('common')
         };
         this.config = {
             layout: Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE

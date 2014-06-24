@@ -1,6 +1,6 @@
 module('Utility - url', {
     setup: function () {
-        this.util = Crocodoc.getUtility('url');
+        this.util = Crocodoc.getUtilityForTest('url');
     }
 });
 

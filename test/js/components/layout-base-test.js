@@ -2,7 +2,7 @@ module('Component - layout-base', {
     setup: function () {
         var self = this;
         this.utilities = {
-            common: Crocodoc.getUtility('common'),
+            common: Crocodoc.getUtilityForTest('common'),
             support: { csstransform: true }
         };
         this.config = {
