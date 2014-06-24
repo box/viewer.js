@@ -54,3 +54,14 @@ test('parse() should return a parsed version of a url when called', function () 
     equal(parsed.href, href);
 });
 
+test('appendQueryParams() should return the correct value when called', function () {
+    var url, params;
+
+    url = '/hello';
+    params = 'foo=bar&baz=wow';
+    equal(this.util.appendQueryParams(url, params), url + '?' + params);
+
+    url = '/hello?already=param';
+    params = 'foo=bar&baz=wow';
+    equal(this.util.appendQueryParams(url, params), url + '&' + params);
+});

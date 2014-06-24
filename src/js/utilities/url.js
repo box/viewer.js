@@ -45,6 +45,20 @@ Crocodoc.addUtility('url', function (framework) {
         },
 
         /**
+         * Append a query parameters string to the given URL
+         * @param   {string} url The URL
+         * @param   {string} str The query parameters
+         * @returns {string}     The new URL
+         */
+        appendQueryParams: function (url, str) {
+            if (url.indexOf('?') > -1) {
+                return url + '&' + str;
+            } else {
+                return url + '?' + str;
+            }
+        },
+
+        /**
          * Parse a URL into protocol, host, port, etc
          * @param   {string} url The URL to parse
          * @returns {object}     The parsed URL parts
