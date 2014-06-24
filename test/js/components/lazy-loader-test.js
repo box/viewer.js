@@ -1,7 +1,7 @@
 module('Component - lazy-loader', {
     setup: function () {
         this.utilities = {
-            common: Crocodoc.getUtility('common')
+            common: Crocodoc.getUtilityForTest('common')
         };
         this.scope = Crocodoc.getScopeForTest(this);
 

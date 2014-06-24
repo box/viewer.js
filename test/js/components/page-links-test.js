@@ -3,7 +3,7 @@ module('Component - page-links', {
         this.links = [
             {bbox: [690.89, 45.87, 716.15, 63.55], uri: 'http://box.com/'}
         ];
-        this.browser = Crocodoc.getUtility('browser');
+        this.browser = Crocodoc.getUtilityForTest('browser');
         this.scope = Crocodoc.getScopeForTest(this);
         this.utilities = {
             browser: this.browser

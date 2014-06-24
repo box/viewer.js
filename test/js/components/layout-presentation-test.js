@@ -1,7 +1,7 @@
 module('Component - layout-presentation', {
     setup: function () {
         this.utilities = {
-            common: Crocodoc.getUtility('common'),
+            common: Crocodoc.getUtilityForTest('common'),
             browser: {
                 mobile: false
             }

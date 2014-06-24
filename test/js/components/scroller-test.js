@@ -2,7 +2,7 @@ module('Component - scroller', {
     setup: function () {
         var self = this;
         this.utilities = {
-            common: Crocodoc.getUtility('common')
+            common: Crocodoc.getUtilityForTest('common')
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.clock = sinon.useFakeTimers();

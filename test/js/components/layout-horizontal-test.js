@@ -1,7 +1,7 @@
 module('Component - layout-horizontal', {
     setup: function () {
         this.utilities = {
-            common: Crocodoc.getUtility('common'),
+            common: Crocodoc.getUtilityForTest('common'),
             browser: {
                 mobile: false
             }
