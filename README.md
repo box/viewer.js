@@ -20,6 +20,7 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
     - [Styling Pages](#styling-pages)
     - [Realtime Page Streaming](#realtime-page-streaming)
     - [Plugins](#plugins)
+    - [Data Providers](#data-providers)
 * [Browser Support](#browser-support)
 * [Contributing](#contributing)
 * [Getting Started with the Code](#getting-started-with-the-code)
@@ -154,7 +155,6 @@ Example:
 }
 ```
 
-
 **queryParams**
 
 The `queryParams` parameter allows you to specify query string parameters to append to each asset request (eg., `info.json` or `page-1.svg`). Can be an object or string. Default: `null`.
@@ -179,6 +179,23 @@ Examples:
 **useWindowAsViewport**
 
 The `useWindowAsViewport` parameter allows you to specify whether to use the browser window as the viewport for the document. This is useful when the document should take up the entire browser window (e.g., on mobile devices). Use this option on mobile devices to allow the browser to auto-hide browser chrome when scrolling. Default: `false`.
+
+
+**dataProviders**
+
+The `dataProviders` parameter allows you override default data providers by specifying names of replacement data providers. See [data providers](#data-providers) for more info.
+
+Example:
+```js
+{
+    dataProviders: {
+        // page-svg data provider will be overridden by the 'my-page-svg' data provider
+        'page-svg': 'my-page-svg'
+    }
+}
+```
+
+
 
 ### Viewer Methods
 
@@ -449,6 +466,11 @@ var viewer = Crocodoc.createViewer('.viewer', {
 ```
 
 
+### Data Providers
+
+See the [JS architecture overview](src/js/README.md#data-providers) for information about data providers.
+
+
 ## Browser Support
 
 Viewer.js is supported in all modern desktop and mobile browsers. It will fall back to raster images in older browsers that do not support SVG.
@@ -503,7 +525,7 @@ If you would like to replace the Box logo with your own, you can simply replace 
 **NOTE:** Make sure you are allowed to remove logos before building with this option. For more information, see [Logos](#logos) above.
 
 
-For more information about the code, see the [JS architecture overview](src/js/README.md
+For more information about the code, see the [JS architecture overview](src/js/README.md)
 
 
 ## Common Issues

@@ -1,6 +1,6 @@
 # Javascript Code Structure
 
-The Crocodoc Viewer uses a modular code structure consisting of the [core framework](#core), [components](#components), [utilities](#utilities), and [plugins](#plugins).
+The Crocodoc Viewer uses a modular code structure consisting of the [core framework](#core), [components](#components), [utilities](#utilities), [plugins](#plugins), and [data providers](#data-providers).
 
 ## Core
 
@@ -158,3 +158,56 @@ var viewer = Crocodoc.createViewer('.viewer', {
     }
 });
 ```
+
+
+## Data Providers
+
+Data providers are used to retrieve data for the viewer to consume, including metadata, stylesheets, SVG (or PNG images), and HTML files.
+
+Data providers implement the same interface as plugins and components, with the addition of the `get` method. Data providers are instantiated the first time they are used. To use a data provider from within a plugin or component (or another data provider), you can call `scope.getDataProvider(objectType)` or as a shorthand to the `get()` method on your data provider, you can simply call `scope.get(objectType[, objectKey])`.
+
+### Built-in data providers
+
+There are five core data providers used by viewer.js:
+
+* `metadata`
+    - provides the metadata found in `info.json` (as an object) for the document
+* `page-img`
+    - provides PNG file for a page (for browsers that don't support SVG) as an `<img>` element
+* `page-svg`
+    - provides the SVG content (as a string) for a page
+    - multiple requests are de-duplicated
+* `page-text`
+    - provides the HTML content (as a string) for a page
+    - multiple requests are de-duplicated
+* `stylesheet`
+    - provides the CSS content (as a string) for the document
+    - multiple requests are de-duplicated
+
+The built-in data providers implement the following API:
+
+* `get(dataType, key)`
+    - get the data for this object type (page-specific data-providers require the page number as the `key` argument)
+    - return a jQuery promise with an added `abort()` method that aborts the request
+
+### Overriding data providers
+
+It's possible to override the built-in data providers by using the `dataProviders` configuration option on the viewer.
+
+```js
+var viewer = Crocodoc.createViewer(element, {
+    url: '...',
+    dataProviders: {
+        metadata: 'my-metadata',
+        stylesheet: 'my-stylesheet',
+        'page-svg': 'my-page-svg',
+        'page-text': 'my-page-text'
+    }
+});
+```
+
+In the above example, the viewer will automatically request data from your replacement data providers as necessary.
+
+**NOTE: if you override default data provider, your replacement MUST implement the same `get()` interface as the default data provider.**
+
+[//]: # (TODO: an example of a replacement data provider)
