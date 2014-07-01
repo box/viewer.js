@@ -31,7 +31,7 @@ var viewer = Crocodoc.createViewer('.viewer', {
     plugins: {
         // the Box View realtime URL received when requesting a session
         realtime: {
-            url: 'https://view-api.box.com/sse/<uuid>'
+            url: '<the realtime URL>'
         }
     }
 });
@@ -44,8 +44,22 @@ The following configuration options are available:
 
 **url**
 
-The URL to the Box View realtime endpoint associated with the viewing session. This would be available in the View API session response.
+The URL to the Box View realtime endpoint associated with the viewing session. This would be available in the View API session response under `urls.realtime`.
 
+For example, with a session response as follows, the URL would be `'https://view-api.box.com/sse/4fba9eda0dd745d491ad0b98e224aa25'`.
+
+```js
+{
+    'type': 'session',
+    'id': '4fba9eda0dd745d491ad0b98e224aa25',
+    'expires_at': '3915-10-29T01:31:48.677Z',
+    'urls': {
+        'view': 'https://view-api.box.com/1/sessions/4fba9eda0dd745d491ad0b98e224aa25/view',
+        'assets': 'https://view-api.box.com/1/sessions/4fba9eda0dd745d491ad0b98e224aa25/assets/',
+        'realtime': 'https://view-api.box.com/sse/4fba9eda0dd745d491ad0b98e224aa25'
+    }
+ }
+```
 
 ## Events
 
