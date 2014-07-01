@@ -16,6 +16,7 @@ Core files are used to define the `Crocodoc` namespace and core functionality an
     - `addUtility`: register a new named utility
     - `getUtility`: create (if not already created) and return an instance of the named utility
     - `addPlugin`: register a new named plugin
+    - `addDataProvider`: register a new data provider
 
 **`core/event-target.js`**
 * Defines `Crocodoc.EventTarget`, which is used as a mixin to other objects to turn them into Event targets.
