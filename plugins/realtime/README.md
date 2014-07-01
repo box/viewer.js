@@ -2,6 +2,8 @@
 
 Enables realtime page-streaming functionality for Box View conversions in viewer.js. This plugin will automatically load pages as necessary when they finish converting.
 
+The realtime plugin is meant to be used with Box View [webhooks](http://developers.box.com/view/webhooks/) to create viewing sessions before the document has completely finished converting (i.e., when the `document.viewable` notification fires).
+
 ## Contents
 * [Dependencies](#dependencies)
 * [Usage](#usage)
