@@ -147,7 +147,7 @@ module.exports = function (grunt) {
                 dest: 'build/crocodoc.viewer.css',
                 options: {
                     deleteAfterEncoding: false,
-                    baseDir: './'
+                    baseDir: '../src/images/'
                 }
             }
         },

@@ -7,7 +7,7 @@
     height: 16px;
     opacity: 0.5;
     filter: alpha(opacity=50);
-    background: transparent url(/src/images/logo.png) 0 0 no-repeat;
+    background: transparent url(../images/logo.png) 0 0 no-repeat;
     pointer-events: none;
 }
 
@@ -18,7 +18,7 @@
 /* hidpi logo */
 @media only screen and (-webkit-min-device-pixel-ratio: 2) {
     .crocodoc-viewer-logo {
-        background: transparent url(/src/images/logo@2x.png) 0 0 no-repeat;
+        background: transparent url(../images/logo@2x.png) 0 0 no-repeat;
         background-size: 29px auto;
     }
 }

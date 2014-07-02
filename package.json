@@ -4,7 +4,7 @@
   "description": "A viewer for documents converted with the Box View API",
   "author": "Cameron Lakenen <lakenen@box.com>",
   "contributors": [
-      "Nicholas Silva <nes@box.com>"
+    "Nicholas Silva <nes@box.com>"
   ],
   "main": "dist/crocodoc.viewer.js",
   "repository": {
