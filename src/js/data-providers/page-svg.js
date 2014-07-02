@@ -13,6 +13,7 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
         browser = scope.getUtility('browser'),
         subpx = scope.getUtility('subpx'),
         config = scope.getConfig(),
+        destroyed = false,
         cache = {};
 
     /**
@@ -47,6 +48,10 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
      * @private
      */
     function processSVGContent(text) {
+        if (destroyed) {
+            return;
+        }
+
         var query = config.queryString.replace('&', '&#38;'),
             dataUrlCount;
 
@@ -95,7 +100,9 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
             cache[pageNum] = $promise.then(processSVGContent).promise({
                 abort: function () {
                     $promise.abort();
-                    delete cache[pageNum];
+                    if (cache) {
+                        delete cache[pageNum];
+                    }
                 }
             });
             return cache[pageNum];
@@ -116,8 +123,8 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
          * @returns {void}
          */
         destroy: function () {
-            util = ajax = subpx = browser = config = null;
-            cache = null;
+            destroyed = true;
+            util = ajax = subpx = browser = config = cache = null;
         }
     };
 });

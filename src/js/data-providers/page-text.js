@@ -11,6 +11,7 @@ Crocodoc.addDataProvider('page-text', function(scope) {
     var util = scope.getUtility('common'),
         ajax = scope.getUtility('ajax'),
         config = scope.getConfig(),
+        destroyed = false,
         cache = {};
 
     /**
@@ -20,6 +21,10 @@ Crocodoc.addDataProvider('page-text', function(scope) {
      * @private
      */
     function processTextContent(text) {
+        if (destroyed) {
+            return;
+        }
+
         // in the text layer, divs are only used for text boxes, so
         // they should provide an accurate count
         var numTextBoxes = util.countInStr(text, '<div');
@@ -61,7 +66,9 @@ Crocodoc.addDataProvider('page-text', function(scope) {
             cache[pageNum] = $promise.then(processTextContent).promise({
                 abort: function () {
                     $promise.abort();
-                    delete cache[pageNum];
+                    if (cache) {
+                        delete cache[pageNum];
+                    }
                 }
             });
             return cache[pageNum];
@@ -82,8 +89,8 @@ Crocodoc.addDataProvider('page-text', function(scope) {
          * @returns {void}
          */
         destroy: function () {
-            util = ajax = config = null;
-            cache = null;
+            destroyed = true;
+            util = ajax = config = cache = null;
         }
     };
 });
