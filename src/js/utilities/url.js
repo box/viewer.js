@@ -10,7 +10,8 @@ Crocodoc.addUtility('url', function (framework) {
 
     'use strict';
 
-    var browser = framework.getUtility('browser');
+    var browser = framework.getUtility('browser'),
+        parsedLocation;
 
     return {
         /**
@@ -40,8 +41,13 @@ Crocodoc.addUtility('url', function (framework) {
         isCrossDomain: function (url) {
             var parsedURL = this.parse(url);
 
-            return parsedURL.protocol !== window.location.protocol ||
-                   parsedURL.host !== window.location.host;
+            if (!parsedLocation) {
+                parsedLocation = this.parse(this.getCurrentURL());
+            }
+
+            return parsedURL.protocol !== parsedLocation.protocol ||
+                   parsedURL.hostname !== parsedLocation.hostname ||
+                   parsedURL.port !== parsedLocation.port;
         },
 
         /**
@@ -64,23 +70,18 @@ Crocodoc.addUtility('url', function (framework) {
          * @returns {object}     The parsed URL parts
          */
         parse: function (url) {
-            var parsed,
+            var parsed = document.createElement('a'),
                 pathname;
 
-            if (url === this.getCurrentURL()) {
-                parsed = window.location;
-            } else {
-                parsed = document.createElement('a');
-                parsed.href = url;
+            parsed.href = url;
 
-                // @NOTE: IE does not automatically parse relative urls,
-                // but requesting href back from the <a> element will return
-                // an absolute URL, which can then be fed back in to get the
-                // expected result. WTF? Yep!
-                if (browser.ie && url !== parsed.href) {
-                    url = parsed.href;
-                    parsed.href = url;
-                }
+            // @NOTE: IE does not automatically parse relative urls,
+            // but requesting href back from the <a> element will return
+            // an absolute URL, which can then be fed back in to get the
+            // expected result. WTF? Yep!
+            if (browser.ie && url !== parsed.href) {
+                url = parsed.href;
+                parsed.href = url;
             }
 
             // @NOTE: IE does not include the preceding '/' in pathname
