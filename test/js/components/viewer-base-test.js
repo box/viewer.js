@@ -159,11 +159,13 @@ test('loadAssets() should broadcast a fail message when loading metadata or styl
     var err = '404 not found';
     this.stub(this.scope, 'get').returns($.Deferred().reject({ error: err }).promise());
 
+    var readySpy = this.spy(this.scope, 'ready');
     var broadcastSpy = this.spy(this.scope, 'broadcast');
 
     this.component.init();
     this.component.loadAssets();
 
+    ok(readySpy.called, 'scope.ready should be called');
     ok(broadcastSpy.calledWith('fail', sinon.match({ error: sinon.match(err) })), 'fail was broadcast');
 });
 

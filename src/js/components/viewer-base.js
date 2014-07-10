@@ -602,6 +602,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 $pageOneContentPromise,
                 $pageOneTextPromise;
 
+            if ($assetsPromise) {
+                return;
+            }
+
             $loadMetadataPromise = scope.get('metadata');
             $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
                 config.metadata = metadata;
@@ -641,12 +645,17 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // when both metatadata and stylesheet are done or if either fails...
             $assetsPromise = $.when($loadMetadataPromise, $loadStylesheetPromise)
                 .fail(function (error) {
+                    if ($assetsPromise) {
+                        $assetsPromise.abort();
+                    }
+                    scope.ready();
                     scope.broadcast('asseterror', error);
                     scope.broadcast('fail', error);
                 })
                 .then(completeInit)
                 .promise({
                     abort: function () {
+                        $assetsPromise = null;
                         $loadMetadataPromise.abort();
                         $loadStylesheetPromise.abort();
                         if ($pageOneContentPromise) {
