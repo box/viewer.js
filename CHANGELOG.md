@@ -2,6 +2,14 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.5.5**
+  * Fix [#93](https://github.com/box/viewer.js/issues/93) - "fail" event is never fired when json/css fail to load
+  * Fix [#94](https://github.com/box/viewer.js/issues/94) - isCrossDomain returns false positive in IE
+  * Fix errors caused by destroying a viewer while pages are loading
+  * Refactor AJAX util to allow headers and data
+  * Add url.appendQueryParams()
+  * Add getUtilityForTest and getFrameworkForTest
+  * Fix [#74](https://github.com/box/viewer.js/issues/74) - zoom broken for viewer in hidden iframe in Firefox
 * **0.5.4**
   * Fix [#70](https://github.com/box/viewer.js/issues/70) - IE 11 crashes when unloading pages
 * **0.5.3**

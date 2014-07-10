@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.5.4 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.5.5 | (c) 2014 Box */
 
 var Crocodoc = (function ($) {
 
@@ -935,6 +935,7 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
         browser = scope.getUtility('browser'),
         subpx = scope.getUtility('subpx'),
         config = scope.getConfig(),
+        destroyed = false,
         cache = {};
 
     /**
@@ -969,6 +970,10 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
      * @private
      */
     function processSVGContent(text) {
+        if (destroyed) {
+            return;
+        }
+
         var query = config.queryString.replace('&', '&#38;'),
             dataUrlCount;
 
@@ -1017,7 +1022,9 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
             cache[pageNum] = $promise.then(processSVGContent).promise({
                 abort: function () {
                     $promise.abort();
-                    delete cache[pageNum];
+                    if (cache) {
+                        delete cache[pageNum];
+                    }
                 }
             });
             return cache[pageNum];
@@ -1038,8 +1045,8 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
          * @returns {void}
          */
         destroy: function () {
-            util = ajax = subpx = browser = config = null;
-            cache = null;
+            destroyed = true;
+            util = ajax = subpx = browser = config = cache = null;
         }
     };
 });
@@ -1052,6 +1059,7 @@ Crocodoc.addDataProvider('page-text', function(scope) {
     var util = scope.getUtility('common'),
         ajax = scope.getUtility('ajax'),
         config = scope.getConfig(),
+        destroyed = false,
         cache = {};
 
     /**
@@ -1061,6 +1069,10 @@ Crocodoc.addDataProvider('page-text', function(scope) {
      * @private
      */
     function processTextContent(text) {
+        if (destroyed) {
+            return;
+        }
+
         // in the text layer, divs are only used for text boxes, so
         // they should provide an accurate count
         var numTextBoxes = util.countInStr(text, '<div');
@@ -1102,7 +1114,9 @@ Crocodoc.addDataProvider('page-text', function(scope) {
             cache[pageNum] = $promise.then(processTextContent).promise({
                 abort: function () {
                     $promise.abort();
-                    delete cache[pageNum];
+                    if (cache) {
+                        delete cache[pageNum];
+                    }
                 }
             });
             return cache[pageNum];
@@ -1123,8 +1137,8 @@ Crocodoc.addDataProvider('page-text', function(scope) {
          * @returns {void}
          */
         destroy: function () {
-            util = ajax = config = null;
-            cache = null;
+            destroyed = true;
+            util = ajax = config = cache = null;
         }
     };
 });
@@ -1209,6 +1223,7 @@ Crocodoc.addUtility('ajax', function (framework) {
     'use strict';
 
     var util = framework.getUtility('common'),
+        support = framework.getUtility('support'),
         urlUtil = framework.getUtility('url');
 
     /**
@@ -1238,24 +1253,6 @@ Crocodoc.addUtility('ajax', function (framework) {
     }
 
     /**
-     * Get a XHR object
-     * @returns {XMLHttpRequest} An XHR object
-     * @private
-     */
-    function getXMLHttpRequest() {
-        if (window.XMLHttpRequest) {
-            return new window.XMLHttpRequest();
-        } else {
-            try {
-                return new ActiveXObject('MSXML2.XMLHTTP.3.0');
-            }
-            catch(ex) {
-                return null;
-            }
-        }
-    }
-
-    /**
     * Returns true if a request made to a local file has a status equals zero (0)
     * and if it has a response text
     * @param   {string}  url The URL
@@ -1267,30 +1264,146 @@ Crocodoc.addUtility('ajax', function (framework) {
                request.responseText !== '';
     }
 
+    /**
+     * Parse AJAX options
+     * @param   {Object} options The options
+     * @returns {Object}         The parsed options
+     */
+    function parseOptions(options) {
+        options = util.extend(true, {}, options || {});
+        options.method = options.method || 'GET';
+        options.headers = options.headers || [];
+        options.data = options.data || '';
+
+        if (typeof options.data !== 'string') {
+            options.data = $.param(options.data);
+            if (options.method !== 'GET') {
+                options.data = options.data;
+                options.headers.push(['Content-Type', 'application/x-www-form-urlencoded']);
+            }
+        }
+        return options;
+    }
+
+    /**
+     * Set XHR headers
+     * @param {XMLHttpRequest} req The request object
+     * @param {Array} headers      Array of headers to set
+     */
+    function setHeaders(req, headers) {
+        var i;
+        for (i = 0; i < headers.length; ++i) {
+            req.setRequestHeader(headers[i][0], headers[i][1]);
+        }
+    }
+
+    /**
+     * Make an XHR request
+     * @param   {string}   url     request URL
+     * @param   {string}   method  request method
+     * @param   {*}        data    request data to send
+     * @param   {Array}    headers request headers
+     * @param   {Function} success success callback function
+     * @param   {Function} fail    fail callback function
+     * @returns {XMLHttpRequest}   Request object
+     * @private
+     */
+    function doXHR(url, method, data, headers, success, fail) {
+        var req = support.getXHR();
+        req.open(method, url, true);
+        req.onreadystatechange = function () {
+            var status;
+            if (req.readyState === 4) { // DONE
+                // remove the onreadystatechange handler,
+                // because it could be called again
+                // @NOTE: we replace it with a noop function, because
+                // IE8 will throw an error if the value is not of type
+                // 'function' when using ActiveXObject
+                req.onreadystatechange = function () {};
+
+                try {
+                    status = req.status;
+                } catch (e) {
+                    // NOTE: IE (9?) throws an error when the request is aborted
+                    fail(req);
+                    return;
+                }
+
+                if (status === 200 || isRequestToLocalFileOk(url, req)) {
+                    success(req);
+                } else {
+                    fail(req);
+                }
+            }
+        };
+        setHeaders(req, headers);
+        req.send(data);
+        return req;
+    }
+
+    /**
+     * Make an XDR request
+     * @param   {string}   url     request URL
+     * @param   {string}   method  request method
+     * @param   {*}        data    request data to send
+     * @param   {Function} success success callback function
+     * @param   {Function} fail    fail callback function
+     * @returns {XDomainRequest} Request object
+     * @private
+     */
+    function doXDR(url, method, data, success, fail) {
+        var req = support.getXDR();
+        try {
+            req.open(method, url);
+            req.onload = function () { success(req); };
+            // NOTE: IE (8/9) requires onerror, ontimeout, and onprogress
+            // to be defined when making XDR to https servers
+            req.onerror = function () { fail(req); };
+            req.ontimeout = function () { fail(req); };
+            req.onprogress = function () {};
+            req.send(data);
+        } catch (e) {
+            return fail({
+                status: 0,
+                statusText: e.message
+            });
+        }
+        return req;
+    }
+
     return {
         /**
          * Make a raw AJAX request
          * @param   {string}     url               request URL
          * @param   {Object}     [options]         AJAX request options
          * @param   {string}     [options.method]  request method, eg. 'GET', 'POST' (defaults to 'GET')
+         * @param   {Array}      [options.headers] request headers (defaults to [])
+         * @param   {*}          [options.data]    request data to send (defaults to null)
          * @param   {Function}   [options.success] success callback function
          * @param   {Function}   [options.fail]    fail callback function
          * @returns {XMLHttpRequest|XDomainRequest} Request object
          */
         request: function (url, options) {
-            options = options || {};
-            var method = options.method || 'GET',
-                req = getXMLHttpRequest();
+            var opt = parseOptions(options),
+                method = opt.method,
+                data = opt.data,
+                headers = opt.headers;
+
+            if (method === 'GET' && data) {
+                url = urlUtil.appendQueryParams(url, data);
+                data = '';
+            }
 
             /**
              * Function to call on successful AJAX request
              * @returns {void}
              * @private
              */
-            function ajaxSuccess() {
-                if (util.isFn(options.success)) {
-                    options.success.call(createRequestWrapper(req));
+            function ajaxSuccess(req) {
+                if (util.isFn(opt.success)) {
+                    opt.success.call(createRequestWrapper(req));
                 }
+                return req;
             }
 
             /**
@@ -1298,76 +1411,29 @@ Crocodoc.addUtility('ajax', function (framework) {
              * @returns {void}
              * @private
              */
-            function ajaxFail() {
-                if (util.isFn(options.fail)) {
-                    options.fail.call(createRequestWrapper(req));
+            function ajaxFail(req) {
+                if (util.isFn(opt.fail)) {
+                    opt.fail.call(createRequestWrapper(req));
                 }
+                return req;
             }
 
-            if (urlUtil.isCrossDomain(url) && !('withCredentials' in req)) {
-                if ('XDomainRequest' in window) {
-                    req = new window.XDomainRequest();
-                    try {
-                        req.open(method, url);
-                        req.onload = ajaxSuccess;
-                        // NOTE: IE (8/9) requires onerror, ontimeout, and onprogress
-                        // to be defined when making XDR to https servers
-                        req.onerror = ajaxFail;
-                        req.ontimeout = ajaxFail;
-                        req.onprogress = function () {};
-                        req.send();
-                    } catch (e) {
-                        req = {
-                            status: 0,
-                            statusText: e.message
-                        };
-                        ajaxFail();
-                    }
-                } else {
-                    // CORS is not supported!
-                    req = {
-                        status: 0,
-                        statusText: 'CORS not supported'
-                    };
-                    ajaxFail();
-                }
-            } else if (req) {
-                req.open(method, url, true);
-                req.onreadystatechange = function () {
-                    var status;
-                    if (req.readyState === 4) { // DONE
-                        // remove the onreadystatechange handler,
-                        // because it could be called again
-                        // @NOTE: we replace it with a noop function, because
-                        // IE8 will throw an error if the value is not of type
-                        // 'function' when using ActiveXObject
-                        req.onreadystatechange = function () {};
-
-                        try {
-                            status = req.status;
-                        } catch (e) {
-                            // NOTE: IE (9?) throws an error when the request is aborted
-                            ajaxFail();
-                            return;
-                        }
-
-                        if (status === 200 || isRequestToLocalFileOk(url, req)) {
-                            ajaxSuccess();
-                        } else {
-                            ajaxFail();
-                        }
-                    }
-                };
-                req.send();
-            } else {
-                req = {
+            // is XHR supported at all?
+            if (!support.isXHRSupported()) {
+                return opt.fail({
                     status: 0,
                     statusText: 'AJAX not supported'
-                };
-                ajaxFail();
+                });
             }
 
-            return req;
+            // cross-domain request? check if CORS is supported...
+            if (urlUtil.isCrossDomain(url) && !support.isCORSSupported()) {
+                // the browser supports XHR, but not XHR+CORS, so (try to) use XDR
+                return doXDR(url, method, data, ajaxSuccess, ajaxFail);
+            } else {
+                // the browser supports XHR and XHR+CORS, so just do a regular XHR
+                return doXHR(url, method, data, headers, ajaxSuccess, ajaxFail);
+            }
         },
 
         /**
@@ -1379,7 +1445,7 @@ Crocodoc.addUtility('ajax', function (framework) {
         fetch: function (url, retries) {
             var req,
                 aborted = false,
-                ajax = framework.getUtility('ajax'),
+                ajax = this,
                 $deferred = $.Deferred();
 
             /**
@@ -1501,6 +1567,7 @@ Crocodoc.addUtility('common', function () {
     util.each = $.each;
     util.map = $.map;
     util.parseJSON = $.parseJSON;
+    util.param = $.param;
 
     return $.extend(util, {
 
@@ -1945,7 +2012,9 @@ Crocodoc.addUtility('subpx', function (framework) {
 Crocodoc.addUtility('support', function () {
 
     'use strict';
-    var prefixes = ['Moz', 'Webkit', 'O', 'ms'];
+    var prefixes = ['Moz', 'Webkit', 'O', 'ms'],
+        xhrSupported = null,
+        xhrCORSSupported = null;
 
     /**
      * Helper function to get the proper vendor property name
@@ -2027,6 +2096,65 @@ Crocodoc.addUtility('support', function () {
         csszoom: getVendorCSSPropertyName('zoom'),
 
         /**
+         * Return true if XHR is supported
+         * @returns {boolean}
+         */
+        isXHRSupported: function () {
+            if (xhrSupported === null) {
+                xhrSupported = !!this.getXHR();
+            }
+            return xhrSupported;
+        },
+
+        /**
+         * Return true if XHR is supported and is CORS-enabled
+         * @returns {boolean}
+         */
+        isCORSSupported: function () {
+            if (xhrCORSSupported === null) {
+                xhrCORSSupported = this.isXHRSupported() &&
+                                   ('withCredentials' in this.getXHR());
+            }
+            return xhrCORSSupported;
+        },
+
+        /**
+         * Return true if XDR is supported
+         * @returns {boolean}
+         */
+        isXDRSupported: function () {
+            return typeof window.XDomainRequest !== 'undefined';
+        },
+
+        /**
+         * Get a XHR object
+         * @returns {XMLHttpRequest} An XHR object
+         */
+        getXHR: function () {
+            if (window.XMLHttpRequest) {
+                return new window.XMLHttpRequest();
+            } else {
+                try {
+                    return new ActiveXObject('MSXML2.XMLHTTP.3.0');
+                }
+                catch(ex) {
+                    return null;
+                }
+            }
+        },
+
+        /**
+         * Get a CORS-enabled request object
+         * @returns {XMLHttpRequest|XDomainRequest} The request object
+         */
+        getXDR: function () {
+            if (this.isXDRSupported()) {
+                return new window.XDomainRequest();
+            }
+            return null;
+        },
+
+        /**
          * Request an animation frame with the given arguments
          * @returns {int} The frame id
          */
@@ -2051,7 +2179,8 @@ Crocodoc.addUtility('url', function (framework) {
 
     'use strict';
 
-    var browser = framework.getUtility('browser');
+    var browser = framework.getUtility('browser'),
+        parsedLocation;
 
     return {
         /**
@@ -2081,8 +2210,27 @@ Crocodoc.addUtility('url', function (framework) {
         isCrossDomain: function (url) {
             var parsedURL = this.parse(url);
 
-            return parsedURL.protocol !== window.location.protocol ||
-                   parsedURL.host !== window.location.host;
+            if (!parsedLocation) {
+                parsedLocation = this.parse(this.getCurrentURL());
+            }
+
+            return parsedURL.protocol !== parsedLocation.protocol ||
+                   parsedURL.hostname !== parsedLocation.hostname ||
+                   parsedURL.port !== parsedLocation.port;
+        },
+
+        /**
+         * Append a query parameters string to the given URL
+         * @param   {string} url The URL
+         * @param   {string} str The query parameters
+         * @returns {string}     The new URL
+         */
+        appendQueryParams: function (url, str) {
+            if (url.indexOf('?') > -1) {
+                return url + '&' + str;
+            } else {
+                return url + '?' + str;
+            }
         },
 
         /**
@@ -2091,23 +2239,18 @@ Crocodoc.addUtility('url', function (framework) {
          * @returns {object}     The parsed URL parts
          */
         parse: function (url) {
-            var parsed,
+            var parsed = document.createElement('a'),
                 pathname;
 
-            if (url === this.getCurrentURL()) {
-                parsed = window.location;
-            } else {
-                parsed = document.createElement('a');
-                parsed.href = url;
+            parsed.href = url;
 
-                // @NOTE: IE does not automatically parse relative urls,
-                // but requesting href back from the <a> element will return
-                // an absolute URL, which can then be fed back in to get the
-                // expected result. WTF? Yep!
-                if (browser.ie && url !== parsed.href) {
-                    url = parsed.href;
-                    parsed.href = url;
-                }
+            // @NOTE: IE does not automatically parse relative urls,
+            // but requesting href back from the <a> element will return
+            // an absolute URL, which can then be fed back in to get the
+            // expected result. WTF? Yep!
+            if (browser.ie && url !== parsed.href) {
+                url = parsed.href;
+                parsed.href = url;
             }
 
             // @NOTE: IE does not include the preceding '/' in pathname
@@ -5331,6 +5474,7 @@ Crocodoc.addComponent('resizer', function (scope) {
     var $window = $(window),
         $document = $(document),
         element,
+        frameWidth = 0,
         currentClientWidth,
         currentClientHeight,
         currentOffsetWidth,
@@ -5376,6 +5520,19 @@ Crocodoc.addComponent('resizer', function (scope) {
     function checkResize () {
         var newOffsetHeight = element.offsetHeight,
             newOffsetWidth = element.offsetWidth;
+
+        // check if we're in a frame
+        if (window.frameElement) {
+            // firefox has an issue where styles aren't calculated in hidden iframes
+            // if the iframe was hidden and is now visible, broadcast a
+            // layoutchange event
+            if (frameWidth === 0 && window.frameElement.offsetWidth !== 0) {
+                frameWidth = window.frameElement.offsetWidth;
+                scope.broadcast('layoutchange');
+                return;
+            }
+        }
+
         //on touch devices, the offset height is sometimes zero as content is loaded
         if (newOffsetHeight) {
             if (newOffsetHeight !== currentOffsetHeight || newOffsetWidth !== currentOffsetWidth) {
@@ -5428,7 +5585,7 @@ Crocodoc.addComponent('resizer', function (scope) {
             } else {
                 loop();
             }
-           $document.on(FULLSCREENCHANGE_EVENT, broadcast);
+           $document.on(FULLSCREENCHANGE_EVENT, checkResize);
         },
 
         /**
@@ -5436,7 +5593,7 @@ Crocodoc.addComponent('resizer', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            $document.off(FULLSCREENCHANGE_EVENT, broadcast);
+            $document.off(FULLSCREENCHANGE_EVENT, checkResize);
             $window.off('resize', checkResize);
             support.cancelAnimationFrame(resizeFrameID);
         }
@@ -5990,7 +6147,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 // strip '?' if it's there, because we add it below
                 queryString = config.queryParams.replace(/^\?/, '');
             } else {
-                queryString = $.param(config.queryParams);
+                queryString = util.param(config.queryParams);
             }
         }
         config.queryString = queryString ? '?' + queryString : '';
@@ -6008,6 +6165,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             'dragend',
             'dragstart',
             'fail',
+            'layoutchange',
             'linkclick',
             'pagefail',
             'pagefocus',
@@ -6028,6 +6186,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          */
         onmessage: function (name, data) {
             switch (name) {
+                case 'layoutchange':
+                    api.updateLayout();
+                    break;
+
                 case 'linkclick':
                     handleLinkClick(data);
                     break;
@@ -6193,6 +6355,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 $pageOneContentPromise,
                 $pageOneTextPromise;
 
+            if ($assetsPromise) {
+                return;
+            }
+
             $loadMetadataPromise = scope.get('metadata');
             $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
                 config.metadata = metadata;
@@ -6232,12 +6398,17 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // when both metatadata and stylesheet are done or if either fails...
             $assetsPromise = $.when($loadMetadataPromise, $loadStylesheetPromise)
                 .fail(function (error) {
+                    if ($assetsPromise) {
+                        $assetsPromise.abort();
+                    }
+                    scope.ready();
                     scope.broadcast('asseterror', error);
                     scope.broadcast('fail', error);
                 })
                 .then(completeInit)
                 .promise({
                     abort: function () {
+                        $assetsPromise = null;
                         $loadMetadataPromise.abort();
                         $loadStylesheetPromise.abort();
                         if ($pageOneContentPromise) {
