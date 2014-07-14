@@ -242,3 +242,17 @@ test('updateLayout() should force a layout update when called', function () {
 
     viewer.updateLayout();
 });
+
+test('Crocodoc.Viewer.get() should return the viewer instance when called with a valid id', function () {
+    var viewer = new Crocodoc.Viewer(this.$el, { url: 'someurl' });
+
+    equal(Crocodoc.Viewer.get(viewer.id), viewer, 'should be the same viewer');
+});
+
+test('destroy() should unregister the instance when called', function () {
+    var viewer = new Crocodoc.Viewer(this.$el, { url: 'someurl' });
+    viewer.destroy();
+
+    notEqual(Crocodoc.Viewer.get(viewer.id), viewer, 'should not be the same viewer');
+    ok(!Crocodoc.Viewer.get(viewer.id), 'should not exist');
+});

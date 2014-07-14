@@ -77,6 +77,15 @@ var Crocodoc = (function () {
         },
 
         /**
+         * Get a viewer instance by id
+         * @param {number} id   The id
+         * @returns {Object}    The viewer instance
+         */
+        getViewer: function (id) {
+            return Crocodoc.Viewer.get(id);
+        },
+
+        /**
          * Register a new component
          * @param  {string} name      The (unique) name of the component
          * @param  {Array} mixins     Array of component names to instantiate and pass as mixinable objects to the creator method

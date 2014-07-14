@@ -71,6 +71,7 @@ module('Framework - createViewer', {
             }
         };
         this.viewerAPI = {
+            id: 3,
             init: function () {}
         };
         this.scopeStub = sinon.stub(Crocodoc, 'Scope').returns(this.scope);
@@ -89,4 +90,19 @@ test('createViewer() should return a new instance of Crocodoc.Viewer when called
         .returns(this.viewerAPI);
     var instance = Crocodoc.createViewer(el, options);
     ok(this.viewerAPI === instance, 'returned the viewer instance');
+});
+
+test('getViewer() should return the viewer instance when called with a valid id', function () {
+    var el = $(), options = {};
+
+    this.stub(Crocodoc, 'Viewer')
+        .withArgs(el, options)
+        .returns(this.viewerAPI);
+    this.stub(Crocodoc.Viewer, 'get')
+        .withArgs(this.viewerAPI.id)
+        .returns(this.viewerAPI);
+
+    var instance = Crocodoc.createViewer(el, options);
+
+    equal(Crocodoc.getViewer(instance.id), instance, 'should be the same viewer');
 });
