@@ -40,7 +40,10 @@
         config.id = ++viewerInstanceCount;
         config.api = this;
         config.$el = $el;
-        viewerBase.init();
+
+        function init() {
+            viewerBase.init();
+        }
 
         //--------------------------------------------------------------------------
         // Public
@@ -190,6 +193,8 @@
                 layout.setZoom();
             }
         };
+
+        init();
     };
 
     Crocodoc.Viewer.prototype = new Crocodoc.EventTarget();
