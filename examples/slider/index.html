@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Include the appropriate CSS and JS files: -->
+    <link rel="stylesheet" href="../../build/crocodoc.viewer.css" />
+    <script src="../../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../../build/crocodoc.viewer.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            /* It's important that the viewer element has a height */
+            height: 100%;
+            background: #fff;
+            font-family: Helvetica;
+            font-size: 13px;
+        }
+        /* Add a border and box-shadow to each page */
+        .crocodoc-page-inner {
+            border: 1px solid #ccc;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .left, .right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+            clip: rect(auto, auto, auto, auto);
+        }
+        .left {
+            right: 50%;
+        }
+        .right {
+            left: 50%;
+        }
+        .divider {
+            position: absolute;
+            outline: 1px solid rgba(0,0,0,0.4);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+        }
+        .viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+        }
+        .controls {
+            position: absolute;
+            text-align: center;
+            bottom: 0;
+            left: 50%;
+            width: 350px;
+            padding: 3px;
+            color: #00b9f2;
+            margin-left: -175px;
+            background: #00325b;
+        }
+
+        .invert .left {
+            -webkit-filter: invert(100%);
+            -ms-filter: invert(100%);
+            filter: invert(100%);
+        }
+        .blur .left {
+            -webkit-filter: blur(3px);
+            -ms-filter: blur(3px);
+            filter: blur(3px);
+        }
+        .hue-rotate .left {
+            -webkit-filter: hue-rotate(90deg);
+            -ms-filter: hue-rotate(90deg);
+            filter: hue-rotate(90deg);
+        }
+        .sepia .left {
+            -webkit-filter: sepia(100%);
+            -ms-filter: sepia(100%);
+            filter: sepia(100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="left"><div class="viewer"></div></div>
+    <div class="right"><div class="viewer"></div></div>
+    <div class="divider"></div>
+    <div class="controls">
+        Filter:
+        <button class="">None</button> |
+        <button class="invert">Invert</button> |
+        <button class="blur">Blur</button> |
+        <button class="hue-rotate">Hue Rotate</button> |
+        <button class="sepia">Sepia</button>
+    </div>
+    <script>
+        var left = Crocodoc.createViewer('.left .viewer', {
+            url: 'https://view-api.box.com/1/sessions/2dfb390dd1d84a11925cf44e9f2d5794/assets'
+        });
+        left.load();
+        var right = Crocodoc.createViewer('.right .viewer', {
+            url: 'https://view-api.box.com/1/sessions/2dfb390dd1d84a11925cf44e9f2d5794/assets'
+        });
+        right.load();
+
+        $('.crocodoc-viewport').on('scroll', function () {
+            $('.crocodoc-viewport').scrollTop($(this).scrollTop());
+        });
+
+        function slide(x) {
+            var p = x / window.innerWidth * 100;
+            $('.right, .divider').css('left', p + '%');
+            $('.left').css('right', (100 - p) + '%');
+        }
+        $(document).on('mousedown', function () {
+            $(document).on('mousemove', function (ev) {
+                slide(ev.clientX);
+                ev.preventDefault();
+            });
+        });
+        $(document).on('mouseup', function () {
+            $(document).off('mousemove');
+        });
+        $('button').on('click', function () {
+            $(document.body)
+                .removeClass()
+                .addClass($(this).attr('class'));
+        });
+    </script>
+</body>
+</html>

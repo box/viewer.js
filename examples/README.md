@@ -14,5 +14,8 @@ In this directory, you'll find several examples of common viewer.js use cases.
     - An example using the realtime plugin to stream pages to the viewer as they are finished converting. This example uses a local server to simulate conversion, so you can test it out on already converted documents.
 * `remember-page`
     - Store current page number in the url hash, then resume from the proper page when linked to or reloading the browser window.
+* `slider`
+    - Two separate viewer instances are created: left and right
+    - There is a slider in the middle that can be dragged to reveal more of either viewer. A filter is applied to on the left (in browsers that support CSS filters).
 * `thumbnails`
     - Two separate viewer instances are created: one for the presentation, and the other for thumbnails. When a thumbnail is clicked, the presentation view jumps to the correct page.
