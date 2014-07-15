@@ -68,6 +68,7 @@ module('Component - viewer-base', {
         this.viewerAPI = {
             setLayout: function () {},
             disableLinks: function () {},
+            disableTextSelection: function () {},
             fire: function () {},
             updateLayout: function () {}
         };
@@ -87,6 +88,14 @@ test('init() should throw an error when called url.config is not defined', funct
 
     this.config.url = null;
     throws(function (){ this.component.init(); }, 'error should be thrown');
+});
+
+test('init() should disable text selection in IE < 9', function () {
+    var spy = this.spy(this.viewerAPI, 'disableTextSelection');
+
+    this.utilities.browser.ielt9 = true;
+    this.component.init();
+    ok(spy.called, 'should disable text selection');
 });
 
 test('loadAssets() should request metadata when called', function () {

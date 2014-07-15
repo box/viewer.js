@@ -504,7 +504,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             }
 
             if (browser.ielt9) {
-                config.enableTextSelection = false;
+                api.disableTextSelection();
             }
 
             // make the url absolute
