@@ -13,7 +13,8 @@
     var CSS_CLASS_TEXT_DISABLED  = 'crocodoc-text-disabled',
         CSS_CLASS_LINKS_DISABLED = 'crocodoc-links-disabled';
 
-    var viewerInstanceCount = 0;
+    var viewerInstanceCount = 0,
+        instances = {};
 
     /**
      * Crocodoc.Viewer constructor
@@ -37,9 +38,11 @@
             throw new Error('Invalid container element');
         }
 
-        config.id = ++viewerInstanceCount;
+        this.id = config.id = ++viewerInstanceCount;
         config.api = this;
         config.$el = $el;
+        // register this instance
+        instances[this.id] = this;
 
         function init() {
             viewerBase.init();
@@ -54,6 +57,9 @@
          * @returns {void}
          */
         this.destroy = function () {
+            // unregister this instance
+            delete instances[config.id];
+
             // broadcast a destroy message
             scope.broadcast('destroy');
 
@@ -199,6 +205,15 @@
 
     Crocodoc.Viewer.prototype = new Crocodoc.EventTarget();
     Crocodoc.Viewer.prototype.constructor = Crocodoc.Viewer;
+
+    /**
+     * Get a viewer instance by id
+     * @param {number} id   The id
+     * @returns {Object}    The viewer instance
+     */
+    Crocodoc.Viewer.get = function (id) {
+        return instances[id];
+    };
 
     // Global defaults
     Crocodoc.Viewer.defaults = {
