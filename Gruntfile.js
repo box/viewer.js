@@ -1,9 +1,6 @@
 /*global module*/
 /*jshint node: true*/
 
-var WRAPPER_HEADER = 'var Crocodoc = (function ($) {\n\n',
-    WRAPPER_FOOTER = '\n\nreturn Crocodoc;\n})(jQuery);';
-
 module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-qunit');
     grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -90,10 +87,8 @@ module.exports = function (grunt) {
                 banner: '/*! Crocodoc Viewer - v<%= pkg.version %> | (c) <%= grunt.template.today("yyyy") %> Box */\n\n',
             },
             js: {
-                // also use the jQuery wrapper for js files
                 options: {
-                    banner: '<%= concat.options.banner %>' + WRAPPER_HEADER,
-                    footer: WRAPPER_FOOTER
+                    banner: ''
                 },
                 src: [
                     'src/js/core/crocodoc.js',
@@ -120,6 +115,15 @@ module.exports = function (grunt) {
                     'src/css/theme.css'
                 ],
                 dest: 'build/crocodoc.viewer.css'
+            },
+            wrapjs: {
+                src: ['src/js/wrap.js'],
+                dest: 'build/crocodoc.viewer.js',
+                options: {
+                    process: function (content) {
+                        return content.replace('//__crocodoc_viewer__', grunt.file.read('build/crocodoc.viewer.js'));
+                    }
+                }
             }
         },
         jshint: {
@@ -152,7 +156,7 @@ module.exports = function (grunt) {
             }
         },
         copy: {
-            main: {
+            dist: {
                 files: [{
                     expand: true,
                     cwd: 'build/',
@@ -175,7 +179,7 @@ module.exports = function (grunt) {
     });
 
     var useLogo = !grunt.option('no-logo');
-    var defaultTasks = ['test', 'concat:js'];
+    var defaultTasks = ['test', 'concat:js', 'concat:wrapjs'];
     if (useLogo) {
         defaultTasks.push('concat:css', 'imageEmbed');
     } else {
@@ -193,5 +197,5 @@ module.exports = function (grunt) {
     grunt.registerTask('default', defaultTasks);
     grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'parallel:examples']);
-    grunt.registerTask('release', ['build', 'copy']);
+    grunt.registerTask('release', ['build', 'copy:dist']);
 };
