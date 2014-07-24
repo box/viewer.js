@@ -24,9 +24,9 @@
 
 /* override these rules with !important to change the highlight color */
 /* @NOTE: !important is used here because stylesheet.css would otherwise take precedence in this case */
-.crocodoc-page-text .tx::-moz-selection {
+.crocodoc-page-text ::-moz-selection {
     background: rgba(50, 151, 253, 0.75) !important;
 }
-.crocodoc-page-text .tx::selection {
+.crocodoc-page-text ::selection {
     background: rgba(50, 151, 253, 0.75) !important;
 }
