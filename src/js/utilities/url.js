@@ -45,6 +45,11 @@ Crocodoc.addUtility('url', function (framework) {
                 parsedLocation = this.parse(this.getCurrentURL());
             }
 
+            // IE7 does not properly parse relative URLs, so the hostname is empty
+            if (!parsedURL.hostname) {
+                return false;
+            }
+
             return parsedURL.protocol !== parsedLocation.protocol ||
                    parsedURL.hostname !== parsedLocation.hostname ||
                    parsedURL.port !== parsedLocation.port;
