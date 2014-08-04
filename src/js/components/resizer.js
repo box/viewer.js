@@ -28,7 +28,14 @@ Crocodoc.addComponent('resizer', function (scope) {
         currentClientHeight,
         currentOffsetWidth,
         currentOffsetHeight,
-        resizeFrameID;
+        resizeFrameID,
+        inIframe = (function () {
+            try {
+                return window.self !== window.top;
+            } catch (e) {
+                return true;
+            }
+        })();
 
     /**
      * Fire the resize event with the proper data
@@ -71,12 +78,12 @@ Crocodoc.addComponent('resizer', function (scope) {
             newOffsetWidth = element.offsetWidth;
 
         // check if we're in a frame
-        if (window.frameElement) {
+        if (inIframe) {
             // firefox has an issue where styles aren't calculated in hidden iframes
             // if the iframe was hidden and is now visible, broadcast a
             // layoutchange event
-            if (frameWidth === 0 && window.frameElement.offsetWidth !== 0) {
-                frameWidth = window.frameElement.offsetWidth;
+            if (frameWidth === 0 && window.innerWidth !== 0) {
+                frameWidth = window.innerWidth;
                 scope.broadcast('layoutchange');
                 return;
             }
