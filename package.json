@@ -1,6 +1,6 @@
 {
   "name": "viewer",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "A viewer for documents converted with the Box View API",
   "author": "Cameron Lakenen <lakenen@box.com>",
   "contributors": [

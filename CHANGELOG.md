@@ -1,7 +1,14 @@
 # Change Log #
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
-
+* **0.5.6**
+  * Fix [#110](https://github.com/box/viewer.js/issues/110) - check for hidden iframe throws for cross-domain frame
+  * Fix isCrossDomain check for relative URLs in IE7
+  * Fix [#106](https://github.com/box/viewer.js/issues/106) - text selection styles
+  * Fix documentation issues
+  * Add slider example
+  * Add `Crocodoc.getViewer()`
+  * Fix [#100](https://github.com/box/viewer.js/issues/100) - text-disabled class not properly applied in IE < 9
 * **0.5.5**
   * Fix [#93](https://github.com/box/viewer.js/issues/93) - "fail" event is never fired when json/css fail to load
   * Fix [#94](https://github.com/box/viewer.js/issues/94) - isCrossDomain returns false positive in IE

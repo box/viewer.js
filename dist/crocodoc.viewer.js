@@ -76,6 +76,15 @@ var Crocodoc = (function () {
         },
 
         /**
+         * Get a viewer instance by id
+         * @param {number} id   The id
+         * @returns {Object}    The viewer instance
+         */
+        getViewer: function (id) {
+            return Crocodoc.Viewer.get(id);
+        },
+
+        /**
          * Register a new component
          * @param  {string} name      The (unique) name of the component
          * @param  {Array} mixins     Array of component names to instantiate and pass as mixinable objects to the creator method
@@ -535,7 +544,8 @@ var Crocodoc = (function () {
     var CSS_CLASS_TEXT_DISABLED  = 'crocodoc-text-disabled',
         CSS_CLASS_LINKS_DISABLED = 'crocodoc-links-disabled';
 
-    var viewerInstanceCount = 0;
+    var viewerInstanceCount = 0,
+        instances = {};
 
     /**
      * Crocodoc.Viewer constructor
@@ -559,10 +569,15 @@ var Crocodoc = (function () {
             throw new Error('Invalid container element');
         }
 
-        config.id = ++viewerInstanceCount;
+        this.id = config.id = ++viewerInstanceCount;
         config.api = this;
         config.$el = $el;
-        viewerBase.init();
+        // register this instance
+        instances[this.id] = this;
+
+        function init() {
+            viewerBase.init();
+        }
 
         //--------------------------------------------------------------------------
         // Public
@@ -573,6 +588,9 @@ var Crocodoc = (function () {
          * @returns {void}
          */
         this.destroy = function () {
+            // unregister this instance
+            delete instances[config.id];
+
             // broadcast a destroy message
             scope.broadcast('destroy');
 
@@ -712,10 +730,21 @@ var Crocodoc = (function () {
                 layout.setZoom();
             }
         };
+
+        init();
     };
 
     Crocodoc.Viewer.prototype = new Crocodoc.EventTarget();
     Crocodoc.Viewer.prototype.constructor = Crocodoc.Viewer;
+
+    /**
+     * Get a viewer instance by id
+     * @param {number} id   The id
+     * @returns {Object}    The viewer instance
+     */
+    Crocodoc.Viewer.get = function (id) {
+        return instances[id];
+    };
 
     // Global defaults
     Crocodoc.Viewer.defaults = {
@@ -2212,6 +2241,11 @@ Crocodoc.addUtility('url', function (framework) {
 
             if (!parsedLocation) {
                 parsedLocation = this.parse(this.getCurrentURL());
+            }
+
+            // IE7 does not properly parse relative URLs, so the hostname is empty
+            if (!parsedURL.hostname) {
+                return false;
             }
 
             return parsedURL.protocol !== parsedLocation.protocol ||
@@ -5479,7 +5513,14 @@ Crocodoc.addComponent('resizer', function (scope) {
         currentClientHeight,
         currentOffsetWidth,
         currentOffsetHeight,
-        resizeFrameID;
+        resizeFrameID,
+        inIframe = (function () {
+            try {
+                return window.self !== window.top;
+            } catch (e) {
+                return true;
+            }
+        })();
 
     /**
      * Fire the resize event with the proper data
@@ -5522,12 +5563,12 @@ Crocodoc.addComponent('resizer', function (scope) {
             newOffsetWidth = element.offsetWidth;
 
         // check if we're in a frame
-        if (window.frameElement) {
+        if (inIframe) {
             // firefox has an issue where styles aren't calculated in hidden iframes
             // if the iframe was hidden and is now visible, broadcast a
             // layoutchange event
-            if (frameWidth === 0 && window.frameElement.offsetWidth !== 0) {
-                frameWidth = window.frameElement.offsetWidth;
+            if (frameWidth === 0 && window.innerWidth !== 0) {
+                frameWidth = window.innerWidth;
                 scope.broadcast('layoutchange');
                 return;
             }
@@ -6257,7 +6298,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             }
 
             if (browser.ielt9) {
-                config.enableTextSelection = false;
+                api.disableTextSelection();
             }
 
             // make the url absolute
