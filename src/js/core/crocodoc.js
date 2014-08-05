@@ -3,7 +3,11 @@
  * @author lakenen
  */
 
-/*global Crocodoc:true*/
+/*jshint unused:false*/
+
+if (typeof $ === 'undefined') {
+    throw new Error('jQuery is required');
+}
 
 /**
  * The one global object for Crocodoc JavaScript.
