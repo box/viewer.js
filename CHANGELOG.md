@@ -1,6 +1,10 @@
 # Change Log #
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
+
+
+* **0.6.0**
+  * Add support for common JS `require()` syntax via exports
 * **0.5.6**
   * Fix [#110](https://github.com/box/viewer.js/issues/110) - check for hidden iframe throws for cross-domain frame
   * Fix isCrossDomain check for relative URLs in IE7

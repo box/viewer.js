@@ -1,8 +1,24 @@
-/*! Crocodoc Viewer - v0.5.5 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.6.0 | (c) 2014 Box */
 
-var Crocodoc = (function ($) {
+(function (window) {
+    /*global jQuery*/
+    /*jshint unused:false, undef:false*/
+    'use strict';
+    window.Crocodoc = (function(fn) {
+        if (typeof exports === 'object') {
+            // nodejs / browserify - export a function that accepts a jquery impl
+            module.exports = fn;
+        } else {
+            // normal browser environment
+            return fn(jQuery);
+        }
+    }(function($) {
 
-/*global Crocodoc:true*/
+/*jshint unused:false*/
+
+if (typeof $ === 'undefined') {
+    throw new Error('jQuery is required');
+}
 
 /**
  * The one global object for Crocodoc JavaScript.
@@ -6465,5 +6481,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
 });
 
 
-return Crocodoc;
-})(jQuery);
+        return Crocodoc;
+    }));
+})(typeof window !== 'undefined' ? window : this);
