@@ -353,21 +353,21 @@ The above list are the modes that are included as part of the bundled viewer.js 
 ### Styling Pages
 
 `.crocodoc-page` and `.crocodoc-page-content` classes can be used to style pages, but there are some important restrictions:
-* `.crocodoc-page`: padding should be used to adjust page spacing (never use margin for this)
+* `.crocodoc-page`: padding should be used to adjust page spacing (don't use margin for this)
 * `.crocodoc-page`: background should be transparent - use `.crocodoc-page-content` for changing the background of pages (including adding a background-image, such as a loading indicator)
 
 Examples:
 ```css
 .crocodoc-page {
-    /* 40px padding around all sides of every page */
+    /* 40px spacing around all sides of every page */
     padding: 40px;
 }
 .crocodoc-page {
-    /* 40px padding around the left and right sides of every page */
+    /* 40px spacing around the left and right sides of every page */
     padding: 0 40px;
 }
 
-/* the following can be used in a layout with pages that are side-by-side to remove padding in the middle (e.g., custom layout 'vertical-two-page') */
+/* the following can be used in a layout with pages that are side-by-side to remove spacing in the middle (e.g., custom layout 'vertical-two-page') */
 .crocodoc-page {
     padding: 20px;
 }
