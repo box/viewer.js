@@ -354,7 +354,7 @@ The above list are the modes that are included as part of the bundled viewer.js 
 
 `.crocodoc-page` and `.crocodoc-page-content` classes can be used to style pages, but there are some important restrictions:
 * `.crocodoc-page`: padding should be used to adjust page spacing (never use margin for this)
-* `.crocodoc-page`: background should be transparent, unless you want the background to also appear as a border (based on the padding size) - use `.crocodoc-page-content` for changing the background of pages
+* `.crocodoc-page`: background should be transparent - use `.crocodoc-page-content` for changing the background of pages (including adding a background-image, such as a loading indicator)
 
 Examples:
 ```css
@@ -386,6 +386,11 @@ Examples:
 /* change the background color of pages */
 .crocodoc-page-content {
     background-color: papayawhip;
+}
+
+/* add a spinner image to loading pages */
+.crocodoc-page-loading .crocodoc-page-content {
+    background: #FFF url('../images/spinner.gif') center center no-repeat;
 }
 
 /* mirror all pages horizontally (?!) */
