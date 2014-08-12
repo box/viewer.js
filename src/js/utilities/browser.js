@@ -39,6 +39,10 @@ Crocodoc.addUtility('browser', function () {
         browser.chrome = /chrome/i.test(ua);
         browser.safari = !browser.chrome;
     }
+    if (browser.safari) {
+        version = (navigator.appVersion).match(/Version\/(\d+(\.\d+)?)/);
+        browser.version = version && parseFloat(version[1]);
+    }
 
     return browser;
 });
