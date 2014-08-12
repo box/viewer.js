@@ -154,7 +154,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
     }
 
     /**
-     * Fixes a bug in iOS 6.1 where <use> elements are not supported properly
+     * Fixes a bug in Safari where <use> elements are not supported properly
      * by replacing each <use> element with a clone of its referenced <image>
      * @param   {Document} contentDocument The SVG document
      * @returns {void}
@@ -205,9 +205,9 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     contentDocument.body.innerHTML = html;
                 } else {
                     contentDocument.documentElement.innerHTML = html;
-                    // @NOTE: there is a bug in iOS 6.1 Safari where <use>
+                    // @NOTE: there is a bug in Safari 6 where <use>
                     // elements don't work properly
-                    if (browser.ios && browser.version < 7) {
+                    if ((browser.ios || browser.safari) && browser.version < 7) {
                         fixUseElements(contentDocument);
                     }
                 }
