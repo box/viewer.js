@@ -82,6 +82,8 @@
          * @returns {void}
          */
         this.setLayout = function (mode) {
+            // removing old reference to prevent errors when handling layoutchange message
+            layout = null;
             layout = viewerBase.setLayout(mode);
         };
 
