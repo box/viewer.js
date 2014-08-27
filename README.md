@@ -506,6 +506,14 @@ npm install
 
 That's it! You should be setup with development dependencies and ready to go. 
 
+### Git Hooks
+
+Viewer.js comes with a pre-commit git hook that runs the unit tests before allowing a commit. This is a useful way to make sure you don't accidentally commit code that breaks unit tests. To install the git hook, just run:
+
+```
+./install-githooks.sh
+```
+
 ### Grunt
 
 * `grunt test` - runs `jshint` and `qunit` tests against the code
