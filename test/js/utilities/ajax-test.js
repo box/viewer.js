@@ -29,8 +29,6 @@ module('Utility - ajax', {
     }
 });
 
-// @TODO: test ajax.request
-
 test('fetch() should resolve a promise if the successful response is non-empy', function() {
     var promiseResolved = false;
     var responseObject = { responseText: 'some data' };
@@ -258,4 +256,48 @@ test('request() should send urlencoded data as the body if the request method is
     this.stub(this.utilities.support, 'isXHRSupported').returns(true);
     this.util.request(url, options);
     ok(sendSpy.calledWith(paramed), 'urlencoded data should be sent');
+});
+
+test('sendJSON() should send stringified JSON data as the body of a POST request', function() {
+    var url = 'some url',
+        data = {key: 'value'};
+
+    sinon.mock(this.util).expects('request').withArgs(url, sinon.match({method: "POST", data: this.utilities.common.stringifyJSON(data) }));
+    expect(0);
+    this.util.sendJSON(url, data);
+});
+
+test('sendJSON should return a rejected promise if the request fails', function() {
+    var responseObject = {
+        status: 500,
+        statusText: 'uncaught server exception'
+    };
+
+    this.stub(this.util, 'request').yieldsToOn('fail', responseObject);
+
+    var promise = this.util.sendJSON('someurl', {});
+    promise.fail(function(){
+        ok(true, 'promise should be rejected');
+    });
+});
+
+test('sendJSON should return a completed promise with a valid JSON-decoded object if the request succeeds', function() {
+    var responseObject = {
+        status: 200,
+        responseText: '{"key":"value"}',
+        rawRequest: {
+            getResponseHeader: this.stub().returns('application/json')
+        }
+    };
+
+    this.stub(this.util, 'request').yieldsToOn('success', responseObject);
+
+    var promise = this.util.sendJSON('someurl', {});
+    promise.done(function(decodedObject){
+        ok(true, 'promise should be completed');
+        ok(typeof decodedObject === 'object', 'the variable passed to the completed promise should be a native object');
+    });
+    promise.fail(function() {
+        ok(false, 'promise should be completed');
+    });
 });
