@@ -1,17 +1,12 @@
 
 /***** "PRESENTATION-SLIDE MODE" PAGE TRANSITIONS *****/
+/*Make all pages visible and apply a transition on opacity and transform*/
 .crocodoc-presentation-slide .crocodoc-page {
     -webkit-transition: opacity 0.2s, -webkit-transform 0.4s;
     transition: opacity 0.2s, transform 0.4s;
     visibility: visible;
 }
-.crocodoc-presentation-slide .crocodoc-current-page {
-    -webkit-transform: none;
-    transform: none;
-    -webkit-transition-delay: 0s, 0s;
-    transition-delay: 0s, 0s;
-    opacity: 1;
-}
+/*Transform 100% to the left and transparentize*/
 .crocodoc-presentation-slide .crocodoc-page-before {
     -webkit-transform: translateX(-100%);
     transform: translateX(-100%);
@@ -19,6 +14,7 @@
     transition-delay: 0.2s, 0s;
     opacity: 0;
 }
+/*Transform 100% to the right and transparentize*/
 .crocodoc-presentation-slide .crocodoc-page-after {
     -webkit-transform: translateX(100%);
     transform: translateX(100%);
