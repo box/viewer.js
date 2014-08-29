@@ -17,9 +17,13 @@ Crocodoc.addUtility('common', function () {
     util.extend = $.extend;
     util.each = $.each;
     util.map = $.map;
-    util.parseJSON = $.parseJSON;
-    util.stringifyJSON = JSON.stringify; // IE 8+
     util.param = $.param;
+    util.parseJSON = $.parseJSON;
+    util.stringifyJSON = typeof window.JSON !== 'undefined' ?
+        window.JSON.stringify : // IE 8+
+        function () {
+            throw new Error('JSON.stringify not supported');
+        };
 
     return $.extend(util, {
 
