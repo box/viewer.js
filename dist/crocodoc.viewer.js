@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.6.0 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.6.1 | (c) 2014 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -629,6 +629,8 @@ var Crocodoc = (function () {
          * @returns {void}
          */
         this.setLayout = function (mode) {
+            // removing old reference to prevent errors when handling layoutchange message
+            layout = null;
             layout = viewerBase.setLayout(mode);
         };
 
@@ -1293,7 +1295,8 @@ Crocodoc.addUtility('ajax', function (framework) {
         return {
             status: status,
             statusText: statusText,
-            responseText: responseText
+            responseText: responseText,
+            rawRequest: req
         };
     }
 
@@ -1552,6 +1555,53 @@ Crocodoc.addUtility('ajax', function (framework) {
                     req.abort();
                 }
             });
+        },
+
+        /**
+         * Send data to the server. Uses JSON.stringify, so IE 8+.
+         *
+         * @param {string} url      The url to POST data to
+         * @param {Object} data     A object that will be JSON serialized and sent in the body of the POST
+         * @returns {$.Promise}     A JQuery promise. There is no abort() method because we cannot guarantee
+         *                          that an aborted POST has not affected state.
+         */
+        sendJSON: function(url, data) {
+            var ajax = this,
+                req,
+                $deferred = $.Deferred();
+
+            function request() {
+                return ajax.request(url, {
+                    method: 'POST',
+                    data: util.stringifyJSON(data),
+                    headers: [
+                        ["Content-Type", "application/json"]
+                    ],
+                    success: function() {
+                        if (this.responseText) {
+                            var parsedJSON;
+                            try {
+                                if (this.rawRequest.getResponseHeader('content-type') === 'application/json') {
+                                    parsedJSON = util.parseJSON(this.responseText);
+                                    $deferred.resolve(parsedJSON);
+                                } else {
+                                    $deferred.reject('response not json');
+                                }
+                            } catch (e) {
+                                $deferred.reject('invalid json');
+                            }
+                        } else {
+                            $deferred.reject('empty response');
+                        }
+                    },
+                    fail: function() {
+                        $deferred.reject(this.statusText);
+                    }
+                });
+            }
+
+            req = request();
+            return $deferred.promise();
         }
     };
 });
@@ -1593,6 +1643,10 @@ Crocodoc.addUtility('browser', function () {
         browser.chrome = /chrome/i.test(ua);
         browser.safari = !browser.chrome;
     }
+    if (browser.safari) {
+        version = (navigator.appVersion).match(/Version\/(\d+(\.\d+)?)/);
+        browser.version = version && parseFloat(version[1]);
+    }
 
     return browser;
 });
@@ -1611,8 +1665,13 @@ Crocodoc.addUtility('common', function () {
     util.extend = $.extend;
     util.each = $.each;
     util.map = $.map;
-    util.parseJSON = $.parseJSON;
     util.param = $.param;
+    util.parseJSON = $.parseJSON;
+    util.stringifyJSON = typeof window.JSON !== 'undefined' ?
+        window.JSON.stringify : // IE 8+
+        function () {
+            throw new Error('JSON.stringify not supported');
+        };
 
     return $.extend(util, {
 
@@ -4850,7 +4909,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
     }
 
     /**
-     * Fixes a bug in iOS 6.1 where <use> elements are not supported properly
+     * Fixes a bug in Safari where <use> elements are not supported properly
      * by replacing each <use> element with a clone of its referenced <image>
      * @param   {Document} contentDocument The SVG document
      * @returns {void}
@@ -4901,9 +4960,9 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     contentDocument.body.innerHTML = html;
                 } else {
                     contentDocument.documentElement.innerHTML = html;
-                    // @NOTE: there is a bug in iOS 6.1 Safari where <use>
+                    // @NOTE: there is a bug in Safari 6 where <use>
                     // elements don't work properly
-                    if (browser.ios && browser.version < 7) {
+                    if ((browser.ios || browser.safari) && browser.version < 7) {
                         fixUseElements(contentDocument);
                     }
                 }

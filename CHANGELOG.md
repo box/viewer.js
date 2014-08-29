@@ -2,7 +2,13 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
-
+* **0.6.1**
+  * Simplify and add comments to the presentation transition examples
+  * Fix [#125](https://github.com/box/viewer.js/issues/125) - Pages are shifted right in IE 7
+  * Fix [#124](https://github.com/box/viewer.js/issues/124) - JSON is not defined in IE 7
+  * Remove npm postinstall script
+  * Fix [#118](https://github.com/box/viewer.js/issues/118) - Error when switching between layouts
+  * Fix issue with images not showing up in Safari 6
 * **0.6.0**
   * Add support for common JS `require()` syntax via exports
 * **0.5.6**
