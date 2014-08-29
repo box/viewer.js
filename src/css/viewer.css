@@ -72,9 +72,14 @@
 /* individual pages */
 .crocodoc-page {
     display: inline-block;
-    /* IE7 hack */
+    /* IE7 hack to force inline behavior on divs */
     *display: inline;
-    zoom: 1;
+    *zoom: 1;
+    /* End hack */
+
+    /* IE7 inherits text-align: center, which causes the page-content to be shifted */
+    text-align: left;
+
     vertical-align: middle;
     -webkit-user-select: none;
     -moz-user-select: none;
