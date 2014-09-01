@@ -18,6 +18,7 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
         + [Built-in Layout Modes](#built-in-layout-modes)
         + [Other Layout Modes](#other-layout-modes)
     - [Styling Pages](#styling-pages)
+    - [Presentation Transitions](#presentation-transitions)
     - [Realtime Page Streaming](#realtime-page-streaming)
     - [Plugins](#plugins)
     - [Data Providers](#data-providers)
@@ -402,6 +403,22 @@ Examples:
     transform: scale(-1, 1);
 }
 ```
+
+
+### Presentation Transitions
+
+With viewer.js in presentation (`Crocodoc.LAYOUT_PRESENTATION`) layout mode, it is possible to add custom page transitions using pure CSS. The viewer automatically applies CSS classes to the pages appropriately so that you can write CSS that will affect the current, previous, and next pages, as well as all pages before and after the current page.
+
+To see some examples, look at the CSS files in ["presentations" example](examples/presentations) included with this repo.
+
+The classes available are:
+
+* `.crocodoc-current-page`: the current page
+* `.crocodoc-page-prev`: the previous page
+* `.crocodoc-page-next`: the next page
+* `.crocodoc-page-before`: any page before the current page (including the previous page)
+* `.crocodoc-page-after`: any page after the current page (including the next page)
+
 
 ### Realtime Page Streaming
 
