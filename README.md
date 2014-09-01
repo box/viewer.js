@@ -308,6 +308,8 @@ viewer.on('ready', function (event) {
 
 * `pagefocus` Triggered whenever a new page is scrolled into view. Event properties:
     * `page` - page number
+    * `numPages` - total number of pages in the document
+    * `visiblePages` - an array of page numbers that are currently (fully or partially) visible in the viewport
 * `pageload` Triggered whenever a page is loaded. Event properties:
     * `page` - page number
 * `pageunload` Triggered whenever a page is unloaded to improve performance. Event properties:
