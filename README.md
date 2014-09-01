@@ -14,6 +14,8 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
     - [Viewer Config](#viewer-config)
     - [Viewer Methods](#viewer-methods)
     - [Event Handling](#event-handling)
+        + [Viewer Events](#viewer-events)
+        + [Page Events](#page-events)
     - [Setting the Layout Mode](#setting-the-layout-mode)
         + [Built-in Layout Modes](#built-in-layout-modes)
         + [Other Layout Modes](#other-layout-modes)
@@ -277,7 +279,7 @@ viewer.on('ready', function (event) {
 ```
 
 
-**Viewer Events**
+#### Viewer Events
 
 * `asseterror` Triggered if any asset fails to load. Event properties:
     * `error` - the error message
@@ -304,7 +306,7 @@ viewer.on('ready', function (event) {
     * `canZoomOut` - whether the viewer is able to zoom out (boolean)
     * `canZoomIn` - whether the viewer is able to zoom in (boolean)
 
-**Page Events**
+#### Page Events
 
 * `pagefocus` Triggered whenever a new page is scrolled into view. Event properties:
     * `page` - page number
