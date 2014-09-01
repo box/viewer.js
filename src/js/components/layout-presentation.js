@@ -22,6 +22,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
         CSS_CLASS_PAGE_BEFORE_BUFFER = CSS_CLASS_PAGE_PREFIX + 'before-buffer',
         CSS_CLASS_PAGE_AFTER_BUFFER = CSS_CLASS_PAGE_PREFIX + 'after-buffer',
         CSS_CLASS_CURRENT_PAGE = 'crocodoc-current-page',
+        CSS_CLASS_PRECEDING_PAGE = 'crocodoc-preceding-page',
         PRESENTATION_CSS_CLASSES = [
             CSS_CLASS_PAGE_NEXT,
             CSS_CLASS_PAGE_AFTER,
@@ -116,11 +117,26 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
          * @param {int} page The page number
          */
         setCurrentPage: function (page) {
-            var index = util.clamp(page - 1, 0, this.numPages);
+            var index = util.clamp(page - 1, 0, this.numPages),
+                $precedingPage,
+                $currentPage;
+
             base.setCurrentPage.call(this, page);
+
             // update CSS classes
-            this.$doc.find('.' + CSS_CLASS_CURRENT_PAGE).removeClass(CSS_CLASS_CURRENT_PAGE);
-            this.$pages.eq(this.state.currentPage - 1).addClass(CSS_CLASS_CURRENT_PAGE);
+            this.$doc.find('.' + CSS_CLASS_PRECEDING_PAGE)
+                .removeClass(CSS_CLASS_PRECEDING_PAGE);
+
+            $precedingPage = this.$doc.find('.' + CSS_CLASS_CURRENT_PAGE);
+            $currentPage = this.$pages.eq(index);
+
+            if ($precedingPage[0] !== $currentPage[0]) {
+                $precedingPage
+                    .addClass(CSS_CLASS_PRECEDING_PAGE)
+                    .removeClass(CSS_CLASS_CURRENT_PAGE);
+                $currentPage.addClass(CSS_CLASS_CURRENT_PAGE);
+            }
+
             this.updateVisiblePages(true);
             this.updatePageClasses(index);
         },

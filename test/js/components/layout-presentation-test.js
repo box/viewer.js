@@ -15,6 +15,8 @@ module('Component - layout-presentation', {
                 updateCurrentPage: function () {},
                 updatePageMargins: function () {},
                 updatePageClasses: function () {},
+                updateVisiblePages: function () {},
+                setCurrentPage: function () {},
                 extend: function (obj) {
                     return Crocodoc.getUtility('common').extend({}, this, obj);
                 }
@@ -54,4 +56,47 @@ test('calculateNextPage() should return the correct page number when called', fu
     var page = 8;
     this.component.state = { currentPage: page };
     equal(this.component.calculateNextPage(), page + 1, 'the page was correct');
+});
+
+QUnit.cases([
+    { page: 1, expectedCurrent: 1 },
+    { currentPage: 1, page: 1, expectedCurrent: 1 },
+    { currentPage: 1, page: 2, expectedCurrent: 2, expectedPreceding: 1 },
+    { precedingPage: 1, currentPage: 2, page: 1, expectedCurrent: 1, expectedPreceding: 2 }
+]).test('setCurrentPage() should update the preceding and current page classes correctly when called', function (params) {
+    this.stub(this.component, 'updateVisiblePages');
+    this.stub(this.component, 'updatePageClasses');
+
+    var $doc = $('<div class="crocodoc-doc"></div>'),
+        $page = $('<div class="crocodoc-page"></div>');
+
+    $page.clone().appendTo($doc);
+    $page.clone().appendTo($doc);
+    $page.clone().appendTo($doc);
+
+    var $pages = $doc.find('.crocodoc-page');
+
+    if (params.currentPage) {
+        $pages.eq(params.currentPage - 1).addClass('crocodoc-current-page');
+    }
+    if (params.precedingPage) {
+        $pages.eq(params.precedingPage - 1).addClass('crocodoc-preceding-page');
+    }
+
+    this.component.state = { currentPage: params.currentPage };
+    this.component.$doc = $doc;
+    this.component.$pages = $pages;
+
+    this.component.setCurrentPage(params.page);
+
+    if (params.expectedCurrent) {
+        ok($pages.eq(params.expectedCurrent - 1).hasClass('crocodoc-current-page'), 'should have current page class');
+    }
+    if (params.expectedPreceding) {
+        ok($pages.eq(params.expectedPreceding - 1).hasClass('crocodoc-preceding-page'), 'should have preceding page class');
+        equal($doc.find('.crocodoc-preceding-page').length, 1, 'should only be one preceding page');
+    } else {
+        equal($doc.find('.crocodoc-preceding-page').length, 0, 'should not be a preceding page');
+    }
+    equal($doc.find('.crocodoc-current-page').length, 1, 'should only be one current page');
 });
