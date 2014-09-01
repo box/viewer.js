@@ -24,6 +24,8 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
 * [Browser Support](#browser-support)
 * [Contributing](#contributing)
 * [Getting Started with the Code](#getting-started-with-the-code)
+    - [Dev Dependenvies](#dev-dependencies)
+    - [Git Hooks](#git-hooks)
     - [Grunt](#grunt)
     - [Logo Options](#logo-options)
 * [Common Issues](#common-issues)
@@ -491,6 +493,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 
 ## Getting Started with the Code
+
+### Dev Dependencies
 
 To install the development dependencies, you'll need [node](http://nodejs.org/) and [npm](https://npmjs.org/). Most node installs come with npm pre-packaged.
 
