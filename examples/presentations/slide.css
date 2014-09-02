@@ -1,5 +1,3 @@
-
-/***** "PRESENTATION-SLIDE MODE" PAGE TRANSITIONS *****/
 /*Make all pages visible and apply a transition on opacity and transform*/
 .crocodoc-presentation-slide .crocodoc-page {
     -webkit-transition: opacity 0.2s, -webkit-transform 0.4s;

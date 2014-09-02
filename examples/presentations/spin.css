@@ -1,0 +1,34 @@
+.crocodoc-presentation-spin .crocodoc-doc {
+    /*Make it look 3d!*/
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    -webkit-perspective: 1000px;
+    perspective: 1000px;
+}
+
+/*Apply a transition to all pages*/
+.crocodoc-presentation-spin .crocodoc-page {
+    -webkit-transition: visibility 0s, -webkit-transform 0.5s;
+    transition: visibility 0s, transform 0.5s;
+
+    /*We don't want the backs of pages showing*/
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+
+    visibility: visible !important;
+}
+
+.crocodoc-presentation-spin .crocodoc-page-before {
+    -webkit-transform: rotateY(-180deg);
+    transform: rotateY(-180deg);
+    /*Delay the visibility "transition", because we want to see the transform transition*/
+    -webkit-transition-delay: 0.5s, 0s;
+    transition-delay: 0.5s, 0s;
+}
+
+.crocodoc-presentation-spin .crocodoc-page-after {
+    -webkit-transform: rotateY(180deg);
+    transform: rotateY(180deg);
+    -webkit-transition-delay: 0.5s, 0s;
+    transition-delay: 0.5s, 0s;
+}

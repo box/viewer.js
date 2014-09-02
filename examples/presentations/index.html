@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="pop.css" />
     <link rel="stylesheet" href="fade.css" />
     <link rel="stylesheet" href="slide.css" />
+    <link rel="stylesheet" href="spin.css" />
     <link rel="stylesheet" href="pageflip.css" />
     <link rel="stylesheet" href="carousel.css" />
     <script src="../../node_modules/jquery/dist/jquery.js"></script>
@@ -53,6 +54,7 @@
         <button class="pop" onclick="setMode('pop')">Pop</button>
         <button class="fade" onclick="setMode('fade')">Fade</button>
         <button class="carousel" onclick="setMode('carousel')">Carousel</button>
+        <button class="spin" onclick="setMode('spin')">Spin</button>
         <button class="slide" onclick="setMode('slide')">Slide</button>
         <button class="book" onclick="setMode('book')">Book</button>
     </div>
@@ -67,13 +69,19 @@
                 case 'pop':
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
-                    $('body').removeClass().addClass('crocodoc-presentation');
+                    $('body').removeClass().addClass('crocodoc-presentation-pop');
                     break;
 
                 case 'fade':
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
-                    $('body').removeClass().addClass('crocodoc-fade');
+                    $('body').removeClass().addClass('crocodoc-presentation-fade');
+                    break;
+
+                case 'spin':
+                    viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
+                    viewer.zoom(Crocodoc.ZOOM_AUTO);
+                    $('body').removeClass().addClass('crocodoc-presentation-spin');
                     break;
 
                 case 'slide':
@@ -86,7 +94,7 @@
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
                     viewer.zoom(Crocodoc.ZOOM_OUT);
-                    $('body').removeClass().addClass('crocodoc-carousel');
+                    $('body').removeClass().addClass('crocodoc-presentation-carousel');
                     break;
 
                 case 'book':

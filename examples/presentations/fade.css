@@ -1,8 +1,8 @@
-.crocodoc-fade .crocodoc-page-before,
-.crocodoc-fade .crocodoc-page-after {
+.crocodoc-presentation-fade .crocodoc-page-before,
+.crocodoc-presentation-fade .crocodoc-page-after {
     opacity: 0;
 }
-.crocodoc-fade .crocodoc-preceding-page {
+.crocodoc-presentation-fade .crocodoc-preceding-page {
     /* Delay visibility to keep the page visible during the transition */
     -webkit-transition: opacity 0.5s,
                         visibility 0s ease 0.5s;
