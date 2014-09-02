@@ -3,6 +3,7 @@
 <head>
     <link rel="stylesheet" href="../../build/crocodoc.viewer.css" />
     <link rel="stylesheet" href="pop.css" />
+    <link rel="stylesheet" href="fade.css" />
     <link rel="stylesheet" href="slide.css" />
     <link rel="stylesheet" href="pageflip.css" />
     <link rel="stylesheet" href="carousel.css" />
@@ -50,6 +51,7 @@
     <div class="viewer"></div>
     <div class="controls">
         <button class="pop" onclick="setMode('pop')">Pop</button>
+        <button class="fade" onclick="setMode('fade')">Fade</button>
         <button class="carousel" onclick="setMode('carousel')">Carousel</button>
         <button class="slide" onclick="setMode('slide')">Slide</button>
         <button class="book" onclick="setMode('book')">Book</button>
@@ -63,9 +65,15 @@
             $('.controls button.' + mode).addClass('selected');
             switch (mode) {
                 case 'pop':
-                    $('body').removeClass().addClass('crocodoc-presentation');
                     viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
                     viewer.zoom(Crocodoc.ZOOM_AUTO);
+                    $('body').removeClass().addClass('crocodoc-presentation');
+                    break;
+
+                case 'fade':
+                    viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
+                    viewer.zoom(Crocodoc.ZOOM_AUTO);
+                    $('body').removeClass().addClass('crocodoc-fade');
                     break;
 
                 case 'slide':

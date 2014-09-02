@@ -418,6 +418,7 @@ To see some examples, look at the CSS files in ["presentations" example](example
 The classes available are:
 
 * `.crocodoc-current-page`: the current page
+* `.crocodoc-preceding-page`: the last "current" page (i.e. the page that had the `crocodoc-current-page` class before the most recent `pagefocus` event)
 * `.crocodoc-page-prev`: the previous page
 * `.crocodoc-page-next`: the next page
 * `.crocodoc-page-before`: any page before the current page (including the previous page)

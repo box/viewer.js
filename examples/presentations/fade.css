@@ -1,0 +1,15 @@
+.crocodoc-fade .crocodoc-page-before,
+.crocodoc-fade .crocodoc-page-after {
+    opacity: 0;
+}
+.crocodoc-fade .crocodoc-preceding-page {
+    /* Delay visibility to keep the page visible during the transition */
+    -webkit-transition: opacity 0.5s,
+                        visibility 0s ease 0.5s;
+    transition: opacity 0.5s,
+                visibility 0s ease 0.5s;
+
+    /* Position the preceding page on top of the current page, so no matter which
+       order the pages are actually in, the transition will look the same */
+    z-index: 2 !important;
+}
