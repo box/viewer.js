@@ -2,6 +2,8 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.7.0**
+  * Add `.crocodoc-preceding-page` class for easier transition effects in presentation layout
 * **0.6.1**
   * Simplify and add comments to the presentation transition examples
   * Fix [#125](https://github.com/box/viewer.js/issues/125) - Pages are shifted right in IE 7
@@ -31,7 +33,7 @@ Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers
   * Fix [#70](https://github.com/box/viewer.js/issues/70) - IE 11 crashes when unloading pages
 * **0.5.3**
   * Fix IE9 issue with box-sizing: initial
-  * LazyLader: only load visible pages initially to improve initial load performance
+  * LazyLoader: only load visible pages initially to improve initial load performance
 * **0.5.2**
   * Fix issue with optimistic asset prefetching in non-svg browsers (e.g., IE 8)
 * **0.5.1**
