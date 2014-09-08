@@ -11,7 +11,8 @@ Crocodoc.addComponent('resizer', function (scope) {
 
     'use strict';
 
-    var util = scope.getUtility('common');
+    var util = scope.getUtility('common'),
+        dom = scope.getUtility('dom');
 
     // shorter way of defining
     // 'fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange'
@@ -20,9 +21,8 @@ Crocodoc.addComponent('resizer', function (scope) {
         // @NOTE: IE 11 uses upper-camel-case for this, which is apparently necessary
         'MSFullscreenChange';
 
-    var $window = $(window),
-        $document = $(document),
-        element,
+    var element,
+        resizerWindow = window,
         frameWidth = 0,
         currentClientWidth,
         currentClientHeight,
@@ -62,23 +62,28 @@ Crocodoc.addComponent('resizer', function (scope) {
      * @private
      */
     function initResizer() {
-        var $iframe = $('<iframe>'),
-            $div = $('<div>');
-        $iframe.add($div).css({
-            visiblility: 'hidden',
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            top: 0,
-            left: 0,
-            border: 0
-        });
-        $iframe.prependTo($div.prependTo(element));
+        var iframe = dom.create('iframe'),
+            div = dom.create('div'),
+            styles = {
+                visiblility: 'hidden',
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                top: 0,
+                left: 0,
+                border: 0
+            };
+
+        dom.css(iframe, styles);
+        dom.css(div, styles);
+        dom.prependTo(div, iframe);
+        dom.prependTo(element, div);
+
         if (util.getComputedStyle(element).position === 'static') {
-            $(element).css({ position: 'relative' });
+            dom.css(element, 'position', 'relative');
         }
-        $window = $($iframe[0].contentWindow);
-        $window.on('resize', checkResize);
+        resizerWindow = iframe.contentWindow;
+        dom.on(resizerWindow, 'resize', checkResize);
     }
 
     /**
@@ -135,23 +140,22 @@ Crocodoc.addComponent('resizer', function (scope) {
 
         /**
          * Initialize the Resizer component with an element to watch
-         * @param  {HTMLElement} el The element to watch
+         * @param  {Element} el The element to watch
          * @returns {void}
          */
         init: function (el) {
-            element = $(el).get(0);
+            element = el;
 
             // use the documentElement for viewport dimensions
             // if we are using the window as the viewport
-            if (element === window) {
+            if (element === resizerWindow) {
                 element = document.documentElement;
-                $window.on('resize', checkResize);
+                dom.on(resizerWindow, 'resize', checkResize);
             } else {
                 initResizer();
             }
 
-           $document.on(FULLSCREENCHANGE_EVENT, checkResize);
-
+            dom.on(document, FULLSCREENCHANGE_EVENT, checkResize);
             checkResize();
         },
 
@@ -160,8 +164,8 @@ Crocodoc.addComponent('resizer', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            $document.off(FULLSCREENCHANGE_EVENT, checkResize);
-            $window.off('resize', checkResize);
+            dom.off(resizerWindow, 'resize', checkResize);
+            dom.off(document, FULLSCREENCHANGE_EVENT, checkResize);
         }
     };
 });

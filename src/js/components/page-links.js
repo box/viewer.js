@@ -14,8 +14,13 @@ Crocodoc.addComponent('page-links', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var $el,
-        browser = scope.getUtility('browser');
+    var containerEl,
+        util = scope.getUtility('common'),
+        browser = scope.getUtility('browser'),
+        dom = scope.getUtility('dom'),
+        linkId = 0,
+        spanEls = [],
+        linkData = [];
 
     /**
      * Create a link element given link data
@@ -24,21 +29,22 @@ Crocodoc.addComponent('page-links', function (scope) {
      * @private
      */
     function createLink(link) {
-        var $link = $('<a>').addClass(CSS_CLASS_PAGE_LINK),
+        var linkEl = dom.create('a'),
             left = link.bbox[0],
             top = link.bbox[1],
             attr = {};
 
+        dom.addClass(linkEl, CSS_CLASS_PAGE_LINK);
         if (browser.ie) {
             // @NOTE: IE doesn't allow override of ctrl+click on anchor tags,
             // but there is a workaround to add a child element (which triggers
             // the onclick event first)
-            $('<span>')
-                .appendTo($link)
-                .on('click', handleClick);
+            var spanEl = dom.create('span');
+            dom.appendTo(linkEl, spanEl)
+            dom.on(spanEl, 'click', handleClick);
         }
 
-        $link.css({
+        dom.css(linkEl, {
             left: left + 'pt',
             top: top + 'pt',
             width: link.bbox[2] - left + 'pt',
@@ -57,9 +63,10 @@ Crocodoc.addComponent('page-links', function (scope) {
             attr.href = '#page-' + link.destination.pagenum;
         }
 
-        $link.attr(attr);
-        $link.data('link', link);
-        $link.appendTo($el);
+        dom.attr(linkEl, attr);
+        dom.data(linkEl, 'link', linkId);
+        linkData[linkId++] = link;
+        dom.appendTo(containerEl, linkEl);
     }
 
     /**
@@ -70,8 +77,8 @@ Crocodoc.addComponent('page-links', function (scope) {
      */
     function handleClick(event) {
         var targetEl = browser.ie ? event.target.parentNode : event.target,
-            $link = $(targetEl),
-            data = $link.data('link');
+            linkEl = targetEl,
+            data = linkData[dom.data(linkEl, 'link')];
 
         if (data) {
             scope.broadcast('linkclick', data);
@@ -92,12 +99,12 @@ Crocodoc.addComponent('page-links', function (scope) {
          * them in as an argument?
          */
         init: function (el, links) {
-            $el = $(el);
+            containerEl = el;
             this.createLinks(links);
             if (!browser.ie) {
                 // @NOTE: event handlers are individually bound in IE, because
                 // the ctrl+click workaround fails when using event delegation
-                $el.on('click', '.' + CSS_CLASS_PAGE_LINK, handleClick);
+                dom.on(el, 'click', '.' + CSS_CLASS_PAGE_LINK, handleClick);
             }
         },
 
@@ -106,10 +113,12 @@ Crocodoc.addComponent('page-links', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            // @NOTE: individual click event handlers needed for IE are
-            // implicitly removed by jQuery when we empty the links container
-            $el.empty().off('click');
-            $el = browser = null;
+            util.each(spanEls, function (s) {
+                dom.off(s, 'click', handleClick);
+            });
+            dom.empty(containerEl)
+            dom.off(containerEl, 'click', handleClick);
+            containerEl = browser = spanEls = linkData = null;
         },
 
         /**

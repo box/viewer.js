@@ -15,11 +15,12 @@ Crocodoc.addComponent('page-text', function (scope) {
     //--------------------------------------------------------------------------
 
     var browser = scope.getUtility('browser'),
+        dom = scope.getUtility('dom'),
         subpx   = scope.getUtility('subpx');
 
     var destroyed = false,
         loaded = false,
-        $textLayer,
+        containerEl,
         $loadTextPromise,
         page,
         viewerConfig = scope.getConfig();
@@ -55,9 +56,9 @@ Crocodoc.addComponent('page-text', function (scope) {
 
         // select just the element we want (CSS_CLASS_PAGE_TEXT)
         textEl = document.importNode(doc.querySelector('.' + CSS_CLASS_PAGE_TEXT), true);
-        $textLayer.attr('class', textEl.getAttribute('class'));
-        $textLayer.html(textEl.innerHTML);
-        subpx.fix($textLayer);
+        dom.attr(containerEl, { 'class': textEl.getAttribute('class') });
+        dom.html(containerEl, textEl.innerHTML);
+        subpx.fix(containerEl);
     }
 
     function loadTextLayerHTMLFail(error) {
@@ -93,11 +94,11 @@ Crocodoc.addComponent('page-text', function (scope) {
     return {
         /**
          * Initialize the page-text component
-         * @param {jQuery} $el The jQuery element to load the text layer into
+         * @param {Element} el The element to load the text layer into
          * @returns {void}
          */
-        init: function ($el, pageNum) {
-            $textLayer = $el;
+        init: function (el, pageNum) {
+            containerEl = el;
             page = pageNum;
         },
 
@@ -108,7 +109,7 @@ Crocodoc.addComponent('page-text', function (scope) {
         destroy: function () {
             destroyed = true;
             this.unload();
-            $textLayer.empty();
+            dom.empty(containerEl);
         },
 
         /**
@@ -146,7 +147,7 @@ Crocodoc.addComponent('page-text', function (scope) {
          * @returns {void}
          */
         enable: function () {
-            $textLayer.css('display', '');
+            dom.show(containerEl);
             // we created an empty promise if text selection was previously disabled,
             // so we can scrap it so a new promise will be created next time this
             // page is requested
@@ -160,7 +161,7 @@ Crocodoc.addComponent('page-text', function (scope) {
          * @returns {void}
          */
         disable: function () {
-            $textLayer.css('display', 'none');
+            dom.hide(containerEl);
         }
     };
 });

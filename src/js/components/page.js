@@ -15,9 +15,10 @@ Crocodoc.addComponent('page', function (scope) {
     //--------------------------------------------------------------------------
 
     var support = scope.getUtility('support'),
+        dom = scope.getUtility('dom'),
         util = scope.getUtility('common');
 
-    var $el,
+    var containerEl,
         pageText, pageContent, pageLinks,
         pageNum, index,
         isVisible, status,
@@ -65,14 +66,16 @@ Crocodoc.addComponent('page', function (scope) {
 
         /**
          * Initialize the Page component
+         * @param {Element} el The page element
+         * @param {object} config The page config
          * @returns {void}
          */
-        init: function ($pageEl, config) {
-            var $text, $svg, $links;
-            $el = $pageEl;
-            $svg = $pageEl.find('.' + CSS_CLASS_PAGE_SVG);
-            $text = $pageEl.find('.' + CSS_CLASS_PAGE_TEXT);
-            $links = $pageEl.find('.' + CSS_CLASS_PAGE_LINKS);
+        init: function (el, config) {
+            var textEl, svgEl, linksEl;
+            containerEl = el;
+            svgEl = dom.find('.' + CSS_CLASS_PAGE_SVG, containerEl);
+            textEl = dom.find('.' + CSS_CLASS_PAGE_TEXT, containerEl);
+            linksEl = dom.find('.' + CSS_CLASS_PAGE_LINKS, containerEl);
 
             status = config.status || PAGE_STATUS_NOT_LOADED;
             index = config.index;
@@ -85,12 +88,12 @@ Crocodoc.addComponent('page', function (scope) {
                     scope.createComponent('page-svg') :
                     scope.createComponent('page-img');
 
-            pageText.init($text, pageNum);
-            pageContent.init($svg, pageNum);
+            pageText.init(textEl, pageNum);
+            pageContent.init(svgEl, pageNum);
 
             if (config.enableLinks && config.links.length) {
                 pageLinks = scope.createComponent('page-links');
-                pageLinks.init($links, config.links);
+                pageLinks.init(linksEl, config.links);
             }
         },
 
@@ -142,7 +145,7 @@ Crocodoc.addComponent('page', function (scope) {
                 .done(function handleLoadDone() {
                     if (loadRequested) {
                         if (status !== PAGE_STATUS_LOADED) {
-                            $el.removeClass(CSS_CLASS_PAGE_LOADING);
+                            dom.removeClass(containerEl, CSS_CLASS_PAGE_LOADING);
                             status = PAGE_STATUS_LOADED;
                             scope.broadcast('pageload', { page: pageNum });
                         }
@@ -152,7 +155,7 @@ Crocodoc.addComponent('page', function (scope) {
                 })
                 .fail(function handleLoadFail(error) {
                     status = PAGE_STATUS_ERROR;
-                    $el.addClass(CSS_CLASS_PAGE_ERROR);
+                    dom.addClass(containerEl, CSS_CLASS_PAGE_ERROR);
                     scope.broadcast('pagefail', { page: index + 1, error: error });
                 });
         },
@@ -167,8 +170,8 @@ Crocodoc.addComponent('page', function (scope) {
             pageText.unload();
             if (status === PAGE_STATUS_LOADED) {
                 status = PAGE_STATUS_NOT_LOADED;
-                $el.addClass(CSS_CLASS_PAGE_LOADING);
-                $el.removeClass(CSS_CLASS_PAGE_ERROR);
+                dom.addClass(containerEl, CSS_CLASS_PAGE_LOADING);
+                dom.removeClass(containerEl, CSS_CLASS_PAGE_ERROR);
                 scope.broadcast('pageunload', { page: pageNum });
             }
         },

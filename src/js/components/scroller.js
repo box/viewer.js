@@ -11,14 +11,15 @@ Crocodoc.addComponent('scroller', function (scope) {
     'use strict';
 
     var util = scope.getUtility('common'),
-        browser = scope.getUtility('browser');
+        browser = scope.getUtility('browser'),
+        dom = scope.getUtility('dom');
 
     var GHOST_SCROLL_TIMEOUT = 3000,
         GHOST_SCROLL_INTERVAL = 30,
         SCROLL_EVENT_THROTTLE_INTERVAL = 200,
         SCROLL_END_TIMEOUT = browser.mobile ? 500 : 250;
 
-    var $el,
+    var containerEl,
         scrollendTID,
         scrollingStarted = false,
         touchStarted = false,
@@ -34,8 +35,8 @@ Crocodoc.addComponent('scroller', function (scope) {
      */
     function buildEventData() {
         return {
-            scrollTop: $el.scrollTop(),
-            scrollLeft: $el.scrollLeft()
+            scrollTop: dom.scrollTop(containerEl),
+            scrollLeft: dom.scrollLeft(containerEl)
         };
     }
 
@@ -139,11 +140,11 @@ Crocodoc.addComponent('scroller', function (scope) {
          * @returns {void}
          */
         init: function (el) {
-            $el = $(el);
-            $el.on('scroll', handleScroll);
-            $el.on('touchstart', handleTouchstart);
-            $el.on('touchmove', handleTouchmove);
-            $el.on('touchend', handleTouchend);
+            containerEl = el;
+            dom.on(containerEl, 'scroll', handleScroll);
+            dom.on(containerEl, 'touchstart', handleTouchstart);
+            dom.on(containerEl, 'touchmove', handleTouchmove);
+            dom.on(containerEl, 'touchend', handleTouchend);
         },
 
         /**
@@ -152,10 +153,10 @@ Crocodoc.addComponent('scroller', function (scope) {
          */
         destroy: function () {
             clearTimeout(scrollendTID);
-            $el.off('scroll', handleScroll);
-            $el.off('touchstart', handleTouchstart);
-            $el.off('touchmove', handleTouchmove);
-            $el.off('touchend', handleTouchend);
+            dom.off(containerEl, 'scroll', handleScroll);
+            dom.off(containerEl, 'touchstart', handleTouchstart);
+            dom.off(containerEl, 'touchmove', handleTouchmove);
+            dom.off(containerEl, 'touchend', handleTouchend);
         }
     };
 });

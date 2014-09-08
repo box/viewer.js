@@ -13,11 +13,12 @@ Crocodoc.addComponent('viewer-base', function (scope) {
 
     var util = scope.getUtility('common'),
         browser = scope.getUtility('browser'),
-        support = scope.getUtility('support');
+        support = scope.getUtility('support'),
+        dom = scope.getUtility('dom');
 
     var api, // the viewer API object
         config,
-        $el,
+        viewerEl,
         stylesheetEl,
         layout,
         scroller,
@@ -32,17 +33,17 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function setCSSFlags() {
         // add SVG version number flag
-        $el.attr(ATTR_SVG_VERSION, config.metadata.version || '0.0.0');
+        dom.attr(viewerEl, ATTR_SVG_VERSION, config.metadata.version || '0.0.0');
 
         //add CSS flags
         if (browser.mobile) {
-            $el.addClass(CSS_CLASS_MOBILE);      //Mobile?
+            dom.addClass(viewerEl, CSS_CLASS_MOBILE);      //Mobile?
         }
         if (browser.ielt9) {
-            $el.addClass(CSS_CLASS_IELT9);       //IE7 or IE8?
+            dom.addClass(viewerEl, CSS_CLASS_IELT9);       //IE7 or IE8?
         }
         if (support.svg) {
-            $el.addClass(CSS_CLASS_SUPPORTS_SVG);
+            dom.addClass(viewerEl, CSS_CLASS_SUPPORTS_SVG);
         }
     }
 
@@ -53,14 +54,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function initViewerHTML() {
         // create viewer HTML
-        $el.html(Crocodoc.viewerTemplate);
+        dom.html(viewerEl, Crocodoc.viewerTemplate);
         if (config.useWindowAsViewport) {
-            config.$viewport = $(window);
-            $el.addClass(CSS_CLASS_WINDOW_AS_VIEWPORT);
+            config.viewportEl = window;
+            dom.addClass(viewerEl, CSS_CLASS_WINDOW_AS_VIEWPORT);
         } else {
-            config.$viewport = $el.find('.' + CSS_CLASS_VIEWPORT);
+            config.viewportEl = dom.find('.' + CSS_CLASS_VIEWPORT, viewerEl);
         }
-        config.$doc = $el.find('.' + CSS_CLASS_DOC);
+        config.docEl = dom.find('.' + CSS_CLASS_DOC, viewerEl);
     }
 
     /**
@@ -91,9 +92,9 @@ Crocodoc.addComponent('viewer-base', function (scope) {
 
         // initialize scroller and resizer components
         scroller = scope.createComponent('scroller');
-        scroller.init(config.$viewport);
+        scroller.init(config.viewportEl);
         resizer = scope.createComponent('resizer');
-        resizer.init(config.$viewport);
+        resizer.init(config.viewportEl);
 
         var controller;
         switch (config.metadata.type) {
@@ -165,13 +166,13 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     function updateDragger(isDraggable) {
         if (isDraggable) {
             if (!dragger) {
-                $el.addClass(CSS_CLASS_DRAGGABLE);
+                dom.addClass(viewerEl, CSS_CLASS_DRAGGABLE);
                 dragger = scope.createComponent('dragger');
                 dragger.init(config.$viewport);
             }
         } else {
             if (dragger) {
-                $el.removeClass(CSS_CLASS_DRAGGABLE);
+                dom.removeClass(viewerEl, CSS_CLASS_DRAGGABLE);
                 scope.destroyComponent(dragger);
                 dragger = null;
             }
@@ -249,17 +250,13 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                     break;
 
                 case 'dragstart':
-                    if (!$el.hasClass(CSS_CLASS_DRAGGING)) {
-                        $el.addClass(CSS_CLASS_DRAGGING);
-                    }
+                    dom.toggleClass(viewerEl, CSS_CLASS_DRAGGING, true);
                     // forward zoom event to external event handlers
                     api.fire(name, data);
                     break;
 
                 case 'dragend':
-                    if ($el.hasClass(CSS_CLASS_DRAGGING)) {
-                        $el.removeClass(CSS_CLASS_DRAGGING);
-                    }
+                    dom.toggleClass(viewerEl, CSS_CLASS_DRAGGING, false);
                     // forward zoom event to external event handlers
                     api.fire(name, data);
                     break;
@@ -283,11 +280,11 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             config.namespace = CSS_CLASS_VIEWER + '-' + config.id;
 
             // Setup container
-            $el = config.$el;
+            viewerEl = config.el;
 
             // add crocodoc viewer and namespace classes
-            $el.addClass(CSS_CLASS_VIEWER);
-            $el.addClass(config.namespace);
+            dom.addClass(viewerEl, CSS_CLASS_VIEWER);
+            dom.addClass(viewerEl, config.namespace);
 
             // add a / to the end of the base url if necessary
             if (config.url) {
@@ -312,13 +309,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          */
         destroy: function () {
             // empty container and remove all class names that contain "crocodoc"
-            $el.empty().removeClass(function (i, cls) {
+            dom.empty(viewerEl)
+            dom.removeClass(viewerEl, function (i, cls) {
                 var match = cls.match(new RegExp('crocodoc\\S+', 'g'));
                 return match && match.join(' ');
             });
 
             // remove the stylesheet
-            $(stylesheetEl).remove();
+            dom.remove(stylesheetEl);
 
             if ($assetsPromise) {
                 $assetsPromise.abort();

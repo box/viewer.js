@@ -13,8 +13,9 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
         // @NOTE: IE 11 uses upper-camel-case for this, which is apparently necessary
         'MSFullscreenChange';
 
-    var $el, el,
+    var el,
         util = scope.getUtility('common'),
+        dom = scope.getUtility('dom'),
         viewerConfig = scope.getConfig(),
         viewerAPI = viewerConfig.api,
         requestFullscreen,
@@ -43,10 +44,10 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
     function fullscreenchangeHandler() {
         viewerAPI.fire('fullscreenchange');
         if (isFullscreen()) {
-            $el.addClass('crocodoc-fullscreen');
+            dom.addClass(el, 'crocodoc-fullscreen');
             viewerAPI.fire('fullscreenenter');
         } else {
-            $el.removeClass('crocodoc-fullscreen');
+            dom.removeClass(el, 'crocodoc-fullscreen');
             viewerAPI.fire('fullscreenexit');
         }
     }
@@ -71,8 +72,8 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
     function fakeRequestFullscreen() {
         if (useFakeFullscreen) {
             isFakeFullscreen = true;
-            $(window).on('keydown', handleKeydown);
-            $el.addClass('crocodoc-fakefullscreen');
+            dom.on(window, 'keydown', handleKeydown);
+            dom.addClass(el, 'crocodoc-fakefullscreen');
             fullscreenchangeHandler();
         }
     }
@@ -84,8 +85,8 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
      */
     function fakeCancelFullscreen() {
         isFakeFullscreen = false;
-        $(window).off('keydown', handleKeydown);
-        $el.removeClass('crocodoc-fakefullscreen');
+        dom.off(window, 'keydown', handleKeydown);
+        dom.removeClass(el, 'crocodoc-fakefullscreen');
         fullscreenchangeHandler();
     }
 
@@ -140,14 +141,16 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
                 // the viewport, so turn it off
                 useFakeFullscreen = false;
                 el = document.documentElement;
-                $el = $(el);
             } else {
                 if (config.element) {
-                    $el = $(config.element);
+                    if (typeof config.element === 'string') {
+                        el = dom.find(config.element);
+                    } else {
+                        el = config.element;
+                    }
                 } else {
-                    $el = viewerConfig.$el;
+                    el = viewerConfig.el;
                 }
-                el = $el[0];
             }
 
             // init browser-specific request/cancel fullscreen methods
@@ -174,7 +177,7 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
                 isFullscreenSupported: isNativeFullscreenSupported
             });
 
-            $(document).on(FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
+            dom.on(document, FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
         },
 
         /**
@@ -183,7 +186,7 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
          */
         destroy: function () {
             viewerAPI.exitFullscreen();
-            $(document).off(FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
+            dom.off(document, FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
         }
     };
 });

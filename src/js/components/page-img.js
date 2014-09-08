@@ -15,9 +15,10 @@ Crocodoc.addComponent('page-img', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var browser = scope.getUtility('browser');
+    var browser = scope.getUtility('browser'),
+        dom = scope.getUtility('dom');
 
-    var $img, $el,
+    var imgEl, containerEl,
         $loadImgPromise,
         page,
         imageLoaded = false,
@@ -35,7 +36,7 @@ Crocodoc.addComponent('page-img', function (scope) {
          * @returns {void}
          */
         init: function (el, pageNum) {
-            $el = $(el);
+            containerEl = el;
             page = pageNum;
         },
 
@@ -46,7 +47,7 @@ Crocodoc.addComponent('page-img', function (scope) {
         destroy: function () {
             removeOnUnload = true;
             this.unload();
-            $el.empty();
+            dom.empty(containerEl);
         },
 
         /**
@@ -75,10 +76,10 @@ Crocodoc.addComponent('page-img', function (scope) {
             $loadImgPromise.done(function loadImgSuccess(img) {
                 if (!imageLoaded) {
                     imageLoaded = true;
-                    $img = $(img).appendTo($el);
+                    imgEl = img;
+                    dom.appendTo(containerEl, imgEl);
                 }
-                // always show the image
-                $img.show();
+                dom.show(imgEl);
             });
 
             $loadImgPromise.fail(function loadImgFail(error) {
@@ -101,13 +102,13 @@ Crocodoc.addComponent('page-img', function (scope) {
                 $loadImgPromise = null;
             }
             if (removeOnUnload) {
-                if ($img) {
-                    $img.remove();
-                    $img = null;
+                if (imgEl) {
+                    dom.remove(imgEl);
+                    imgEl = null;
                 }
                 imageLoaded = false;
-            } else if ($img) {
-                $img.hide();
+            } else if (imgEl) {
+                dom.hide(imgEl);
             }
         }
     };

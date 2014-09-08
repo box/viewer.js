@@ -15,6 +15,7 @@ Crocodoc.addComponent('layout-' + LAYOUT_HORIZONTAL, ['layout-paged'], function 
     //--------------------------------------------------------------------------
 
     var util = scope.getUtility('common'),
+        dom = scope.getUtility('dom'),
         browser = scope.getUtility('browser');
 
     //--------------------------------------------------------------------------
@@ -112,7 +113,7 @@ Crocodoc.addComponent('layout-' + LAYOUT_HORIZONTAL, ['layout-paged'], function 
                 docWidth = Math.max(zoomedWidth, state.viewportDimensions.clientWidth),
                 docHeight = Math.max(zoomedHeight, state.viewportDimensions.clientHeight);
 
-            this.$doc.css({
+            dom.css(this.docEl, {
                 height: docHeight,
                 lineHeight: docHeight + 'px',
                 width: docWidth

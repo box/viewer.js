@@ -15,9 +15,11 @@ Crocodoc.addComponent('page-svg', function (scope) {
     //--------------------------------------------------------------------------
 
     var browser = scope.getUtility('browser'),
+        dom = scope.getUtility('dom'),
         DOMParser = window.DOMParser;
 
-    var $svg, $svgLayer,
+    var svgContainerEl,
+        containerEl,
         $loadSVGPromise,
         page,
         destroyed = false,
@@ -38,30 +40,39 @@ Crocodoc.addComponent('page-svg', function (scope) {
      * @private
      */
     function createSVGEl() {
+        var el;
+
         switch (embedStrategy) {
             case EMBED_STRATEGY_IFRAME_INNERHTML:
             case EMBED_STRATEGY_IFRAME_PROXY:
-                return $('<iframe>');
+                el = dom.create('iframe');
+                break;
 
             case EMBED_STRATEGY_DATA_URL_PROXY:
             case EMBED_STRATEGY_DATA_URL:
-                return $('<object>').attr({
+                el = dom.create('object');
+                dom.attr(el, {
                     type: SVG_MIME_TYPE,
                     data: 'data:'+SVG_MIME_TYPE+';base64,' + window.btoa(SVG_CONTAINER_TEMPLATE)
                 });
+                break;
 
             case EMBED_STRATEGY_INLINE_SVG:
-                return $('<div>');
+                el = dom.create('div');
+                break;
 
             case EMBED_STRATEGY_BASIC_OBJECT:
-                return $('<object>');
+                el = dom.create('object');
+                break;
 
             case EMBED_STRATEGY_BASIC_IMG:
             case EMBED_STRATEGY_DATA_URL_IMG:
-                return $('<img>');
+                el = dom.create('img');
+                break;
 
             // no default
         }
+        return el;
     }
 
     /**
@@ -71,12 +82,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
      * @private
      */
     function prepareSVGContainer() {
-        if (!$svg || $svg.length === 0) {
+        if (!svgContainerEl) {
             svgLoaded = false;
-            $svg = createSVGEl();
+            svgContainerEl = createSVGEl();
         }
-        if ($svg.parent().length === 0) {
-            $svg.appendTo($svgLayer);
+        if (!svgContainerEl.parentNode) {
+            dom.appendTo(containerEl, svgContainerEl);
         }
     }
 
@@ -134,8 +145,8 @@ Crocodoc.addComponent('page-svg', function (scope) {
             svgEl,
             html,
             dataURLPrefix,
-            contentDocument = $svg[0].contentDocument,
-            contentWindow = $svg[0].contentWindow ||
+            contentDocument = svgContainerEl.contentDocument,
+            contentWindow = svgContainerEl.contentWindow ||
                              // @NOTE: supports older versions of ff
                             contentDocument && contentDocument.defaultView;
 
@@ -202,24 +213,24 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 domParser = new DOMParser();
                 svgDoc = domParser.parseFromString(svgText, SVG_MIME_TYPE);
                 svgEl = document.importNode(svgDoc.documentElement, true);
-                $svg.append(svgEl);
+                dom.appendTo(svgContainerEl, svgEl);
                 break;
 
             case EMBED_STRATEGY_BASIC_OBJECT:
-                $svg.attr({
+                dom.attr(svgContainerEl, {
                     type: SVG_MIME_TYPE,
                     data: scope.getDataProvider('page-svg').getURL(page)
                 });
-                svgEl = $svg[0];
+                svgEl = svgContainerEl;
                 break;
 
             case EMBED_STRATEGY_BASIC_IMG:
-                svgEl = $svg[0];
+                svgEl = svgContainerEl;
                 svgEl.src = scope.getDataProvider('page-svg').getURL(page);
                 break;
 
             case EMBED_STRATEGY_DATA_URL_IMG:
-                svgEl = $svg[0];
+                svgEl = svgContainerEl;
                 dataURLPrefix = 'data:' + SVG_MIME_TYPE;
                 if (!browser.ie && window.btoa) {
                     svgEl.src = dataURLPrefix + ';base64,' + window.btoa(svgText);
@@ -254,10 +265,10 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 }
             }
             // always insert and show the svg el when load was successful
-            if ($svg.parent().length === 0) {
-                $svg.appendTo($svgLayer);
+            if (!svgContainerEl.parentNode) {
+                dom.appendTo(containerEl, svgContainerEl);
             }
-            $svg.show();
+            dom.show(svgContainerEl);
         }
     }
 
@@ -284,12 +295,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
     return {
         /**
          * Initialize the page-svg component
-         * @param {jQuery} $el The element to load SVG layer into
+         * @param {Element} el The element to load SVG layer into
          * @param  {number} pageNum The page number
          * @returns {void}
          */
-        init: function ($el, pageNum) {
-            $svgLayer = $el;
+        init: function (el, pageNum) {
+            containerEl = el;
             page = pageNum;
             embedStrategy = viewerConfig.embedStrategy || embedStrategy;
         },
@@ -302,7 +313,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
             destroyed = true;
             removeOnUnload = true;
             this.unload();
-            $svgLayer.empty();
+            dom.empty(containerEl);
         },
 
         /**
@@ -354,14 +365,14 @@ Crocodoc.addComponent('page-svg', function (scope) {
 
             // remove the svg element if necessary
             if (removeOnUnload) {
-                if ($svg) {
-                    $svg.remove();
-                    $svg = null;
+                if (svgContainerEl) {
+                    dom.remove(svgContainerEl);
+                    svgContainerEl = null;
                 }
                 svgLoaded = false;
-            } else if ($svg) {
+            } else if (svgContainerEl) {
                 // just hide the svg element
-                $svg.hide();
+                dom.hide(svgContainerEl);
             }
         }
     };

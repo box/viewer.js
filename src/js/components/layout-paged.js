@@ -15,6 +15,7 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
     //--------------------------------------------------------------------------
 
     var util = scope.getUtility('common'),
+        dom = scope.getUtility('dom'),
         support = scope.getUtility('support');
 
     /**
@@ -56,7 +57,7 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
         // update width/height/padding on all pages
         for (i = 0, len = pages.length; i < len; ++i) {
             pageState = pages[i];
-            layout.$pages.eq(i).css({
+            dom.css(layout.pageEls[i], {
                 width: pageState.actualWidth * zoom,
                 height: pageState.actualHeight * zoom,
                 paddingTop: pageState.paddingTop * zoom,
@@ -132,7 +133,7 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
          */
         destroy: function () {
             base.destroy.call(this);
-            this.$pages.css('padding', '');
+            dom.css(this.pageEls, { padding: '' });
         },
 
         /**
@@ -554,21 +555,21 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
          * @returns {void}
          */
         updateVisiblePages: function (updateClasses) {
-            var i, len, $page,
+            var i, len, pageEl,
                 state = this.state,
                 visibleRange = this.calculateVisibleRange(),
                 fullyVisibleRange = this.calculateFullyVisibleRange();
             state.visiblePages.length = 0;
             state.fullyVisiblePages.length = 0;
-            for (i = 0, len = this.$pages.length; i < len; ++i) {
-                $page = this.$pages.eq(i);
+            for (i = 0, len = this.pageEls.length; i < len; ++i) {
+                pageEl = this.pageEls[i];
                 if (i < visibleRange.min || i > visibleRange.max) {
-                    if (updateClasses && $page.hasClass(CSS_CLASS_PAGE_VISIBLE)) {
-                        $page.removeClass(CSS_CLASS_PAGE_VISIBLE);
+                    if (updateClasses && dom.hasClass(pageEl, CSS_CLASS_PAGE_VISIBLE)) {
+                        dom.removeClass(pageEl, CSS_CLASS_PAGE_VISIBLE);
                     }
                 } else {
-                    if (updateClasses && !$page.hasClass(CSS_CLASS_PAGE_VISIBLE)) {
-                        $page.addClass(CSS_CLASS_PAGE_VISIBLE);
+                    if (updateClasses && !dom.hasClass(pageEl, CSS_CLASS_PAGE_VISIBLE)) {
+                        dom.addClass(pageEl, CSS_CLASS_PAGE_VISIBLE);
                     }
                     state.visiblePages.push(i + 1);
                 }
@@ -587,8 +588,8 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
             var state = this.state,
                 pages = state.pages,
                 rows = state.rows,
-                scrollTop = this.$viewport.scrollTop(),
-                scrollLeft = this.$viewport.scrollLeft(),
+                scrollTop = dom.scrollTop(this.viewportEl),
+                scrollLeft = dom.scrollLeft(this.viewportEl),
                 rowIndex = 0,
                 lastY1 = 0,
                 rightmostPageIndex = 0,
@@ -596,36 +597,34 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
                 i,
                 len,
                 page,
-                pageEl,
-                $pageEl;
+                pageEl;
 
             rows.length = state.sumWidths = state.sumHeights = state.totalWidth = state.totalHeight = 0;
             state.widestPage.totalActualWidth = state.tallestPage.totalActualHeight = 0;
 
             // update the x/y positions and sizes of each page
             // this is basically used as a cache, since accessing the DOM is slow
-            for (i = 0, len = this.$pages.length; i < len; ++i) {
-                $pageEl = this.$pages.eq(i);
-                pageEl = $pageEl[0];
+            for (i = 0, len = this.pageEls.length; i < len; ++i) {
+                pageEl = this.pageEls[i];
                 page = pages[i];
                 if (!page || forceUpdatePaddings) {
-                    $pageEl.css('padding', '');
+                    dom.css(pageEl, { padding: '' });
                     page = {
                         index: i,
                         // only get paddings on the first updatePageStates
                         // @TODO: look into using numeric versions of these styles in IE for better perf
-                        paddingLeft: parseFloat($pageEl.css(STYLE_PADDING_LEFT)),
-                        paddingRight: parseFloat($pageEl.css(STYLE_PADDING_RIGHT)),
-                        paddingTop: parseFloat($pageEl.css(STYLE_PADDING_TOP)),
-                        paddingBottom: parseFloat($pageEl.css(STYLE_PADDING_BOTTOM))
+                        paddingLeft: parseFloat(dom.css(pageEl, STYLE_PADDING_LEFT)),
+                        paddingRight: parseFloat(dom.css(pageEl, STYLE_PADDING_RIGHT)),
+                        paddingTop: parseFloat(dom.css(pageEl, STYLE_PADDING_TOP)),
+                        paddingBottom: parseFloat(dom.css(pageEl, STYLE_PADDING_BOTTOM))
                     };
                 }
 
                 if (!page.actualWidth) {
-                    page.actualWidth = parseFloat(pageEl.getAttribute('data-width'));
+                    page.actualWidth = parseFloat(dom.data(pageEl, 'width'));
                 }
                 if (!page.actualHeight) {
-                    page.actualHeight = parseFloat(pageEl.getAttribute('data-height'));
+                    page.actualHeight = parseFloat(dom.data(pageEl, 'height'));
                 }
 
                 page.totalActualWidth = page.actualWidth + page.paddingLeft + page.paddingRight;
@@ -706,8 +705,9 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
          */
         handleScrollEnd: function (data) {
             // update CSS classes
-            this.$doc.find('.' + CSS_CLASS_CURRENT_PAGE).removeClass(CSS_CLASS_CURRENT_PAGE);
-            this.$pages.eq(this.state.currentPage - 1).addClass(CSS_CLASS_CURRENT_PAGE);
+            var currentPageEl = dom.find(this.docEl, '.' + CSS_CLASS_CURRENT_PAGE)
+            dom.removeClass(currentPageElre, CSS_CLASS_CURRENT_PAGE);
+            dom.addClass(this.pageEls[this.state.currentPage - 1], CSS_CLASS_CURRENT_PAGE);
             this.updateVisiblePages(true);
             this.handleScroll(data);
         },

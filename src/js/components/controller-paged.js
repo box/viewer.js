@@ -11,10 +11,11 @@ Crocodoc.addComponent('controller-paged', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var util = scope.getUtility('common');
+    var util = scope.getUtility('common'),
+        dom = scope.getUtility('dom');
 
     var config,
-        $el,
+        el,
         lazyLoader;
 
     /**
@@ -89,7 +90,8 @@ Crocodoc.addComponent('controller-paged', function (scope) {
         }
 
         // insert skeleton and keep a reference to the jq object
-        config.$pages = $(skeleton).appendTo(config.$doc);
+        dom.html(config.docEl, skeleton);
+        config.pageEls = dom.findAll('.' + CSS_CLASS_PAGE, config.docEl);
     }
 
     /**
@@ -121,7 +123,7 @@ Crocodoc.addComponent('controller-paged', function (scope) {
         //initialize pages
         for (i = start; i < end; i++) {
             page = scope.createComponent('page');
-            page.init(config.$pages.eq(i - start), {
+            page.init(config.pageEls[i - start], {
                 index: i,
                 status: getInitialPageStatus(i),
                 enableLinks: config.enableLinks,
@@ -199,11 +201,13 @@ Crocodoc.addComponent('controller-paged', function (scope) {
      * @private
      */
     function updateSelectedPages() {
-        var node = util.getSelectedNode();
-        var $page = $(node).closest('.'+CSS_CLASS_PAGE);
-        $el.find('.'+CSS_CLASS_TEXT_SELECTED).removeClass(CSS_CLASS_TEXT_SELECTED);
-        if (node && $el.has(node)) {
-            $page.addClass(CSS_CLASS_TEXT_SELECTED);
+        var node = util.getSelectedNode(),
+            pageEl = dom.closest(node, '.'+CSS_CLASS_PAGE),
+            selectedEl = dom.find('.'+CSS_CLASS_TEXT_SELECTED, el);
+
+        dom.removeClass(selectedEl, CSS_CLASS_TEXT_SELECTED);
+        if (node && dom.contains(pageEl, node)) {
+            dom.addClass(pageEl, CSS_CLASS_TEXT_SELECTED);
         }
     }
 
@@ -221,9 +225,9 @@ Crocodoc.addComponent('controller-paged', function (scope) {
             config = scope.getConfig();
 
             // Setup container
-            $el = config.$el;
+            el = config.el;
 
-            $(document).on('mouseup', handleMouseUp);
+            dom.on(document, 'mouseup', handleMouseUp);
 
             validateConfig();
             prepareDOM();
@@ -239,7 +243,7 @@ Crocodoc.addComponent('controller-paged', function (scope) {
          */
         destroy: function () {
             // remove document event handlers
-            $(document).off('mouseup', handleMouseUp);
+            dom.off(document, 'mouseup', handleMouseUp);
         }
     };
 });

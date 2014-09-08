@@ -23,21 +23,26 @@
         // call the EventTarget constructor to init handlers
         Crocodoc.EventTarget.call(this);
 
-        var util = Crocodoc.getUtility('common');
+        var util = Crocodoc.getUtility('common'),
+            dom = Crocodoc.getUtility('dom');
+
         var layout,
-            $el = $(el),
             config = util.extend(true, {}, Crocodoc.Viewer.defaults, options),
             scope = new Crocodoc.Scope(config),
             viewerBase = scope.createComponent('viewer-base');
 
+        if (typeof el === 'string') {
+            el = dom.find(el);
+        }
+
         //Container exists?
-        if ($el.length === 0) {
+        if (!el || !el.parentNode) {
             throw new Error('Invalid container element');
         }
 
         this.id = config.id = ++viewerInstanceCount;
         config.api = this;
-        config.$el = $el;
+        config.el = el;
         // register this instance
         instances[this.id] = this;
 
@@ -147,7 +152,7 @@
          * @returns {void}
          */
         this.enableTextSelection = function () {
-            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, false);
+            dom.toggleClass(el, CSS_CLASS_TEXT_DISABLED, false);
             if (!config.enableTextSelection) {
                 config.enableTextSelection = true;
                 scope.broadcast('textenabledchange', { enabled: true });
@@ -160,7 +165,7 @@
          * @returns {void}
          */
         this.disableTextSelection = function () {
-            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, true);
+            dom.toggleClass(el, CSS_CLASS_TEXT_DISABLED, true);
             if (config.enableTextSelection) {
                 config.enableTextSelection = false;
                 scope.broadcast('textenabledchange', { enabled: false });
@@ -173,7 +178,7 @@
          */
         this.enableLinks = function () {
             if (!config.enableLinks) {
-                $el.removeClass(CSS_CLASS_LINKS_DISABLED);
+                dom.removeClass(el, CSS_CLASS_LINKS_DISABLED);
                 config.enableLinks = true;
             }
         };
@@ -184,7 +189,7 @@
          */
         this.disableLinks = function () {
             if (config.enableLinks) {
-                $el.addClass(CSS_CLASS_LINKS_DISABLED);
+                dom.addClass(el, CSS_CLASS_LINKS_DISABLED);
                 config.enableLinks = false;
             }
         };

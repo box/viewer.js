@@ -15,7 +15,8 @@ Crocodoc.addComponent('layout-' + LAYOUT_VERTICAL, ['layout-paged'], function (s
     //--------------------------------------------------------------------------
 
     var util = scope.getUtility('common'),
-        browser = scope.getUtility('browser');
+        browser = scope.getUtility('browser'),
+        dom = scope.getUtility('dom');
 
     //--------------------------------------------------------------------------
     // Public
@@ -139,7 +140,7 @@ Crocodoc.addComponent('layout-' + LAYOUT_VERTICAL, ['layout-paged'], function (s
                 docWidth = zoomedWidth;
             }
 
-            this.$doc.css({
+            dom.css(this.docEl, {
                 width: docWidth
             });
         }

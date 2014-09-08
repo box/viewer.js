@@ -9,7 +9,8 @@
 Crocodoc.addComponent('layout-' + LAYOUT_TEXT, ['layout-base'], function (scope, base) {
     'use strict';
 
-    var util = scope.getUtility('common');
+    var util = scope.getUtility('common'),
+        dom = scope.getUtility('dom');
 
     return base.extend({
         init: function () {
@@ -38,7 +39,7 @@ Crocodoc.addComponent('layout-' + LAYOUT_TEXT, ['layout-base'], function (scope,
             }
 
             z = util.clamp(z, this.minZoom, this.maxZoom);
-            this.config.$doc.css('font-size', (z * 10) + 'pt');
+            dom.css(this.config.docEl, { 'font-size': (z * 10) + 'pt' });
 
             zoomState.prevZoom = currentZoom;
             zoomState.zoom = z;

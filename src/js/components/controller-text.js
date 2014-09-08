@@ -11,7 +11,8 @@ Crocodoc.addComponent('controller-text', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var $promise;
+    var dom = scope.getUtility('dom'),
+        promise;
 
     //--------------------------------------------------------------------------
     // Public
@@ -25,12 +26,12 @@ Crocodoc.addComponent('controller-text', function (scope) {
          */
         init: function () {
             var config = scope.getConfig();
-            config.$textContainer = $();
 
             // we can just load the text immediately
-            $promise = scope.get('page-text', 1).then(function (html) {
-                config.$doc = $(html);
-                config.$viewport.html(config.$doc);
+            promise = scope.get('page-text', 1);
+            promise.then(function (html) {
+                dom.html(config.viewportEl, html);
+                config.docEl = dom.find(CSS_CLASS_DOC, config.viewportEl);
             });
         },
 
@@ -39,7 +40,7 @@ Crocodoc.addComponent('controller-text', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            $promise.abort();
+            promise.abort();
         }
     };
 });

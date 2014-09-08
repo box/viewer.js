@@ -14,7 +14,8 @@ Crocodoc.addComponent('layout-base', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var util = scope.getUtility('common');
+    var util = scope.getUtility('common'),
+        dom = scope.getUtility('dom');
 
     //--------------------------------------------------------------------------
     // Public
@@ -56,15 +57,15 @@ Crocodoc.addComponent('layout-base', function (scope) {
             var config = scope.getConfig();
             this.config = config;
             // shortcut references to jq DOM objects
-            this.$el = config.$el;
-            this.$doc = config.$doc;
-            this.$viewport = config.$viewport;
-            this.$pages = config.$pages;
+            this.el = config.el;
+            this.docEl = config.docEl;
+            this.viewportEl = config.viewportEl;
+            this.pageEls = config.pageEls;
             this.numPages = config.numPages;
 
             // add the layout css class
             this.layoutClass = CSS_CLASS_LAYOUT_PREFIX + config.layout;
-            this.$el.addClass(this.layoutClass);
+            dom.addClass(this.el, this.layoutClass);
 
             this.initState();
         },
@@ -74,7 +75,7 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         initState: function () {
-            var viewportEl = this.$viewport[0],
+            var viewportEl = this.viewportEl,
                 dimensionsEl = viewportEl;
 
             // use the documentElement for viewport dimensions
@@ -84,8 +85,8 @@ Crocodoc.addComponent('layout-base', function (scope) {
             }
             // setup initial state
             this.state = {
-                scrollTop: viewportEl.scrollTop,
-                scrollLeft: viewportEl.scrollLeft,
+                scrollTop: dom.scrollTop(viewportEl),
+                scrollLeft: dom.scrollLeft(viewportEl),
                 viewportDimensions: {
                     clientWidth: dimensionsEl.clientWidth,
                     clientHeight: dimensionsEl.clientHeight,
@@ -110,8 +111,8 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            this.$doc.removeAttr('style');
-            this.$el.removeClass(this.layoutClass);
+            dom.removeAttr(this.docEl, 'style');
+            dom.removeClass(this.el, this.layoutClass);
         },
 
         /**
@@ -180,8 +181,8 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         scrollToOffset: function (left, top) {
-            this.$viewport.scrollLeft(left);
-            this.$viewport.scrollTop(top);
+            dom.scrollLeft(this.viewportEl, left);
+            dom.scrollTop(this.viewportEl, top);
         },
 
         /**
@@ -213,7 +214,7 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         focus: function () {
-            this.$viewport.focus();
+            this.viewportEl.focus();
         },
 
         /**

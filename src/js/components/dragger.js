@@ -10,8 +10,8 @@ Crocodoc.addComponent('dragger', function (scope) {
 
     'use strict';
 
-    var $el,
-        $window = $(window),
+    var element,
+        dom = scope.getUtility('dom'),
         downScrollPosition,
         downMousePosition;
 
@@ -21,8 +21,8 @@ Crocodoc.addComponent('dragger', function (scope) {
      * @returns {void}
      */
     function handleMousemove(event) {
-        $el.scrollTop(downScrollPosition.top - (event.clientY - downMousePosition.y));
-        $el.scrollLeft(downScrollPosition.left - (event.clientX - downMousePosition.x));
+        element.scrollTop = downScrollPosition.y - (event.clientY - downMousePosition.y);
+        element.scrollLeft = downScrollPosition.x - (event.clientX - downMousePosition.x);
         event.preventDefault();
     }
 
@@ -33,8 +33,8 @@ Crocodoc.addComponent('dragger', function (scope) {
      */
     function handleMouseup(event) {
         scope.broadcast('dragend');
-        $window.off('mousemove', handleMousemove);
-        $window.off('mouseup', handleMouseup);
+        dom.off(document, 'mousemove', handleMousemove);
+        dom.off(document, 'mouseup', handleMouseup);
         event.preventDefault();
     }
 
@@ -46,15 +46,15 @@ Crocodoc.addComponent('dragger', function (scope) {
     function handleMousedown(event) {
         scope.broadcast('dragstart');
         downScrollPosition = {
-            top: $el.scrollTop(),
-            left: $el.scrollLeft()
+            x: element.scrollLeft,
+            y: element.scrollTop
         };
         downMousePosition = {
             x: event.clientX,
             y: event.clientY
         };
-        $window.on('mousemove', handleMousemove);
-        $window.on('mouseup', handleMouseup);
+        dom.on(document, 'mousemove', handleMousemove);
+        dom.on(document, 'mouseup', handleMouseup);
         event.preventDefault();
     }
 
@@ -69,8 +69,8 @@ Crocodoc.addComponent('dragger', function (scope) {
          * @returns {void}
          */
         init: function (el) {
-            $el = $(el);
-            $el.on('mousedown', handleMousedown);
+            element = el;
+            dom.on(element, 'mousedown', handleMousedown);
         },
 
         /**
@@ -78,9 +78,9 @@ Crocodoc.addComponent('dragger', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            $el.off('mousedown', handleMousedown);
-            $el.off('mousemove', handleMousemove);
-            $window.off('mouseup', handleMouseup);
+            dom.off(element, 'mousedown', handleMousedown);
+            dom.off(element, 'mousemove', handleMousemove);
+            dom.off(document, 'mouseup', handleMouseup);
         }
     };
 });

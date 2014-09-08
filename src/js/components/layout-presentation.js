@@ -14,7 +14,8 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
     // Private
     //--------------------------------------------------------------------------
 
-    var util = scope.getUtility('common');
+    var util = scope.getUtility('common'),
+        dom = scope.getUtility('dom');
 
     //--------------------------------------------------------------------------
     // Public
@@ -37,7 +38,8 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
          */
         destroy: function () {
             paged.destroy.call(this);
-            this.$pages.css({ margin: '', left: '' }).removeClass(PRESENTATION_CSS_CLASSES);
+            dom.css(this.pageEls, { margin: '', left: '' })
+            dom.removeClass(this.pageEls, PRESENTATION_CSS_CLASSES);
         },
 
         /**
@@ -100,23 +102,22 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
          */
         setCurrentPage: function (page) {
             var index = util.clamp(page - 1, 0, this.numPages),
-                $precedingPage,
-                $currentPage;
+                precedingPageEl,
+                currentPageEl;
 
             paged.setCurrentPage.call(this, page);
 
             // update CSS classes
-            this.$doc.find('.' + CSS_CLASS_PRECEDING_PAGE)
-                .removeClass(CSS_CLASS_PRECEDING_PAGE);
+            precedingPageEl = dom.find('.' + CSS_CLASS_PRECEDING_PAGE, this.docEl);
+            dom.removeClass(precedingPageEl, CSS_CLASS_PRECEDING_PAGE);
 
-            $precedingPage = this.$doc.find('.' + CSS_CLASS_CURRENT_PAGE);
-            $currentPage = this.$pages.eq(index);
+            precedingPageEl = dom.find('.' + CSS_CLASS_CURRENT_PAGE, this.docEl);
+            currentPageEl = this.pageEls[index];
 
-            if ($precedingPage[0] !== $currentPage[0]) {
-                $precedingPage
-                    .addClass(CSS_CLASS_PRECEDING_PAGE)
-                    .removeClass(CSS_CLASS_CURRENT_PAGE);
-                $currentPage.addClass(CSS_CLASS_CURRENT_PAGE);
+            if (precedingPageEl !== currentPageEl) {
+                dom.addClass(precedingPageEl, CSS_CLASS_PRECEDING_PAGE);
+                dom.removeClass(precedingPageEl, CSS_CLASS_CURRENT_PAGE);
+                dom.addClass(currentPageEl, CSS_CLASS_CURRENT_PAGE);
             }
 
             this.updateVisiblePages(true);
@@ -150,7 +151,8 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
                 currentPageWidth,
                 currentPageHeight,
                 zoomedWidth, zoomedHeight,
-                docWidth, docHeight;
+                docWidth, docHeight,
+                isScrollable;
 
             secondPageWidth = secondPage.actualWidth;
             currentPageWidth = currentPage.actualWidth + (this.twoPageMode ? secondPageWidth : 0);
@@ -162,18 +164,15 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
             docWidth = Math.max(zoomedWidth, viewportWidth);
             docHeight = Math.max(zoomedHeight, viewportHeight);
 
-            this.$doc.css({
+            dom.css(this.docEl, {
                 width: docWidth,
                 height: docHeight
             });
 
             this.updatePageMargins();
 
-            if (docWidth > viewportWidth || docHeight > viewportHeight) {
-                this.$el.addClass('crocodoc-scrollable');
-            } else {
-                this.$el.removeClass('crocodoc-scrollable');
-            }
+            isScrollable = docWidth > viewportWidth || docHeight > viewportHeight;
+            dom.toggleClass(this.el, 'crocodoc-scrollable', isScrollable);
         },
 
         /**
@@ -181,14 +180,14 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
          * @returns {void}
          */
         updatePageMargins: function () {
-            var i, len, page, $page,
+            var i, len, page, pageEl,
                 width, height, left, top, paddingH,
                 state = this.state,
                 viewportWidth = state.viewportDimensions.clientWidth,
                 viewportHeight = state.viewportDimensions.clientHeight;
             // update pages so they are centered (preserving margins)
-            for (i = 0, len = this.$pages.length; i < len; ++i) {
-                $page = this.$pages.eq(i);
+            for (i = 0, len = this.pageEls.length; i < len; ++i) {
+                pageEl = this.pageEls[i];
                 page = state.pages[i];
 
                 if (this.twoPageMode) {
@@ -210,7 +209,7 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
                 top = (viewportHeight - height) / 2;
                 left = Math.max(left, 0);
                 top = Math.max(top, 0);
-                $page.css({
+                dom.css(pageEl, {
                     marginLeft: left,
                     marginTop: top
                 });
@@ -222,7 +221,7 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
          * @returns {void}
          */
         updatePageClasses: function () {
-            var $pages = this.$pages,
+            var pageEls = this.pageEls,
                 index = this.state.currentPage - 1,
                 next = index + 1,
                 prev = index - 1,
@@ -230,67 +229,24 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
 
             // @TODO: optimize this a bit
             // add/removeClass is expensive, so try using hasClass
-            $pages.removeClass(PRESENTATION_CSS_CLASSES);
+            dom.removeClass(pageEls, PRESENTATION_CSS_CLASSES);
             if (this.twoPageMode) {
                 next = index + 2;
                 prev = index - 2;
-                $pages.slice(Math.max(prev, 0), index).addClass(CSS_CLASS_PAGE_PREV);
-                $pages.slice(next, next + 2).addClass(CSS_CLASS_PAGE_NEXT);
+                dom.addClass(pageEls.slice(Math.max(prev, 0), index), CSS_CLASS_PAGE_PREV);
+                dom.addClass(pageEls.slice(next, next + 2), CSS_CLASS_PAGE_NEXT);
             } else {
                 if (prev >= 0) {
-                    $pages.eq(prev).addClass(CSS_CLASS_PAGE_PREV);
+                    dom.addClass(pageEls[prev], CSS_CLASS_PAGE_PREV);
                 }
                 if (next < this.numPages) {
-                    $pages.eq(next).addClass(CSS_CLASS_PAGE_NEXT);
+                    dom.addClass(pageEls[next], CSS_CLASS_PAGE_NEXT);
                 }
             }
-            $pages.slice(0, index).addClass(CSS_CLASS_PAGE_BEFORE);
-            $pages.slice(Math.max(0, index - buffer), index).addClass(CSS_CLASS_PAGE_BEFORE_BUFFER);
-            $pages.slice(next).addClass(CSS_CLASS_PAGE_AFTER);
-            $pages.slice(next, Math.min(this.numPages, next + buffer)).addClass(CSS_CLASS_PAGE_AFTER_BUFFER);
-
-            /*
-            // OPTIMIZATION CODE NOT YET WORKING PROPERLY
-            $pages.slice(0, index).each(function () {
-                var $p = $(this),
-                    i = $p.index(),
-                    toAdd = '',
-                    toRm = '';
-                if (!$p.hasClass(beforeClass.trim())) toAdd += beforeClass;
-                if ($p.hasClass(nextClass.trim())) toRm += nextClass;
-                if ($p.hasClass(afterClass.trim())) toRm += afterClass;
-                if ($p.hasClass(afterBufferClass.trim())) toRm += afterBufferClass;
-                if (i >= index - buffer && !$p.hasClass(beforeBufferClass.trim()))
-                    toAdd += beforeBufferClass;
-                else if ($p.hasClass(beforeBufferClass.trim()))
-                    toRm += beforeBufferClass;
-                if (i >= prev && !$p.hasClass(prevClass.trim()))
-                    toAdd += prevClass;
-                else if ($p.hasClass(prevClass.trim()))
-                    toRm += prevClass;
-                $p.addClass(toAdd).removeClass(toRm);
-//                console.log('before', $p.index(), toRm, toAdd);
-            });
-            $pages.slice(next).each(function () {
-                var $p = $(this),
-                    i = $p.index(),
-                    toAdd = '',
-                    toRm = '';
-                if (!$p.hasClass(afterClass.trim())) toAdd += afterClass;
-                if ($p.hasClass(prevClass.trim())) toRm += prevClass;
-                if ($p.hasClass(beforeClass.trim())) toRm += beforeClass;
-                if ($p.hasClass(beforeBufferClass.trim())) toRm += beforeBufferClass;
-                if (i <= index + buffer && !$p.hasClass(afterBufferClass.trim()))
-                    toAdd += afterBufferClass;
-                else if ($p.hasClass(afterBufferClass.trim()))
-                    toRm += afterBufferClass;
-                if (i <= next + 1 && !$p.hasClass(nextClass.trim()))
-                    toAdd += nextClass;
-                else if ($p.hasClass(nextClass.trim()))
-                    toRm += nextClass;
-                $p.addClass(toAdd).removeClass(toRm);
-//                console.log('after', $p.index(), toRm, toAdd);
-            });*/
+            dom.addClass(pageEls.slice(0, index), CSS_CLASS_PAGE_BEFORE);
+            dom.addClass(pageEls.slice(Math.max(0, index - buffer), index), CSS_CLASS_PAGE_BEFORE_BUFFER);
+            dom.addClass(pageEls.slice(next), CSS_CLASS_PAGE_AFTER);
+            dom.addClass(pageEls.slice(next, Math.min(this.numPages, next + buffer)), CSS_CLASS_PAGE_AFTER_BUFFER);
         }
     });
 });
