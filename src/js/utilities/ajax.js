@@ -294,52 +294,5 @@ Crocodoc.addUtility('ajax', function (framework) {
                 }
             });
         },
-
-        /**
-         * Send data to the server. Uses JSON.stringify, so IE 8+.
-         *
-         * @param {string} url      The url to POST data to
-         * @param {Object} data     A object that will be JSON serialized and sent in the body of the POST
-         * @returns {$.Promise}     A JQuery promise. There is no abort() method because we cannot guarantee
-         *                          that an aborted POST has not affected state.
-         */
-        sendJSON: function(url, data) {
-            var ajax = this,
-                req,
-                $deferred = $.Deferred();
-
-            function request() {
-                return ajax.request(url, {
-                    method: 'POST',
-                    data: util.stringifyJSON(data),
-                    headers: [
-                        ["Content-Type", "application/json"]
-                    ],
-                    success: function() {
-                        if (this.responseText) {
-                            var parsedJSON;
-                            try {
-                                if (this.rawRequest.getResponseHeader('content-type') === 'application/json') {
-                                    parsedJSON = util.parseJSON(this.responseText);
-                                    $deferred.resolve(parsedJSON);
-                                } else {
-                                    $deferred.reject('response not json');
-                                }
-                            } catch (e) {
-                                $deferred.reject('invalid json');
-                            }
-                        } else {
-                            $deferred.reject('empty response');
-                        }
-                    },
-                    fail: function() {
-                        $deferred.reject(this.statusText);
-                    }
-                });
-            }
-
-            req = request();
-            return $deferred.promise();
-        }
     };
 });
