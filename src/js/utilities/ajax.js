@@ -39,15 +39,21 @@ Crocodoc.addUtility('ajax', function (framework) {
     }
 
     /**
-    * Returns true if a request made to a local file has a status equals zero (0)
-    * and if it has a response text
+    * Returns true if the url is referencing a local file
     * @param   {string}  url The URL
-    * @param   {Object}  request The request object
+    * @param   {Boolean}
     */
-    function isRequestToLocalFileOk(url, request) {
-        return urlUtil.parse(url).protocol === 'file:' &&
-               request.status === 0 &&
-               request.responseText !== '';
+    function isRequestToLocalFile(url) {
+        return urlUtil.parse(url).protocol === 'file:';
+    }
+
+    /**
+     * Return true if the given status code looks successful
+     * @param   {number}  status The http status code
+     * @returns {Boolean}
+     */
+    function isSuccessfulStatusCode(status) {
+        return status >= 200 && status < 300 || status === 304;
     }
 
     /**
@@ -115,7 +121,12 @@ Crocodoc.addUtility('ajax', function (framework) {
                     return;
                 }
 
-                if (status === 200 || isRequestToLocalFileOk(url, req)) {
+                // status is 0 for successful local file requests, so assume 200
+                if (status === 0 && isRequestToLocalFile(url)) {
+                    status = 200;
+                }
+
+                if (isSuccessfulStatusCode(status)) {
                     success(req);
                 } else {
                     fail(req);
