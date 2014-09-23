@@ -2,6 +2,9 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.8.0**
+  * Add support for 2xx response codes in ajax utility
+  * Add download plugin
 * **0.7.0**
   * Add `.crocodoc-preceding-page` class for easier transition effects in presentation layout
 * **0.6.1**

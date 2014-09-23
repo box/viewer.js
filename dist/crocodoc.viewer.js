@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.7.0 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.8.0 | (c) 2014 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -1301,15 +1301,21 @@ Crocodoc.addUtility('ajax', function (framework) {
     }
 
     /**
-    * Returns true if a request made to a local file has a status equals zero (0)
-    * and if it has a response text
+    * Returns true if the url is referencing a local file
     * @param   {string}  url The URL
-    * @param   {Object}  request The request object
+    * @param   {Boolean}
     */
-    function isRequestToLocalFileOk(url, request) {
-        return urlUtil.parse(url).protocol === 'file:' &&
-               request.status === 0 &&
-               request.responseText !== '';
+    function isRequestToLocalFile(url) {
+        return urlUtil.parse(url).protocol === 'file:';
+    }
+
+    /**
+     * Return true if the given status code looks successful
+     * @param   {number}  status The http status code
+     * @returns {Boolean}
+     */
+    function isSuccessfulStatusCode(status) {
+        return status >= 200 && status < 300 || status === 304;
     }
 
     /**
@@ -1377,7 +1383,12 @@ Crocodoc.addUtility('ajax', function (framework) {
                     return;
                 }
 
-                if (status === 200 || isRequestToLocalFileOk(url, req)) {
+                // status is 0 for successful local file requests, so assume 200
+                if (status === 0 && isRequestToLocalFile(url)) {
+                    status = 200;
+                }
+
+                if (isSuccessfulStatusCode(status)) {
                     success(req);
                 } else {
                     fail(req);
@@ -1556,53 +1567,6 @@ Crocodoc.addUtility('ajax', function (framework) {
                 }
             });
         },
-
-        /**
-         * Send data to the server. Uses JSON.stringify, so IE 8+.
-         *
-         * @param {string} url      The url to POST data to
-         * @param {Object} data     A object that will be JSON serialized and sent in the body of the POST
-         * @returns {$.Promise}     A JQuery promise. There is no abort() method because we cannot guarantee
-         *                          that an aborted POST has not affected state.
-         */
-        sendJSON: function(url, data) {
-            var ajax = this,
-                req,
-                $deferred = $.Deferred();
-
-            function request() {
-                return ajax.request(url, {
-                    method: 'POST',
-                    data: util.stringifyJSON(data),
-                    headers: [
-                        ["Content-Type", "application/json"]
-                    ],
-                    success: function() {
-                        if (this.responseText) {
-                            var parsedJSON;
-                            try {
-                                if (this.rawRequest.getResponseHeader('content-type') === 'application/json') {
-                                    parsedJSON = util.parseJSON(this.responseText);
-                                    $deferred.resolve(parsedJSON);
-                                } else {
-                                    $deferred.reject('response not json');
-                                }
-                            } catch (e) {
-                                $deferred.reject('invalid json');
-                            }
-                        } else {
-                            $deferred.reject('empty response');
-                        }
-                    },
-                    fail: function() {
-                        $deferred.reject(this.statusText);
-                    }
-                });
-            }
-
-            req = request();
-            return $deferred.promise();
-        }
     };
 });
 
