@@ -627,8 +627,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 });
             }
 
+
             // load page 1 assets immediately if necessary
-            if (!config.pageStart || config.pageStart === 1) {
+            if (config.autoloadFirstPage &&
+                (!config.pageStart || config.pageStart === 1)) {
                 if (support.svg) {
                     $pageOneContentPromise = scope.get('page-svg', 1);
                 } else if (config.conversionIsComplete) {

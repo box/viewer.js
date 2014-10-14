@@ -283,6 +283,10 @@
         pageStart: null,
         pageEnd: null,
 
+        // whether or not to automatically load page one assets immediately (even
+        // if conversion is not yet complete)
+        autoloadFirstPage: true,
+
         // zoom levels are relative to the viewport size,
         // and the dynamic zoom levels (auto, fitwidth, etc) will be added into the mix
         zoomLevels: [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0]
