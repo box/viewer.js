@@ -25,7 +25,7 @@ module('Component - viewer-base', {
                 focus: function () {},
                 updatePageStates: function () {}
             },
-            'lazy-loader': {
+            'controller-paged': {
                 init: function () {}
             },
             scroller: {
@@ -46,12 +46,8 @@ module('Component - viewer-base', {
         this.utilities = {
             common: {
                 insertCSS: function () { return { sheet: {} }; },
-                getSelectedNode: function () {},
                 isFn: sinon.stub().returns(true),
-                extend: $.extend,
-                clamp: sinon.stub().returnsArg(0),
-                template: sinon.stub().returnsArg(0),
-                calculatePtSize: sinon.stub().returns(1.33)
+                extend: $.extend
             },
             ajax: {
                 request: function () {}
@@ -178,19 +174,6 @@ test('loadAssets() should broadcast a fail message when loading metadata or styl
     ok(broadcastSpy.calledWith('fail', sinon.match({ error: sinon.match(err) })), 'fail was broadcast');
 });
 
-test('loadAssets() should create and init a lazy-loader component when loading metadata and stylesheet succeeds', function () {
-    var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
-
-    this.mock(this.components['lazy-loader'])
-        .expects('init')
-        .withArgs(sinon.match.array);
-
-    this.component.init();
-    this.component.loadAssets();
-});
-
 test('loadAssets() should create and init a scroller component when loading metadata and stylesheet succeeds', function () {
     var stub = this.stub(this.scope, 'get');
     stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
@@ -230,65 +213,6 @@ test('loadAssets() should set the appropriate layout when loading metadata and s
         .withArgs(this.config.layout);
 
     this.component.init();
-    this.component.loadAssets();
-});
-
-test('loadAssets() should create and init `numpages` page components with appropriate status when loading metadata and stylesheet succeeds', function () {
-    var metadata = {
-        numpages: 5,
-        dimensions: {
-            width: 100,
-            height: 100
-        }
-    };
-    var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
-
-    this.component.init();
-
-    var createComponentSpy = this.spy(this.scope, 'createComponent');
-    this.mock(this.components.page)
-        .expects('init')
-        .withArgs(sinon.match.object, sinon.match({
-            status: PAGE_STATUS_NOT_LOADED
-        }))
-        .exactly(metadata.numpages);
-
-    this.component.loadAssets();
-
-    ok(createComponentSpy.withArgs('page').callCount === metadata.numpages, 'created correct number of page components');
-});
-
-test('loadAssets() should init page components with appropriate status when called and the conversion is not complete and loading metadata and stylesheet succeeds', function () {
-    var metadata = {
-        numpages: 5,
-        dimensions: {
-            width: 100,
-            height: 100
-        }
-    };
-    var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
-
-    this.config.conversionIsComplete = false;
-    this.component.init();
-
-    var mock = this.mock(this.components.page);
-
-    mock.expects('init')
-        .withArgs(sinon.match.object, sinon.match({
-            status: PAGE_STATUS_NOT_LOADED
-        }))
-        .once();
-
-    mock.expects('init')
-        .withArgs(sinon.match.object, sinon.match({
-            status: PAGE_STATUS_CONVERTING
-        }))
-        .exactly(metadata.numpages - 1);
-
     this.component.loadAssets();
 });
 

@@ -107,13 +107,15 @@
 
         /**
          * Scroll to the given page
+         * @TODO: rename to scrollToPage when possible (and remove this for non-
+         * page-based viewers)
          * @param  {int|string} page Page number or one of:
          *                           Crocodoc.SCROLL_PREVIOUS
          *                           Crocodoc.SCROLL_NEXT
          * @returns {void}
          */
         this.scrollTo = function (page) {
-            if (layout) {
+            if (layout && util.isFn(layout.scrollTo)) {
                 layout.scrollTo(page);
             }
         };
