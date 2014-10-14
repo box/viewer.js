@@ -251,7 +251,7 @@ test('loadAssets() should create and init `numpages` page components with approp
     this.mock(this.components.page)
         .expects('init')
         .withArgs(sinon.match.object, sinon.match({
-            status: Crocodoc.PAGE_STATUS_NOT_LOADED
+            status: PAGE_STATUS_NOT_LOADED
         }))
         .exactly(metadata.numpages);
 
@@ -279,13 +279,13 @@ test('loadAssets() should init page components with appropriate status when call
 
     mock.expects('init')
         .withArgs(sinon.match.object, sinon.match({
-            status: Crocodoc.PAGE_STATUS_NOT_LOADED
+            status: PAGE_STATUS_NOT_LOADED
         }))
         .once();
 
     mock.expects('init')
         .withArgs(sinon.match.object, sinon.match({
-            status: Crocodoc.PAGE_STATUS_CONVERTING
+            status: PAGE_STATUS_CONVERTING
         }))
         .exactly(metadata.numpages - 1);
 

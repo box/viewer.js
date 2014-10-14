@@ -1,4 +1,4 @@
-module('Component - layout-base', {
+module('Component - layout-paged', {
     setup: function () {
         var self = this;
         this.utilities = {
@@ -26,7 +26,7 @@ module('Component - layout-base', {
             this.config.$doc.append('<div class="crocodoc-page"></div>');
         }
         this.config.$pages = this.config.$doc.find('.crocodoc-page');
-        this.component = Crocodoc.getComponentForTest('layout-base', this.scope);
+        this.component = Crocodoc.getComponentForTest('layout-paged', this.scope);
     }
 });
 

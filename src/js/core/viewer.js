@@ -10,9 +10,6 @@
 (function () {
     'use strict';
 
-    var CSS_CLASS_TEXT_DISABLED  = 'crocodoc-text-disabled',
-        CSS_CLASS_LINKS_DISABLED = 'crocodoc-links-disabled';
-
     var viewerInstanceCount = 0,
         instances = {};
 
@@ -196,9 +193,7 @@
          */
         this.updateLayout = function () {
             if (layout) {
-                // force update layout (incl. calculating page paddings)
-                layout.updatePageStates(true);
-                layout.setZoom();
+                layout.update();
             }
         };
 
@@ -223,10 +218,10 @@
         url: null,
 
         // document viewer layout
-        layout: Crocodoc.LAYOUT_VERTICAL,
+        layout: LAYOUT_VERTICAL,
 
         // initial zoom level
-        zoom: Crocodoc.ZOOM_AUTO,
+        zoom: ZOOM_AUTO,
 
         // page to start on
         page: 1,

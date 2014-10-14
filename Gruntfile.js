@@ -91,6 +91,7 @@ module.exports = function (grunt) {
                     banner: ''
                 },
                 src: [
+                    'src/js/core/constants.js',
                     'src/js/core/crocodoc.js',
                     'src/js/core/scope.js',
                     'src/js/core/event-target.js',

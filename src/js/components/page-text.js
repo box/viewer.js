@@ -14,8 +14,6 @@ Crocodoc.addComponent('page-text', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_TEXT = 'crocodoc-page-text';
-
     var browser = scope.getUtility('browser'),
         subpx   = scope.getUtility('subpx');
 

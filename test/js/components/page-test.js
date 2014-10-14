@@ -73,7 +73,7 @@ test('onmessage() should call disableTextSelection() when called with message "t
 
 test('preload() should preload svg and text when status is PAGE_STATUS_NOT_LOADED', function () {
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_NOT_LOADED
+        status: PAGE_STATUS_NOT_LOADED
     });
 
     this.mock(this.components['page-svg'])
@@ -85,7 +85,7 @@ test('preload() should preload svg and text when status is PAGE_STATUS_NOT_LOADE
 
 test('preload() should not preload svg and text when status is not PAGE_STATUS_NOT_LOADED', function () {
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_CONVERTING
+        status: PAGE_STATUS_CONVERTING
     });
 
     this.mock(this.components['page-svg'])
@@ -99,7 +99,7 @@ test('preload() should not preload svg and text when status is not PAGE_STATUS_N
 
 test('load() should not call pageSVG.load() when page is in an error state', function () {
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_ERROR
+        status: PAGE_STATUS_ERROR
     });
 
     this.mock(this.components['page-svg'])
@@ -110,7 +110,7 @@ test('load() should not call pageSVG.load() when page is in an error state', fun
 
 test('load() should not call pageSVG.load() when page is converting', function () {
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_CONVERTING
+        status: PAGE_STATUS_CONVERTING
     });
 
     this.mock(this.components['page-svg'])
@@ -121,7 +121,7 @@ test('load() should not call pageSVG.load() when page is converting', function (
 
 test('load() should call pageSVG.load() when page is not loaded', function () {
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_NOT_LOADED
+        status: PAGE_STATUS_NOT_LOADED
     });
 
     this.mock(this.components['page-svg'])
@@ -131,7 +131,7 @@ test('load() should call pageSVG.load() when page is not loaded', function () {
 
 test('load() should broadcast "pageload" message when page is loaded', function () {
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_NOT_LOADED,
+        status: PAGE_STATUS_NOT_LOADED,
         index: 0
     });
 
@@ -143,7 +143,7 @@ test('load() should broadcast "pageload" message when page is loaded', function 
 
 test('load() should call pageText.load() when called and the page should be loaded', function () {
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_NOT_LOADED,
+        status: PAGE_STATUS_NOT_LOADED,
         index: 0
     });
 
@@ -158,7 +158,7 @@ test('load() should broadcast pagefail when the page fails to load', function ()
 
     this.component.init($(), {
         index: index,
-        status: Crocodoc.PAGE_STATUS_NOT_LOADED
+        status: PAGE_STATUS_NOT_LOADED
     });
 
     var $promise = $.Deferred().reject(error).promise();
@@ -176,7 +176,7 @@ test('load() should broadcast pagefail when the page fails to load', function ()
 test('unload() should unload svg and text layers only when called when status is PAGE_STATUS_LOADED', function () {
     var mock = this.mock(this.components['page-svg']);
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_LOADED,
+        status: PAGE_STATUS_LOADED,
         index: 0
     });
 
@@ -191,7 +191,7 @@ test('unload() should unload svg and text layers only when called when status is
 test('unload() should broadcast "pageunload" only when called when status is PAGE_STATUS_LOADED', function () {
     var mock = this.mock(this.scope);
     this.component.init($(), {
-        status: Crocodoc.PAGE_STATUS_LOADED,
+        status: PAGE_STATUS_LOADED,
         index: 0
     });
 

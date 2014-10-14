@@ -8,7 +8,7 @@ module('Component - layout-vertical', {
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.mixins = {
-            'layout-base': {
+            'layout-paged': {
                 calculateZoomValue: function () {},
                 init: function () {},
                 handleResize: function () {},

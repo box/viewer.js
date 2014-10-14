@@ -14,13 +14,6 @@ Crocodoc.addComponent('page', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_PREFIX = 'crocodoc-page-',
-        CSS_CLASS_PAGE_LOADING = CSS_CLASS_PAGE_PREFIX + 'loading',
-        CSS_CLASS_PAGE_ERROR = CSS_CLASS_PAGE_PREFIX + 'error',
-        CSS_CLASS_PAGE_TEXT = CSS_CLASS_PAGE_PREFIX + 'text',
-        CSS_CLASS_PAGE_SVG = CSS_CLASS_PAGE_PREFIX + 'svg',
-        CSS_CLASS_PAGE_LINKS = CSS_CLASS_PAGE_PREFIX + 'links';
-
     var support = scope.getUtility('support'),
         util = scope.getUtility('common');
 
@@ -48,8 +41,8 @@ Crocodoc.addComponent('page', function (scope) {
             switch (name) {
                 case 'pageavailable':
                     if (data.page === index + 1 || data.upto > index || data.all === true) {
-                        if (status === Crocodoc.PAGE_STATUS_CONVERTING) {
-                            status = Crocodoc.PAGE_STATUS_NOT_LOADED;
+                        if (status === PAGE_STATUS_CONVERTING) {
+                            status = PAGE_STATUS_NOT_LOADED;
                         }
                     }
                     break;
@@ -81,7 +74,7 @@ Crocodoc.addComponent('page', function (scope) {
             $text = $pageEl.find('.' + CSS_CLASS_PAGE_TEXT);
             $links = $pageEl.find('.' + CSS_CLASS_PAGE_LINKS);
 
-            status = config.status || Crocodoc.PAGE_STATUS_NOT_LOADED;
+            status = config.status || PAGE_STATUS_NOT_LOADED;
             index = config.index;
             pageNum = index + 1;
             this.config = config;
@@ -115,7 +108,7 @@ Crocodoc.addComponent('page', function (scope) {
          */
         preload: function () {
             pageContent.prepare();
-            if (status === Crocodoc.PAGE_STATUS_NOT_LOADED) {
+            if (status === PAGE_STATUS_NOT_LOADED) {
                 pageContent.preload();
                 pageText.preload();
             }
@@ -131,26 +124,26 @@ Crocodoc.addComponent('page', function (scope) {
             loadRequested = true;
 
             // the page has failed to load for good... don't try anymore
-            if (status === Crocodoc.PAGE_STATUS_ERROR) {
+            if (status === PAGE_STATUS_ERROR) {
                 return false;
             }
 
             // don't actually load if the page is converting
-            if (status === Crocodoc.PAGE_STATUS_CONVERTING) {
+            if (status === PAGE_STATUS_CONVERTING) {
                 return false;
             }
 
             // request assets to be loaded... but only ACTUALLY load if it is
             // not loaded already
-            if (status !== Crocodoc.PAGE_STATUS_LOADED) {
-                status = Crocodoc.PAGE_STATUS_LOADING;
+            if (status !== PAGE_STATUS_LOADED) {
+                status = PAGE_STATUS_LOADING;
             }
             return $.when(pageContent.load(), pageText.load())
                 .done(function handleLoadDone() {
                     if (loadRequested) {
-                        if (status !== Crocodoc.PAGE_STATUS_LOADED) {
+                        if (status !== PAGE_STATUS_LOADED) {
                             $el.removeClass(CSS_CLASS_PAGE_LOADING);
-                            status = Crocodoc.PAGE_STATUS_LOADED;
+                            status = PAGE_STATUS_LOADED;
                             scope.broadcast('pageload', { page: pageNum });
                         }
                     } else {
@@ -158,7 +151,7 @@ Crocodoc.addComponent('page', function (scope) {
                     }
                 })
                 .fail(function handleLoadFail(error) {
-                    status = Crocodoc.PAGE_STATUS_ERROR;
+                    status = PAGE_STATUS_ERROR;
                     $el.addClass(CSS_CLASS_PAGE_ERROR);
                     scope.broadcast('pagefail', { page: index + 1, error: error });
                 });
@@ -172,8 +165,8 @@ Crocodoc.addComponent('page', function (scope) {
             loadRequested = false;
             pageContent.unload();
             pageText.unload();
-            if (status === Crocodoc.PAGE_STATUS_LOADED) {
-                status = Crocodoc.PAGE_STATUS_NOT_LOADED;
+            if (status === PAGE_STATUS_LOADED) {
+                status = PAGE_STATUS_NOT_LOADED;
                 $el.addClass(CSS_CLASS_PAGE_LOADING);
                 $el.removeClass(CSS_CLASS_PAGE_ERROR);
                 scope.broadcast('pageunload', { page: pageNum });

@@ -11,53 +11,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PREFIX         = 'crocodoc-',
-        ATTR_SVG_VERSION         = 'data-svg-version',
-        CSS_CLASS_VIEWER         = CSS_CLASS_PREFIX + 'viewer',
-        CSS_CLASS_DOC            = CSS_CLASS_PREFIX + 'doc',
-        CSS_CLASS_VIEWPORT       = CSS_CLASS_PREFIX + 'viewport',
-        CSS_CLASS_LOGO           = CSS_CLASS_PREFIX + 'viewer-logo',
-        CSS_CLASS_DRAGGABLE      = CSS_CLASS_PREFIX + 'draggable',
-        CSS_CLASS_DRAGGING       = CSS_CLASS_PREFIX + 'dragging',
-        CSS_CLASS_TEXT_SELECTED  = CSS_CLASS_PREFIX + 'text-selected',
-        CSS_CLASS_MOBILE         = CSS_CLASS_PREFIX + 'mobile',
-        CSS_CLASS_IELT9          = CSS_CLASS_PREFIX + 'ielt9',
-        CSS_CLASS_SUPPORTS_SVG   = CSS_CLASS_PREFIX + 'supports-svg',
-        CSS_CLASS_WINDOW_AS_VIEWPORT = CSS_CLASS_PREFIX + 'window-as-viewport',
-        CSS_CLASS_PAGE           = CSS_CLASS_PREFIX + 'page',
-        CSS_CLASS_PAGE_INNER     = CSS_CLASS_PAGE + '-inner',
-        CSS_CLASS_PAGE_CONTENT   = CSS_CLASS_PAGE + '-content',
-        CSS_CLASS_PAGE_SVG       = CSS_CLASS_PAGE + '-svg',
-        CSS_CLASS_PAGE_TEXT      = CSS_CLASS_PAGE + '-text',
-        CSS_CLASS_PAGE_LINKS     = CSS_CLASS_PAGE + '-links',
-        CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE + '-autoscale',
-        CSS_CLASS_PAGE_LOADING   = CSS_CLASS_PAGE + '-loading';
-
-    var VIEWER_HTML_TEMPLATE =
-        '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
-            '<div class="' + CSS_CLASS_DOC + '">' +
-            '</div>' +
-        '</div>' +
-        '<div class="' + CSS_CLASS_LOGO + '"></div>';
-
-    var PAGE_HTML_TEMPLATE =
-        '<div class="' + CSS_CLASS_PAGE + ' ' + CSS_CLASS_PAGE_LOADING + '" ' +
-            'style="width:{{w}}px; height:{{h}}px;" data-width="{{w}}" data-height="{{h}}">' +
-            '<div class="' + CSS_CLASS_PAGE_INNER + '">' +
-                '<div class="' + CSS_CLASS_PAGE_CONTENT + '">' +
-                    '<div class="' + CSS_CLASS_PAGE_SVG + '"></div>' +
-                    '<div class="' + CSS_CLASS_PAGE_AUTOSCALE + '">' +
-                        '<div class="' + CSS_CLASS_PAGE_TEXT + '"></div>' +
-                        '<div class="' + CSS_CLASS_PAGE_LINKS + '"></div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
-
-    // the width to consider the 100% zoom level; zoom levels are calculated based
-    // on this width relative to the actual document width
-    var DOCUMENT_100_PERCENT_WIDTH = 1024;
-
     var util = scope.getUtility('common'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support');
@@ -255,9 +208,9 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function getPageStatus(pageIndex) {
         if (pageIndex === 0 || config.conversionIsComplete) {
-            return Crocodoc.PAGE_STATUS_NOT_LOADED;
+            return PAGE_STATUS_NOT_LOADED;
         }
-        return Crocodoc.PAGE_STATUS_CONVERTING;
+        return PAGE_STATUS_CONVERTING;
     }
 
     /**
