@@ -28,6 +28,9 @@ module('Component - viewer-base', {
             'controller-paged': {
                 init: function () {}
             },
+            'controller-text': {
+                init: function () {}
+            },
             scroller: {
                 init: function () {},
                 destroy: function () {},
@@ -86,12 +89,27 @@ test('init() should throw an error when called url.config is not defined', funct
     throws(function (){ this.component.init(); }, 'error should be thrown');
 });
 
-test('init() should disable text selection in IE < 9', function () {
+test('loadAssets() should disable text selection in IE < 9', function () {
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
     var spy = this.spy(this.viewerAPI, 'disableTextSelection');
 
     this.utilities.browser.ielt9 = true;
     this.component.init();
+    this.component.loadAssets();
     ok(spy.called, 'should disable text selection');
+});
+
+test('loadAssets() should not disable text selection in IE < 9 for text files', function () {
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('stylesheet').returns($.Deferred().promise());
+    stub.withArgs('metadata').returns($.Deferred().resolve({ type: 'text' }).promise());
+    var spy = this.spy(this.viewerAPI, 'disableTextSelection');
+
+    this.utilities.browser.ielt9 = true;
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.notCalled, 'should not disable text selection');
 });
 
 test('loadAssets() should request metadata when called', function () {

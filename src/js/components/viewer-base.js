@@ -99,14 +99,27 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         switch (config.metadata.type) {
             case 'text':
                 // load text-based viewer
+                controller = scope.createComponent('controller-text');
+                // force the text layout only
+                // @TODO: allow overriding the layout eventually
+                config.layout = LAYOUT_TEXT;
                 break;
 
             case 'paged':
                 /* falls through */
             default:
                 controller = scope.createComponent('controller-paged');
-                controller.init();
                 break;
+        }
+        controller.init();
+
+        // disable text selection if necessary
+        if (config.metadata.type === 'text') {
+            if (!config.enableTextSelection) {
+                api.disableTextSelection();
+            }
+        } else if (browser.ielt9) {
+            api.disableTextSelection();
         }
 
         // disable links if necessary
@@ -283,10 +296,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 }
             } else {
                 throw new Error('no URL given for viewer assets');
-            }
-
-            if (browser.ielt9) {
-                api.disableTextSelection();
             }
 
             // make the url absolute

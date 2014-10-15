@@ -55,6 +55,7 @@ var Crocodoc = (function () {
         LAYOUT_HORIZONTAL:              LAYOUT_HORIZONTAL,
         LAYOUT_PRESENTATION:            LAYOUT_PRESENTATION,
         LAYOUT_PRESENTATION_TWO_PAGE:   LAYOUT_PRESENTATION_TWO_PAGE,
+        LAYOUT_TEXT:                    LAYOUT_TEXT,
 
         // The number of times to retry loading an asset before giving up
         ASSET_REQUEST_RETRIES: 1,

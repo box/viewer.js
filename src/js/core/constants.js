@@ -86,6 +86,7 @@ var ZOOM_FIT_WIDTH = 'fitwidth',
     LAYOUT_HORIZONTAL = 'horizontal',
     LAYOUT_PRESENTATION = 'presentation',
     LAYOUT_PRESENTATION_TWO_PAGE = 'presentation-two-page',
+    LAYOUT_TEXT = 'text',
 
     PAGE_STATUS_CONVERTING = 'converting',
     PAGE_STATUS_NOT_LOADED = 'not loaded',

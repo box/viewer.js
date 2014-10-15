@@ -120,6 +120,37 @@ Crocodoc.addComponent('layout-base', function (scope) {
         setZoom: function () {},
 
         /**
+         * Calculate the next zoom level for zooming in or out
+         * @param   {string} direction Can be either Crocodoc.ZOOM_IN or Crocodoc.ZOOM_OUT
+         * @returns {number|boolean} The next zoom level or false if the viewer cannot be
+         *                               zoomed in the given direction
+         */
+        calculateNextZoomLevel: function (direction) {
+            var i,
+                zoom = false,
+                currentZoom = this.state.zoomState.zoom,
+                zoomLevels = this.zoomLevels;
+
+            if (direction === Crocodoc.ZOOM_IN) {
+                for (i = 0; i < zoomLevels.length; ++i) {
+                    if (zoomLevels[i] > currentZoom) {
+                        zoom = zoomLevels[i];
+                        break;
+                    }
+                }
+            } else if (direction === Crocodoc.ZOOM_OUT) {
+                for (i = zoomLevels.length - 1; i >= 0; --i) {
+                    if (zoomLevels[i] < currentZoom) {
+                        zoom = zoomLevels[i];
+                        break;
+                    }
+                }
+            }
+
+            return zoom;
+        },
+
+        /**
          * Returns true if the layout is currently draggable
          * (in this case that means that the viewport is scrollable)
          * @returns {Boolean} Whether this layout is draggable

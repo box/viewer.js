@@ -147,8 +147,8 @@
          * @returns {void}
          */
         this.enableTextSelection = function () {
+            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, false);
             if (!config.enableTextSelection) {
-                $el.removeClass(CSS_CLASS_TEXT_DISABLED);
                 config.enableTextSelection = true;
                 scope.broadcast('textenabledchange', { enabled: true });
             }
@@ -160,8 +160,8 @@
          * @returns {void}
          */
         this.disableTextSelection = function () {
+            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, true);
             if (config.enableTextSelection) {
-                $el.addClass(CSS_CLASS_TEXT_DISABLED);
                 config.enableTextSelection = false;
                 scope.broadcast('textenabledchange', { enabled: false });
             }
