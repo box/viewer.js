@@ -304,6 +304,6 @@ Crocodoc.addUtility('ajax', function (framework) {
                     req.abort();
                 }
             });
-        },
+        }
     };
 });
