@@ -2,6 +2,8 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.10.0**
+  * Add support for rendering text-based (non-paged) files
 * **0.9.0**
   * Add option to disable auto-loading of first page assets at `load()`
 * **0.8.0**

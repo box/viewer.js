@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.9.0 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.10.0 | (c) 2014 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -13,6 +13,196 @@
             return fn(jQuery);
         }
     }(function($) {
+
+var CSS_CLASS_PREFIX         = 'crocodoc-',
+    ATTR_SVG_VERSION         = 'data-svg-version',
+    CSS_CLASS_VIEWER         = CSS_CLASS_PREFIX + 'viewer',
+    CSS_CLASS_DOC            = CSS_CLASS_PREFIX + 'doc',
+    CSS_CLASS_VIEWPORT       = CSS_CLASS_PREFIX + 'viewport',
+    CSS_CLASS_LOGO           = CSS_CLASS_PREFIX + 'viewer-logo',
+    CSS_CLASS_DRAGGABLE      = CSS_CLASS_PREFIX + 'draggable',
+    CSS_CLASS_DRAGGING       = CSS_CLASS_PREFIX + 'dragging',
+    CSS_CLASS_TEXT_SELECTED  = CSS_CLASS_PREFIX + 'text-selected',
+    CSS_CLASS_TEXT_DISABLED  = CSS_CLASS_PREFIX + 'text-disabled',
+    CSS_CLASS_LINKS_DISABLED = CSS_CLASS_PREFIX + 'links-disabled',
+    CSS_CLASS_MOBILE         = CSS_CLASS_PREFIX + 'mobile',
+    CSS_CLASS_IELT9          = CSS_CLASS_PREFIX + 'ielt9',
+    CSS_CLASS_SUPPORTS_SVG   = CSS_CLASS_PREFIX + 'supports-svg',
+    CSS_CLASS_WINDOW_AS_VIEWPORT = CSS_CLASS_PREFIX + 'window-as-viewport',
+    CSS_CLASS_LAYOUT_PREFIX  = CSS_CLASS_PREFIX + 'layout-',
+    CSS_CLASS_CURRENT_PAGE   = CSS_CLASS_PREFIX + 'current-page',
+    CSS_CLASS_PRECEDING_PAGE = CSS_CLASS_PREFIX + 'preceding-page',
+    CSS_CLASS_PAGE           = CSS_CLASS_PREFIX + 'page',
+    CSS_CLASS_PAGE_INNER     = CSS_CLASS_PAGE + '-inner',
+    CSS_CLASS_PAGE_CONTENT   = CSS_CLASS_PAGE + '-content',
+    CSS_CLASS_PAGE_SVG       = CSS_CLASS_PAGE + '-svg',
+    CSS_CLASS_PAGE_TEXT      = CSS_CLASS_PAGE + '-text',
+    CSS_CLASS_PAGE_LINK      = CSS_CLASS_PAGE + '-link',
+    CSS_CLASS_PAGE_LINKS     = CSS_CLASS_PAGE + '-links',
+    CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE + '-autoscale',
+    CSS_CLASS_PAGE_LOADING   = CSS_CLASS_PAGE + '-loading',
+    CSS_CLASS_PAGE_ERROR     = CSS_CLASS_PAGE + '-error',
+    CSS_CLASS_PAGE_VISIBLE   = CSS_CLASS_PAGE + '-visible',
+    CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE + '-autoscale',
+    CSS_CLASS_PAGE_PREV      = CSS_CLASS_PAGE + '-prev',
+    CSS_CLASS_PAGE_NEXT      = CSS_CLASS_PAGE + '-next',
+    CSS_CLASS_PAGE_BEFORE    = CSS_CLASS_PAGE + '-before',
+    CSS_CLASS_PAGE_AFTER     = CSS_CLASS_PAGE + '-after',
+    CSS_CLASS_PAGE_BEFORE_BUFFER = CSS_CLASS_PAGE + '-before-buffer',
+    CSS_CLASS_PAGE_AFTER_BUFFER  = CSS_CLASS_PAGE + '-after-buffer',
+    PRESENTATION_CSS_CLASSES = [
+        CSS_CLASS_PAGE_NEXT,
+        CSS_CLASS_PAGE_AFTER,
+        CSS_CLASS_PAGE_PREV,
+        CSS_CLASS_PAGE_BEFORE,
+        CSS_CLASS_PAGE_BEFORE_BUFFER,
+        CSS_CLASS_PAGE_AFTER_BUFFER
+    ].join(' ');
+
+
+var VIEWER_HTML_TEMPLATE =
+    '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
+        '<div class="' + CSS_CLASS_DOC + '">' +
+        '</div>' +
+    '</div>' +
+    '<div class="' + CSS_CLASS_LOGO + '"></div>';
+
+var PAGE_HTML_TEMPLATE =
+    '<div class="' + CSS_CLASS_PAGE + ' ' + CSS_CLASS_PAGE_LOADING + '" ' +
+        'style="width:{{w}}px; height:{{h}}px;" data-width="{{w}}" data-height="{{h}}">' +
+        '<div class="' + CSS_CLASS_PAGE_INNER + '">' +
+            '<div class="' + CSS_CLASS_PAGE_CONTENT + '">' +
+                '<div class="' + CSS_CLASS_PAGE_SVG + '"></div>' +
+                '<div class="' + CSS_CLASS_PAGE_AUTOSCALE + '">' +
+                    '<div class="' + CSS_CLASS_PAGE_TEXT + '"></div>' +
+                    '<div class="' + CSS_CLASS_PAGE_LINKS + '"></div>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+
+// the width to consider the 100% zoom level; zoom levels are calculated based
+// on this width relative to the actual document width
+var DOCUMENT_100_PERCENT_WIDTH = 1024;
+
+
+var ZOOM_FIT_WIDTH = 'fitwidth',
+    ZOOM_FIT_HEIGHT = 'fitheight',
+    ZOOM_AUTO = 'auto',
+    ZOOM_IN = 'in',
+    ZOOM_OUT = 'out',
+
+    SCROLL_PREVIOUS = 'previous',
+    SCROLL_NEXT = 'next',
+
+    LAYOUT_VERTICAL = 'vertical',
+    LAYOUT_VERTICAL_SINGLE_COLUMN = 'vertical-single-column',
+    LAYOUT_HORIZONTAL = 'horizontal',
+    LAYOUT_PRESENTATION = 'presentation',
+    LAYOUT_PRESENTATION_TWO_PAGE = 'presentation-two-page',
+    LAYOUT_TEXT = 'text',
+
+    PAGE_STATUS_CONVERTING = 'converting',
+    PAGE_STATUS_NOT_LOADED = 'not loaded',
+    PAGE_STATUS_LOADING = 'loading',
+    PAGE_STATUS_LOADED = 'loaded',
+    PAGE_STATUS_ERROR = 'error';
+
+
+var STYLE_PADDING_PREFIX = 'padding-',
+    STYLE_PADDING_TOP = STYLE_PADDING_PREFIX + 'top',
+    STYLE_PADDING_RIGHT = STYLE_PADDING_PREFIX + 'right',
+    STYLE_PADDING_LEFT = STYLE_PADDING_PREFIX + 'left',
+    STYLE_PADDING_BOTTOM = STYLE_PADDING_PREFIX + 'bottom',
+    // threshold for removing similar zoom levels (closer to 1 is more similar)
+    ZOOM_LEVEL_SIMILARITY_THRESHOLD = 0.95,
+    // threshold for removing similar zoom presets (e.g., auto, fit-width, etc)
+    ZOOM_LEVEL_PRESETS_SIMILARITY_THRESHOLD = 0.99;
+
+
+var PAGE_LOAD_INTERVAL = 100, //ms between initiating page loads
+    MAX_PAGE_LOAD_RANGE = 32,
+    MAX_PAGE_LOAD_RANGE_MOBILE = 8,
+    // the delay in ms to wait before triggering preloading after `ready`
+    READY_TRIGGER_PRELOADING_DELAY = 1000;
+
+/**
+ * Creates a global method for loading svg text into the proxy svg object
+ * @NOTE: this function should never be called directly in this context;
+ * it's converted to a string and encoded into the proxy svg data:url
+ * @returns {void}
+ * @private
+ */
+function PROXY_SVG() {
+    'use strict';
+    window.loadSVG = function (svgText) {
+        var domParser = new window.DOMParser(),
+            svgDoc = domParser.parseFromString(svgText, 'image/svg+xml'),
+            svgEl = document.importNode(svgDoc.documentElement, true);
+        // make sure the svg width/height are explicity set to 100%
+        svgEl.setAttribute('width', '100%');
+        svgEl.setAttribute('height', '100%');
+
+        if (document.body) {
+            document.body.appendChild(svgEl);
+        } else {
+            document.documentElement.appendChild(svgEl);
+        }
+    };
+}
+
+// @NOTE: MAX_DATA_URLS is the maximum allowed number of data-urls in svg
+// content before we give up and stop rendering them
+var SVG_MIME_TYPE = 'image/svg+xml',
+    HTML_TEMPLATE = '<style>html,body{width:100%;height:100%;margin:0;overflow:hidden;}</style>',
+    SVG_CONTAINER_TEMPLATE = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><script><![CDATA[('+PROXY_SVG+')()]]></script></svg>',
+
+    // Embed the svg in an iframe (initialized to about:blank), and inject
+    // the SVG directly to the iframe window using document.write()
+    // @NOTE: this breaks images in Safari because [?]
+    EMBED_STRATEGY_IFRAME_INNERHTML = 1,
+
+    // Embed the svg with a data-url
+    // @NOTE: ff allows direct script access to objects embedded with a data url,
+    //        and this method prevents a throbbing spinner because document.write
+    //        causes a spinner in ff
+    // @NOTE: NOT CURRENTLY USED - this breaks images in firefox because:
+    //        https://bugzilla.mozilla.org/show_bug.cgi?id=922433
+    EMBED_STRATEGY_DATA_URL = 2,
+
+    // Embed the svg directly in html via inline svg.
+    // @NOTE: NOT CURRENTLY USED -  seems to be slow everywhere, but I'm keeping
+    //        this here because it's very little extra code, and inline SVG might
+    //        be better some day?
+    EMBED_STRATEGY_INLINE_SVG = 3,
+
+    // Embed the svg directly with an object tag; don't replace linked resources
+    // @NOTE: NOT CURRENTLY USED - this is only here for testing purposes, because
+    //        it works in every browser; it doesn't support query string params
+    //        and causes a spinner
+    EMBED_STRATEGY_BASIC_OBJECT = 4,
+
+    // Embed the svg directly with an img tag; don't replace linked resources
+    // @NOTE: NOT CURRENTLY USED - this is only here for testing purposes
+    EMBED_STRATEGY_BASIC_IMG = 5,
+
+    // Embed a proxy svg script as an object tag via data:url, which exposes a
+    // loadSVG method on its contentWindow, then call the loadSVG method directly
+    // with the svg text as the argument
+    // @NOTE: only works in firefox because of its security policy on data:uri
+    EMBED_STRATEGY_DATA_URL_PROXY = 6,
+
+    // Embed in a way similar to the EMBED_STRATEGY_DATA_URL_PROXY, but in this
+    // method we use an iframe initialized to about:blank and embed the proxy
+    // script before calling loadSVG on the iframe's contentWindow
+    // @NOTE: this is a workaround for the image issue with EMBED_STRATEGY_IFRAME_INNERHTML
+    //        in safari; it also works in firefox
+    EMBED_STRATEGY_IFRAME_PROXY = 7,
+
+    // Embed in an img tag via data:url, downloading stylesheet separately, and
+    // injecting it into the data:url of SVG text before embedding
+    // @NOTE: this method seems to be more performant on IE
+    EMBED_STRATEGY_DATA_URL_IMG = 8;
 
 /*jshint unused:false*/
 
@@ -52,26 +242,21 @@ var Crocodoc = (function () {
 
     return {
         // Zoom, scroll, page status, layout constants
-        ZOOM_FIT_WIDTH:                 'fitwidth',
-        ZOOM_FIT_HEIGHT:                'fitheight',
-        ZOOM_AUTO:                      'auto',
-        ZOOM_IN:                        'in',
-        ZOOM_OUT:                       'out',
+        ZOOM_FIT_WIDTH:                 ZOOM_FIT_WIDTH,
+        ZOOM_FIT_HEIGHT:                ZOOM_FIT_HEIGHT,
+        ZOOM_AUTO:                      ZOOM_AUTO,
+        ZOOM_IN:                        ZOOM_IN,
+        ZOOM_OUT:                       ZOOM_OUT,
 
-        SCROLL_PREVIOUS:                'previous',
-        SCROLL_NEXT:                    'next',
+        SCROLL_PREVIOUS:                SCROLL_PREVIOUS,
+        SCROLL_NEXT:                    SCROLL_NEXT,
 
-        LAYOUT_VERTICAL:                'vertical',
-        LAYOUT_VERTICAL_SINGLE_COLUMN:  'vertical-single-column',
-        LAYOUT_HORIZONTAL:              'horizontal',
-        LAYOUT_PRESENTATION:            'presentation',
-        LAYOUT_PRESENTATION_TWO_PAGE:   'presentation-two-page',
-
-        PAGE_STATUS_CONVERTING:         'converting',
-        PAGE_STATUS_NOT_LOADED:         'not loaded',
-        PAGE_STATUS_LOADING:            'loading',
-        PAGE_STATUS_LOADED:             'loaded',
-        PAGE_STATUS_ERROR:              'error',
+        LAYOUT_VERTICAL:                LAYOUT_VERTICAL,
+        LAYOUT_VERTICAL_SINGLE_COLUMN:  LAYOUT_VERTICAL_SINGLE_COLUMN,
+        LAYOUT_HORIZONTAL:              LAYOUT_HORIZONTAL,
+        LAYOUT_PRESENTATION:            LAYOUT_PRESENTATION,
+        LAYOUT_PRESENTATION_TWO_PAGE:   LAYOUT_PRESENTATION_TWO_PAGE,
+        LAYOUT_TEXT:                    LAYOUT_TEXT,
 
         // The number of times to retry loading an asset before giving up
         ASSET_REQUEST_RETRIES: 1,
@@ -557,9 +742,6 @@ var Crocodoc = (function () {
 (function () {
     'use strict';
 
-    var CSS_CLASS_TEXT_DISABLED  = 'crocodoc-text-disabled',
-        CSS_CLASS_LINKS_DISABLED = 'crocodoc-links-disabled';
-
     var viewerInstanceCount = 0,
         instances = {};
 
@@ -657,13 +839,15 @@ var Crocodoc = (function () {
 
         /**
          * Scroll to the given page
+         * @TODO: rename to scrollToPage when possible (and remove this for non-
+         * page-based viewers)
          * @param  {int|string} page Page number or one of:
          *                           Crocodoc.SCROLL_PREVIOUS
          *                           Crocodoc.SCROLL_NEXT
          * @returns {void}
          */
         this.scrollTo = function (page) {
-            if (layout) {
+            if (layout && util.isFn(layout.scrollTo)) {
                 layout.scrollTo(page);
             }
         };
@@ -695,8 +879,8 @@ var Crocodoc = (function () {
          * @returns {void}
          */
         this.enableTextSelection = function () {
+            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, false);
             if (!config.enableTextSelection) {
-                $el.removeClass(CSS_CLASS_TEXT_DISABLED);
                 config.enableTextSelection = true;
                 scope.broadcast('textenabledchange', { enabled: true });
             }
@@ -708,8 +892,8 @@ var Crocodoc = (function () {
          * @returns {void}
          */
         this.disableTextSelection = function () {
+            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, true);
             if (config.enableTextSelection) {
-                $el.addClass(CSS_CLASS_TEXT_DISABLED);
                 config.enableTextSelection = false;
                 scope.broadcast('textenabledchange', { enabled: false });
             }
@@ -743,9 +927,7 @@ var Crocodoc = (function () {
          */
         this.updateLayout = function () {
             if (layout) {
-                // force update layout (incl. calculating page paddings)
-                layout.updatePageStates(true);
-                layout.setZoom();
+                layout.update();
             }
         };
 
@@ -770,10 +952,10 @@ var Crocodoc = (function () {
         url: null,
 
         // document viewer layout
-        layout: Crocodoc.LAYOUT_VERTICAL,
+        layout: LAYOUT_VERTICAL,
 
         // initial zoom level
-        zoom: Crocodoc.ZOOM_AUTO,
+        zoom: ZOOM_AUTO,
 
         // page to start on
         page: 1,
@@ -2350,6 +2532,261 @@ Crocodoc.addUtility('url', function (framework) {
     };
 });
 
+Crocodoc.addComponent('controller-paged', function (scope) {
+
+    'use strict';
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    var util = scope.getUtility('common');
+
+    var config,
+        $el,
+        lazyLoader;
+
+    /**
+     * Validates the config options
+     * @returns {void}
+     * @private
+     */
+    function validateConfig() {
+        var metadata = config.metadata;
+        config.numPages = metadata.numpages;
+        if (!config.pageStart) {
+            config.pageStart = 1;
+        } else if (config.pageStart < 0) {
+            config.pageStart = metadata.numpages + config.pageStart;
+        }
+        config.pageStart = util.clamp(config.pageStart, 1, metadata.numpages);
+        if (!config.pageEnd) {
+            config.pageEnd = metadata.numpages;
+        } else if (config.pageEnd < 0) {
+            config.pageEnd = metadata.numpages + config.pageEnd;
+        }
+        config.pageEnd = util.clamp(config.pageEnd, config.pageStart, metadata.numpages);
+        config.numPages = config.pageEnd - config.pageStart + 1;
+    }
+
+    /**
+     * Create the html skeleton for the viewer and pages
+     * @returns {void}
+     * @private
+     */
+    function prepareDOM() {
+        var i, pageNum,
+            zoomLevel, maxZoom,
+            ptWidth, ptHeight,
+            pxWidth, pxHeight,
+            pt2px = util.calculatePtSize(),
+            dimensions = config.metadata.dimensions,
+            skeleton = '';
+
+        // adjust page scale if the pages are too small/big
+        // it's adjusted so 100% == DOCUMENT_100_PERCENT_WIDTH px;
+        config.pageScale = DOCUMENT_100_PERCENT_WIDTH / (dimensions.width * pt2px);
+
+        // add zoom levels to accomodate the scale
+        zoomLevel = config.zoomLevels[config.zoomLevels.length - 1];
+        maxZoom = 3 / config.pageScale;
+        while (zoomLevel < maxZoom) {
+            zoomLevel += zoomLevel / 2;
+            config.zoomLevels.push(zoomLevel);
+        }
+
+        dimensions.exceptions = dimensions.exceptions || {};
+
+        // create skeleton
+        for (i = config.pageStart - 1; i < config.pageEnd; i++) {
+            pageNum = i + 1;
+            if (pageNum in dimensions.exceptions) {
+                ptWidth = dimensions.exceptions[pageNum].width;
+                ptHeight = dimensions.exceptions[pageNum].height;
+            } else {
+                ptWidth = dimensions.width;
+                ptHeight = dimensions.height;
+            }
+            pxWidth = ptWidth * pt2px;
+            pxHeight = ptHeight * pt2px;
+            pxWidth *= config.pageScale;
+            pxHeight *= config.pageScale;
+            skeleton += util.template(PAGE_HTML_TEMPLATE, {
+                w: pxWidth,
+                h: pxHeight
+            });
+        }
+
+        // insert skeleton and keep a reference to the jq object
+        config.$pages = $(skeleton).appendTo(config.$doc);
+    }
+
+    /**
+     * Return the expected conversion status of the given page index
+     * @param   {int} pageIndex The page index
+     * @returns {string}        The page status
+     */
+    function getPageStatus(pageIndex) {
+        if (pageIndex === 0 || config.conversionIsComplete) {
+            return PAGE_STATUS_NOT_LOADED;
+        }
+        return PAGE_STATUS_CONVERTING;
+    }
+
+    /**
+     * Create and init all necessary page component instances
+     * @returns {void}
+     * @private
+     */
+    function createPages() {
+        var i,
+            pages = [],
+            page,
+            start = config.pageStart - 1,
+            end = config.pageEnd,
+            links = sortPageLinks();
+
+        //initialize pages
+        for (i = start; i < end; i++) {
+            page = scope.createComponent('page');
+            page.init(config.$pages.eq(i - start), {
+                index: i,
+                status: getPageStatus(i),
+                enableLinks: config.enableLinks,
+                links: links[i],
+                pageScale: config.pageScale
+            });
+            pages.push(page);
+        }
+        config.pages = pages;
+    }
+
+    /**
+     * Returns all links associated with the given page
+     * @param  {int} page The page
+     * @returns {Array}   Array of links
+     * @private
+     */
+    function sortPageLinks() {
+        var i, len, link,
+            links = config.metadata.links || [],
+            sorted = [];
+
+        for (i = 0, len = config.metadata.numpages; i < len; ++i) {
+            sorted[i] = [];
+        }
+
+        for (i = 0, len = links.length; i < len; ++i) {
+            link = links[i];
+            sorted[link.pagenum - 1].push(link);
+        }
+
+        return sorted;
+    }
+
+    /**
+     * Handle mouseup events
+     * @returns {void}
+     * @private
+     */
+    function handleMouseUp() {
+        updateSelectedPages();
+    }
+
+    /**
+     * Check if text is selected on any page, and if so, add a css class to that page
+     * @returns {void}
+     * @TODO(clakenen): this method currently only adds the selected class to one page,
+     * so we should modify it to add the class to all pages with selected text
+     * @private
+     */
+    function updateSelectedPages() {
+        var node = util.getSelectedNode();
+        var $page = $(node).closest('.'+CSS_CLASS_PAGE);
+        $el.find('.'+CSS_CLASS_TEXT_SELECTED).removeClass(CSS_CLASS_TEXT_SELECTED);
+        if (node && $el.has(node)) {
+            $page.addClass(CSS_CLASS_TEXT_SELECTED);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+
+        /**
+         * Initialize the controller
+         * @returns {void}
+         */
+        init: function () {
+            config = scope.getConfig();
+
+            // Setup container
+            $el = config.$el;
+
+            $(document).on('mouseup', handleMouseUp);
+
+            validateConfig();
+            prepareDOM();
+            createPages();
+
+            lazyLoader = scope.createComponent('lazy-loader');
+            lazyLoader.init(config.pages);
+        },
+
+        /**
+         * Destroy the viewer-base component
+         * @returns {void}
+         */
+        destroy: function () {
+            // remove document event handlers
+            $(document).off('mouseup', handleMouseUp);
+        }
+    };
+});
+
+Crocodoc.addComponent('controller-text', function (scope) {
+
+    'use strict';
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    var $promise;
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+
+        /**
+         * Initialize the controller
+         * @returns {void}
+         */
+        init: function () {
+            var config = scope.getConfig();
+            config.$textContainer = $();
+
+            // we can just load the text immediately
+            $promise = scope.get('page-text', 1).then(function (html) {
+                config.$doc = $(html);
+                config.$viewport.html(config.$doc);
+            });
+        },
+
+        /**
+         * Destroy the viewer-base component
+         * @returns {void}
+         */
+        destroy: function () {
+            $promise.abort();
+        }
+    };
+});
+
 /**
  * Dragger component definition
  */
@@ -2443,20 +2880,348 @@ Crocodoc.addComponent('layout-base', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_LAYOUT_PREFIX = 'crocodoc-layout-',
-        CSS_CLASS_CURRENT_PAGE = 'crocodoc-current-page',
-        CSS_CLASS_PAGE_PREFIX = 'crocodoc-page-',
-        CSS_CLASS_PAGE_VISIBLE = CSS_CLASS_PAGE_PREFIX + 'visible',
-        CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE_PREFIX + 'autoscale',
-        STYLE_PADDING_PREFIX = 'padding-',
-        STYLE_PADDING_TOP = STYLE_PADDING_PREFIX + 'top',
-        STYLE_PADDING_RIGHT = STYLE_PADDING_PREFIX + 'right',
-        STYLE_PADDING_LEFT = STYLE_PADDING_PREFIX + 'left',
-        STYLE_PADDING_BOTTOM = STYLE_PADDING_PREFIX + 'bottom',
-        // threshold for removing similar zoom levels (closer to 1 is more similar)
-        ZOOM_LEVEL_SIMILARITY_THRESHOLD = 0.95,
-        // threshold for removing similar zoom presets (e.g., auto, fit-width, etc)
-        ZOOM_LEVEL_PRESETS_SIMILARITY_THRESHOLD = 0.99;
+    var util = scope.getUtility('common');
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return {
+        messages: [
+            'resize',
+            'scroll',
+            'scrollend'
+        ],
+
+        /**
+         * Handle framework messages
+         * @param {string} name The name of the message
+         * @param {Object} data The related data for the message
+         * @returns {void}
+         */
+        onmessage: function (name, data) {
+            switch (name) {
+                case 'resize':
+                    this.handleResize(data);
+                    break;
+                case 'scroll':
+                    this.handleScroll(data);
+                    break;
+                case 'scrollend':
+                    this.handleScrollEnd(data);
+                    break;
+                // no default
+            }
+        },
+
+        /**
+         * Initialize the Layout component
+         * @returns {void}
+         */
+        init: function () {
+            var config = scope.getConfig();
+            this.config = config;
+            // shortcut references to jq DOM objects
+            this.$el = config.$el;
+            this.$doc = config.$doc;
+            this.$viewport = config.$viewport;
+            this.$pages = config.$pages;
+            this.numPages = config.numPages;
+
+            // add the layout css class
+            this.layoutClass = CSS_CLASS_LAYOUT_PREFIX + config.layout;
+            this.$el.addClass(this.layoutClass);
+
+            this.initState();
+        },
+
+        /**
+         * Initalize the state object
+         * @returns {void}
+         */
+        initState: function () {
+            var viewportEl = this.$viewport[0],
+                dimensionsEl = viewportEl;
+
+            // use the documentElement for viewport dimensions
+            // if we are using the window as the viewport
+            if (viewportEl === window) {
+                dimensionsEl = document.documentElement;
+            }
+            // setup initial state
+            this.state = {
+                scrollTop: viewportEl.scrollTop,
+                scrollLeft: viewportEl.scrollLeft,
+                viewportDimensions: {
+                    clientWidth: dimensionsEl.clientWidth,
+                    clientHeight: dimensionsEl.clientHeight,
+                    offsetWidth: dimensionsEl.offsetWidth,
+                    offsetHeight: dimensionsEl.offsetHeight
+                },
+                zoomState: {
+                    zoom: 1,
+                    prevZoom: 0,
+                    zoomMode: null
+                },
+                initialWidth: 0,
+                initialHeight: 0,
+                totalWidth: 0,
+                totalHeight: 0
+            };
+            this.zoomLevels = [];
+        },
+
+        /**
+         * Destroy the Layout component
+         * @returns {void}
+         */
+        destroy: function () {
+            this.$doc.removeAttr('style');
+            this.$el.removeClass(this.layoutClass);
+        },
+
+        /**
+         * Set the zoom level for the layout (to be implemented)
+         */
+        setZoom: function () {},
+
+        /**
+         * Calculate the next zoom level for zooming in or out
+         * @param   {string} direction Can be either Crocodoc.ZOOM_IN or Crocodoc.ZOOM_OUT
+         * @returns {number|boolean} The next zoom level or false if the viewer cannot be
+         *                               zoomed in the given direction
+         */
+        calculateNextZoomLevel: function (direction) {
+            var i,
+                zoom = false,
+                currentZoom = this.state.zoomState.zoom,
+                zoomLevels = this.zoomLevels;
+
+            if (direction === Crocodoc.ZOOM_IN) {
+                for (i = 0; i < zoomLevels.length; ++i) {
+                    if (zoomLevels[i] > currentZoom) {
+                        zoom = zoomLevels[i];
+                        break;
+                    }
+                }
+            } else if (direction === Crocodoc.ZOOM_OUT) {
+                for (i = zoomLevels.length - 1; i >= 0; --i) {
+                    if (zoomLevels[i] < currentZoom) {
+                        zoom = zoomLevels[i];
+                        break;
+                    }
+                }
+            }
+
+            return zoom;
+        },
+
+        /**
+         * Returns true if the layout is currently draggable
+         * (in this case that means that the viewport is scrollable)
+         * @returns {Boolean} Whether this layout is draggable
+         */
+        isDraggable: function () {
+            var state = this.state;
+            return (state.viewportDimensions.clientHeight < state.totalHeight) ||
+                   (state.viewportDimensions.clientWidth < state.totalWidth);
+        },
+
+        /**
+         * Scrolls by the given pixel amount from the current location
+         * @param  {int} left Left offset to scroll to
+         * @param  {int} top  Top offset to scroll to
+         * @returns {void}
+         */
+        scrollBy: function (left, top) {
+            left = parseInt(left, 10) || 0;
+            top = parseInt(top, 10) || 0;
+            this.scrollToOffset(left + this.state.scrollLeft, top + this.state.scrollTop);
+        },
+
+        /**
+         * Scroll to the given left and top offset
+         * @param   {int} left The left offset
+         * @param   {int} top  The top offset
+         * @returns {void}
+         */
+        scrollToOffset: function (left, top) {
+            this.$viewport.scrollLeft(left);
+            this.$viewport.scrollTop(top);
+        },
+
+        /**
+         * Handle scroll messages
+         * @param   {Object} data Object containing scrollTop and scrollLeft of the viewport
+         * @returns {void}
+         */
+        handleScroll: function (data) {
+            this.state.scrollTop = data.scrollTop;
+            this.state.scrollLeft = data.scrollLeft;
+        },
+
+        /**
+         * Handle resize messages (to be implemented in layout)
+         */
+        handleResize: function () {},
+        /**
+         * Handle scrollend messages (to be implemented in layout)
+         */
+        handleScrollEnd: function () {},
+
+        /**
+         * Force a full layout update (to be implemented in layout)
+         */
+        update: function () {},
+
+        /**
+         * Focuses the viewport so it can be natively scrolled with the keyboard
+         * @returns {void}
+         */
+        focus: function () {
+            this.$viewport.focus();
+        },
+
+        /**
+         * Shortcut method to extend this layout
+         * @param   {Object} layout The layout mixins
+         * @returns {Object}        The extended layout
+         */
+        extend: function (layout) {
+            return util.extend({}, this, layout);
+        }
+    };
+});
+
+/**
+ * The horizontal layout
+ */
+Crocodoc.addComponent('layout-' + LAYOUT_HORIZONTAL, ['layout-paged'], function (scope, paged) {
+
+    'use strict';
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    var util = scope.getUtility('common'),
+        browser = scope.getUtility('browser');
+
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    return paged.extend({
+
+        /**
+         * Calculate the numeric value for zoom 'auto' for this layout mode
+         * @returns {float} The zoom value
+         */
+        calculateZoomAutoValue: function () {
+            var state = this.state,
+                fitWidth = this.calculateZoomValue(ZOOM_FIT_WIDTH),
+                fitHeight = this.calculateZoomValue(ZOOM_FIT_HEIGHT);
+
+            // landscape
+            if (state.widestPage.actualWidth > state.tallestPage.actualHeight) {
+                return Math.min(fitWidth, fitHeight);
+            }
+            // portrait
+            else {
+                if (browser.mobile) {
+                    return fitHeight;
+                }
+                // limit max zoom to 1.0
+                return Math.min(1, fitHeight);
+            }
+        },
+
+        /**
+         * Calculate which page is currently the "focused" page.
+         * In horizontal mode, this is the page farthest to the left,
+         * where at least half of the page is showing.
+         * @returns {int} The current page
+         */
+        calculateCurrentPage: function () {
+            var prev, page,
+                state = this.state,
+                pages = state.pages;
+
+            prev = util.bisectRight(pages, state.scrollLeft, 'x0') - 1;
+            page = util.bisectRight(pages, state.scrollLeft + pages[prev].width / 2, 'x0') - 1;
+            return 1 + page;
+        },
+
+        /**
+         * Calculates the next page
+         * @returns {int} The next page number
+         */
+        calculateNextPage: function () {
+            return this.state.currentPage + 1;
+        },
+
+        /**
+         * Calculates the previous page
+         * @returns {int} The previous page number
+         */
+        calculatePreviousPage: function () {
+            return this.state.currentPage - 1;
+        },
+
+        /**
+         * Handle resize mesages
+         * @param   {Object} data The message data
+         * @returns {void}
+         */
+        handleResize: function (data) {
+            paged.handleResize.call(this, data);
+            this.updateCurrentPage();
+        },
+
+        /**
+         * Handle scroll mesages
+         * @param   {Object} data The message data
+         * @returns {void}
+         */
+        handleScroll: function (data) {
+            paged.handleScroll.call(this, data);
+            this.updateCurrentPage();
+        },
+
+        /**
+         * Updates the layout elements (pages, doc, etc) CSS
+         * appropriately for the current zoom level
+         * @returns {void}
+         */
+        updateLayout: function () {
+            var state = this.state,
+                zoomState = state.zoomState,
+                zoom = zoomState.zoom,
+                zoomedWidth = state.sumWidths,
+                zoomedHeight = Math.floor(state.tallestPage.totalActualHeight * zoom),
+                docWidth = Math.max(zoomedWidth, state.viewportDimensions.clientWidth),
+                docHeight = Math.max(zoomedHeight, state.viewportDimensions.clientHeight);
+
+            this.$doc.css({
+                height: docHeight,
+                lineHeight: docHeight + 'px',
+                width: docWidth
+            });
+        }
+    });
+});
+
+
+/**
+ * Base layout component for controlling viewer layout and viewport
+ */
+Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
+
+    'use strict';
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
 
     var util = scope.getUtility('common'),
         support = scope.getUtility('support');
@@ -2533,53 +3298,14 @@ Crocodoc.addComponent('layout-base', function (scope) {
     // Public
     //--------------------------------------------------------------------------
 
-    return {
-        messages: [
-            'resize',
-            'scroll',
-            'scrollend'
-        ],
-
-        /**
-         * Handle framework messages
-         * @param {string} name The name of the message
-         * @param {Object} data The related data for the message
-         * @returns {void}
-         */
-        onmessage: function (name, data) {
-            switch (name) {
-                case 'resize':
-                    this.handleResize(data);
-                    break;
-                case 'scroll':
-                    this.handleScroll(data);
-                    break;
-                case 'scrollend':
-                    this.handleScrollEnd(data);
-                    break;
-                // no default
-            }
-        },
+    return base.extend({
 
         /**
          * Initialize the Layout component
          * @returns {void}
          */
         init: function () {
-            var config = scope.getConfig();
-            this.config = config;
-            // shortcut references to jq DOM objects
-            this.$el = config.$el;
-            this.$doc = config.$doc;
-            this.$viewport = config.$viewport;
-            this.$pages = config.$pages;
-            this.numPages = config.numPages;
-
-            // add the layout css class
-            this.layoutClass = CSS_CLASS_LAYOUT_PREFIX + config.layout;
-            this.$el.addClass(this.layoutClass);
-
-            this.initState();
+            base.init.call(this);
             this.updatePageStates();
             this.updateZoomLevels();
         },
@@ -2589,16 +3315,8 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         initState: function () {
-            var viewportEl = this.$viewport[0],
-                dimensionsEl = viewportEl;
-
-            // use the documentElement for viewport dimensions
-            // if we are using the window as the viewport
-            if (viewportEl === window) {
-                dimensionsEl = document.documentElement;
-            }
-            // setup initial state
-            this.state = {
+            base.initState.call(this);
+            util.extend(this.state, {
                 pages: [],
                 widestPage: {
                     index: 0,
@@ -2611,26 +3329,10 @@ Crocodoc.addComponent('layout-base', function (scope) {
                 sumWidths: 0,
                 sumHeights: 0,
                 rows: [],
-                scrollTop: viewportEl.scrollTop,
-                scrollLeft: viewportEl.scrollLeft,
-                viewportDimensions: {
-                    clientWidth: dimensionsEl.clientWidth,
-                    clientHeight: dimensionsEl.clientHeight,
-                    offsetWidth: dimensionsEl.offsetWidth,
-                    offsetHeight: dimensionsEl.offsetHeight
-                },
-                zoomState: {
-                    zoom: 1,
-                    prevZoom: 0,
-                    zoomMode: null
-                },
                 currentPage: null,
                 visiblePages: [],
-                fullyVisiblePages: [],
-                initialWidth: 0,
-                initialHeight: 0
-            };
-            this.zoomLevels = [];
+                fullyVisiblePages: []
+            });
         },
 
         /**
@@ -2638,9 +3340,16 @@ Crocodoc.addComponent('layout-base', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            this.$doc.removeAttr('style');
+            base.destroy.call(this);
             this.$pages.css('padding', '');
-            this.$el.removeClass(this.layoutClass);
+        },
+
+        /**
+         * Force a full layout update
+         */
+        update: function () {
+            this.updatePageStates(true);
+            this.setZoom();
         },
 
         /**
@@ -2709,17 +3418,6 @@ Crocodoc.addComponent('layout-base', function (scope) {
                 fullyVisiblePages: util.extend([], state.fullyVisiblePages),
                 isDraggable: this.isDraggable()
             }, zoomState));
-        },
-
-        /**
-         * Returns true if the layout is currently draggable
-         * (in this case that means that the viewport is scrollable)
-         * @returns {Boolean} Whether this layout is draggable
-         */
-        isDraggable: function () {
-            var state = this.state;
-            return (state.viewportDimensions.clientHeight < state.totalHeight) ||
-                   (state.viewportDimensions.clientWidth < state.totalWidth);
         },
 
         /**
@@ -2874,37 +3572,6 @@ Crocodoc.addComponent('layout-base', function (scope) {
         },
 
         /**
-         * Calculate the next zoom level for zooming in or out
-         * @param   {string} direction Can be either Crocodoc.ZOOM_IN or Crocodoc.ZOOM_OUT
-         * @returns {number|boolean} The next zoom level or false if the viewer cannot be
-         *                               zoomed in the given direction
-         */
-        calculateNextZoomLevel: function (direction) {
-            var i,
-                zoom = false,
-                currentZoom = this.state.zoomState.zoom,
-                zoomLevels = this.zoomLevels;
-
-            if (direction === Crocodoc.ZOOM_IN) {
-                for (i = 0; i < zoomLevels.length; ++i) {
-                    if (zoomLevels[i] > currentZoom) {
-                        zoom = zoomLevels[i];
-                        break;
-                    }
-                }
-            } else if (direction === Crocodoc.ZOOM_OUT) {
-                for (i = zoomLevels.length - 1; i >= 0; --i) {
-                    if (zoomLevels[i] < currentZoom) {
-                        zoom = zoomLevels[i];
-                        break;
-                    }
-                }
-            }
-
-            return zoom;
-        },
-
-        /**
          * Calculate the numeric value for a given zoom mode (or return the value if it's already numeric)
          * @param   {string} mode The mode to zoom to
          * @returns {float}       The zoom value
@@ -2962,18 +3629,6 @@ Crocodoc.addComponent('layout-base', function (scope) {
             }
             pageNum = util.clamp(pageNum, 1, this.numPages);
             this.scrollToPage(pageNum);
-        },
-
-        /**
-         * Scrolls by the given pixel amount from the current location
-         * @param  {int} left Left offset to scroll to
-         * @param  {int} top  Top offset to scroll to
-         * @returns {void}
-         */
-        scrollBy: function (left, top) {
-            left = parseInt(left, 10) || 0;
-            top = parseInt(top, 10) || 0;
-            this.scrollToOffset(left + this.state.scrollLeft, top + this.state.scrollTop);
         },
 
         /**
@@ -3044,17 +3699,6 @@ Crocodoc.addComponent('layout-base', function (scope) {
                 low = Math.max(lowX, lowY),
                 high = Math.min(highX, highY);
             return util.constrainRange(low, high, this.numPages - 1);
-        },
-
-        /**
-         * Scroll to the given left and top offset
-         * @param   {int} left The left offset
-         * @param   {int} top  The top offset
-         * @returns {void}
-         */
-        scrollToOffset: function (left, top) {
-            this.$viewport.scrollLeft(left);
-            this.$viewport.scrollTop(top);
         },
 
         /**
@@ -3233,16 +3877,6 @@ Crocodoc.addComponent('layout-base', function (scope) {
         },
 
         /**
-         * Handle scroll messages
-         * @param   {Object} data Object containing scrollTop and scrollLeft of the viewport
-         * @returns {void}
-         */
-        handleScroll: function (data) {
-            this.state.scrollTop = data.scrollTop;
-            this.state.scrollLeft = data.scrollLeft;
-        },
-
-        /**
          * Handle scrollend messages (forwarded to handleScroll)
          * @param   {Object} data Object containing scrollTop and scrollLeft of the viewport
          * @returns {void}
@@ -3282,154 +3916,18 @@ Crocodoc.addComponent('layout-base', function (scope) {
             this.scrollToOffset(newScrollLeft, newScrollTop);
         },
 
-        /**
-         * Focuses the viewport so it can be natively scrolled with the keyboard
-         * @returns {void}
-         */
-        focus: function () {
-            this.$viewport.focus();
-        },
-
         /** MUST BE IMPLEMENTED IN LAYOUT **/
         updateLayout: function () {},
         calculateZoomAutoValue: function () { return 1; },
         calculateNextPage: function () { return 1; },
-        calculatePreviousPage: function () { return 1; },
-
-        /**
-         * Shortcut method to extend this layout
-         * @param   {Object} layout The layout mixins
-         * @returns {Object}        The extended layout
-         */
-        extend: function (layout) {
-            return util.extend({}, this, layout);
-        }
-    };
-});
-
-/**
- * The horizontal layout
- */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_HORIZONTAL, ['layout-base'], function (scope, base) {
-
-    'use strict';
-
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
-
-    var util = scope.getUtility('common'),
-        browser = scope.getUtility('browser');
-
-    //--------------------------------------------------------------------------
-    // Public
-    //--------------------------------------------------------------------------
-
-    return base.extend({
-
-        /**
-         * Calculate the numeric value for zoom 'auto' for this layout mode
-         * @returns {float} The zoom value
-         */
-        calculateZoomAutoValue: function () {
-            var state = this.state,
-                fitWidth = this.calculateZoomValue(Crocodoc.ZOOM_FIT_WIDTH),
-                fitHeight = this.calculateZoomValue(Crocodoc.ZOOM_FIT_HEIGHT);
-
-            // landscape
-            if (state.widestPage.actualWidth > state.tallestPage.actualHeight) {
-                return Math.min(fitWidth, fitHeight);
-            }
-            // portrait
-            else {
-                if (browser.mobile) {
-                    return fitHeight;
-                }
-                // limit max zoom to 1.0
-                return Math.min(1, fitHeight);
-            }
-        },
-
-        /**
-         * Calculate which page is currently the "focused" page.
-         * In horizontal mode, this is the page farthest to the left,
-         * where at least half of the page is showing.
-         * @returns {int} The current page
-         */
-        calculateCurrentPage: function () {
-            var prev, page,
-                state = this.state,
-                pages = state.pages;
-
-            prev = util.bisectRight(pages, state.scrollLeft, 'x0') - 1;
-            page = util.bisectRight(pages, state.scrollLeft + pages[prev].width / 2, 'x0') - 1;
-            return 1 + page;
-        },
-
-        /**
-         * Calculates the next page
-         * @returns {int} The next page number
-         */
-        calculateNextPage: function () {
-            return this.state.currentPage + 1;
-        },
-
-        /**
-         * Calculates the previous page
-         * @returns {int} The previous page number
-         */
-        calculatePreviousPage: function () {
-            return this.state.currentPage - 1;
-        },
-
-        /**
-         * Handle resize mesages
-         * @param   {Object} data The message data
-         * @returns {void}
-         */
-        handleResize: function (data) {
-            base.handleResize.call(this, data);
-            this.updateCurrentPage();
-        },
-
-        /**
-         * Handle scroll mesages
-         * @param   {Object} data The message data
-         * @returns {void}
-         */
-        handleScroll: function (data) {
-            base.handleScroll.call(this, data);
-            this.updateCurrentPage();
-        },
-
-        /**
-         * Updates the layout elements (pages, doc, etc) CSS
-         * appropriately for the current zoom level
-         * @returns {void}
-         */
-        updateLayout: function () {
-            var state = this.state,
-                zoomState = state.zoomState,
-                zoom = zoomState.zoom,
-                zoomedWidth = state.sumWidths,
-                zoomedHeight = Math.floor(state.tallestPage.totalActualHeight * zoom),
-                docWidth = Math.max(zoomedWidth, state.viewportDimensions.clientWidth),
-                docHeight = Math.max(zoomedHeight, state.viewportDimensions.clientHeight);
-
-            this.$doc.css({
-                height: docHeight,
-                lineHeight: docHeight + 'px',
-                width: docWidth
-            });
-        }
+        calculatePreviousPage: function () { return 1; }
     });
 });
-
 
 /**
  * The presentation-two-page layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE, ['layout-' + Crocodoc.LAYOUT_PRESENTATION], function (scope, presentation) {
+Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION_TWO_PAGE, ['layout-' + LAYOUT_PRESENTATION], function (scope, presentation) {
 
     'use strict';
 
@@ -3476,7 +3974,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE, ['layou
          */
         calculateZoomValue: function (mode) {
             var baseVal = presentation.calculateZoomValue.call(this, mode);
-            if (mode === Crocodoc.ZOOM_FIT_WIDTH) {
+            if (mode === ZOOM_FIT_WIDTH) {
                 baseVal /= 2;
             }
             return baseVal;
@@ -3517,7 +4015,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE, ['layou
 /**
  *The presentation layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'], function (scope, base) {
+Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], function (scope, paged) {
 
     'use strict';
 
@@ -3525,37 +4023,19 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_PREFIX = 'crocodoc-page-',
-        CSS_CLASS_PAGE_PREV = CSS_CLASS_PAGE_PREFIX + 'prev',
-        CSS_CLASS_PAGE_NEXT = CSS_CLASS_PAGE_PREFIX + 'next',
-        CSS_CLASS_PAGE_BEFORE = CSS_CLASS_PAGE_PREFIX + 'before',
-        CSS_CLASS_PAGE_AFTER = CSS_CLASS_PAGE_PREFIX + 'after',
-        CSS_CLASS_PAGE_BEFORE_BUFFER = CSS_CLASS_PAGE_PREFIX + 'before-buffer',
-        CSS_CLASS_PAGE_AFTER_BUFFER = CSS_CLASS_PAGE_PREFIX + 'after-buffer',
-        CSS_CLASS_CURRENT_PAGE = 'crocodoc-current-page',
-        CSS_CLASS_PRECEDING_PAGE = 'crocodoc-preceding-page',
-        PRESENTATION_CSS_CLASSES = [
-            CSS_CLASS_PAGE_NEXT,
-            CSS_CLASS_PAGE_AFTER,
-            CSS_CLASS_PAGE_PREV,
-            CSS_CLASS_PAGE_BEFORE,
-            CSS_CLASS_PAGE_BEFORE_BUFFER,
-            CSS_CLASS_PAGE_AFTER_BUFFER
-        ].join(' ');
-
     var util = scope.getUtility('common');
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    return base.extend({
+    return paged.extend({
         /**
          * Initialize the presentation layout component
          * @returns {void}
          */
         init: function () {
-            base.init.call(this);
+            paged.init.call(this);
             this.updatePageMargins();
             this.updatePageClasses();
         },
@@ -3565,7 +4045,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
          * @returns {void}
          */
         destroy: function () {
-            base.destroy.call(this);
+            paged.destroy.call(this);
             this.$pages.css({ margin: '', left: '' }).removeClass(PRESENTATION_CSS_CLASSES);
         },
 
@@ -3574,8 +4054,8 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
          * @returns {float} The zoom value
          */
         calculateZoomAutoValue: function () {
-            var fitWidth = this.calculateZoomValue(Crocodoc.ZOOM_FIT_WIDTH),
-                fitHeight = this.calculateZoomValue(Crocodoc.ZOOM_FIT_HEIGHT);
+            var fitWidth = this.calculateZoomValue(ZOOM_FIT_WIDTH),
+                fitHeight = this.calculateZoomValue(ZOOM_FIT_HEIGHT);
             return Math.min(fitWidth, fitHeight);
         },
 
@@ -3632,7 +4112,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
                 $precedingPage,
                 $currentPage;
 
-            base.setCurrentPage.call(this, page);
+            paged.setCurrentPage.call(this, page);
 
             // update CSS classes
             this.$doc.find('.' + CSS_CLASS_PRECEDING_PAGE)
@@ -3825,9 +4305,58 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
 });
 
 /**
+ * Layout for text-based files
+ */
+Crocodoc.addComponent('layout-' + LAYOUT_TEXT, ['layout-base'], function (scope, base) {
+    'use strict';
+
+    var util = scope.getUtility('common');
+
+    return base.extend({
+        init: function () {
+            base.init.call(this);
+            this.zoomLevels = this.config.zoomLevels.slice();
+            this.minZoom = this.zoomLevels[0];
+            this.maxZoom = this.zoomLevels[this.zoomLevels.length - 1];
+        },
+
+        setZoom: function (val) {
+            var z,
+                zoomState = this.state.zoomState,
+                currentZoom = zoomState.zoom;
+
+            if (typeof val === 'string') {
+                z = this.calculateNextZoomLevel(val);
+                if (!z) {
+                    if (val === 'auto' || val === 'fitwidth' || val === 'fitheight') {
+                        z = 1;
+                    } else {
+                        z = currentZoom;
+                    }
+                }
+            } else {
+                z = parseFloat(val) || currentZoom;
+            }
+
+            z = util.clamp(z, this.minZoom, this.maxZoom);
+            this.config.$doc.css('font-size', (z * 10) + 'pt');
+
+            zoomState.prevZoom = currentZoom;
+            zoomState.zoom = z;
+            zoomState.canZoomIn = this.calculateNextZoomLevel(Crocodoc.ZOOM_IN) !== false;
+            zoomState.canZoomOut = this.calculateNextZoomLevel(Crocodoc.ZOOM_OUT) !== false;
+
+            scope.broadcast('zoom', util.extend({
+                isDraggable: this.isDraggable()
+            }, zoomState));
+        }
+    });
+});
+
+/**
  * The vertical-single-column layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN, ['layout-' + Crocodoc.LAYOUT_VERTICAL], function (scope, vertical) {
+Crocodoc.addComponent('layout-' + LAYOUT_VERTICAL_SINGLE_COLUMN, ['layout-' + LAYOUT_VERTICAL], function (scope, vertical) {
 
     'use strict';
 
@@ -3843,7 +4372,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN, ['layo
 /**
  * The vertical layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], function (scope, base) {
+Crocodoc.addComponent('layout-' + LAYOUT_VERTICAL, ['layout-paged'], function (scope, paged) {
 
     'use strict';
 
@@ -3858,7 +4387,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
     // Public
     //--------------------------------------------------------------------------
 
-    return base.extend({
+    return paged.extend({
 
         /**
          * Calculate the numeric value for zoom 'auto' for this layout mode
@@ -3866,8 +4395,8 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
          */
         calculateZoomAutoValue: function () {
             var state = this.state,
-                fitWidth = this.calculateZoomValue(Crocodoc.ZOOM_FIT_WIDTH),
-                fitHeight = this.calculateZoomValue(Crocodoc.ZOOM_FIT_HEIGHT);
+                fitWidth = this.calculateZoomValue(ZOOM_FIT_WIDTH),
+                fitHeight = this.calculateZoomValue(ZOOM_FIT_HEIGHT);
 
             if (state.widestPage.actualWidth > state.tallestPage.actualHeight) {
                 // landscape
@@ -3940,7 +4469,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
          * @returns {void}
          */
         handleResize: function (data) {
-            base.handleResize.call(this, data);
+            paged.handleResize.call(this, data);
             this.updateCurrentPage();
         },
 
@@ -3950,7 +4479,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
          * @returns {void}
          */
         handleScroll: function (data) {
-            base.handleScroll.call(this, data);
+            paged.handleScroll.call(this, data);
             this.updateCurrentPage();
         },
 
@@ -4014,11 +4543,6 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
             page: 1,
             visiblePages: [1]
         };
-
-    var PAGE_LOAD_INTERVAL = (browser.mobile || browser.ielt10) ? 100 : 50, //ms between initiating page loads
-        MAX_PAGE_LOAD_RANGE = (browser.mobile || browser.ielt10) ? 8 : 32,
-        // the delay in ms to wait before triggering preloading after `ready`
-        READY_TRIGGER_PRELOADING_DELAY = 1000;
 
     /**
      * Create and return a range object (eg., { min: x, max: y })
@@ -4257,7 +4781,10 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
         init: function (pageComponents) {
             pages = pageComponents;
             numPages = pages.length;
-            pageLoadRange = Math.min(MAX_PAGE_LOAD_RANGE, numPages);
+            pageLoadRange = (browser.mobile || browser.ielt10) ?
+                MAX_PAGE_LOAD_RANGE_MOBILE :
+                MAX_PAGE_LOAD_RANGE;
+            pageLoadRange = Math.min(pageLoadRange, numPages);
         },
 
         /**
@@ -4628,8 +5155,6 @@ Crocodoc.addComponent('page-links', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_LINK = 'crocodoc-page-link';
-
     var $el,
         browser = scope.getUtility('browser');
 
@@ -4752,59 +5277,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
-
-    // @NOTE: MAX_DATA_URLS is the maximum allowed number of data-urls in svg
-    // content before we give up and stop rendering them
-    var SVG_MIME_TYPE = 'image/svg+xml',
-        HTML_TEMPLATE = '<style>html,body{width:100%;height:100%;margin:0;overflow:hidden;}</style>',
-        SVG_CONTAINER_TEMPLATE = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><script><![CDATA[('+proxySVG+')()]]></script></svg>',
-
-        // Embed the svg in an iframe (initialized to about:blank), and inject
-        // the SVG directly to the iframe window using document.write()
-        // @NOTE: this breaks images in Safari because [?]
-        EMBED_STRATEGY_IFRAME_INNERHTML = 1,
-
-        // Embed the svg with a data-url
-        // @NOTE: ff allows direct script access to objects embedded with a data url,
-        //        and this method prevents a throbbing spinner because document.write
-        //        causes a spinner in ff
-        // @NOTE: NOT CURRENTLY USED - this breaks images in firefox because:
-        //        https://bugzilla.mozilla.org/show_bug.cgi?id=922433
-        EMBED_STRATEGY_DATA_URL = 2,
-
-        // Embed the svg directly in html via inline svg.
-        // @NOTE: NOT CURRENTLY USED -  seems to be slow everywhere, but I'm keeping
-        //        this here because it's very little extra code, and inline SVG might
-        //        be better some day?
-        EMBED_STRATEGY_INLINE_SVG = 3,
-
-        // Embed the svg directly with an object tag; don't replace linked resources
-        // @NOTE: NOT CURRENTLY USED - this is only here for testing purposes, because
-        //        it works in every browser; it doesn't support query string params
-        //        and causes a spinner
-        EMBED_STRATEGY_BASIC_OBJECT = 4,
-
-        // Embed the svg directly with an img tag; don't replace linked resources
-        // @NOTE: NOT CURRENTLY USED - this is only here for testing purposes
-        EMBED_STRATEGY_BASIC_IMG = 5,
-
-        // Embed a proxy svg script as an object tag via data:url, which exposes a
-        // loadSVG method on its contentWindow, then call the loadSVG method directly
-        // with the svg text as the argument
-        // @NOTE: only works in firefox because of its security policy on data:uri
-        EMBED_STRATEGY_DATA_URL_PROXY = 6,
-
-        // Embed in a way similar to the EMBED_STRATEGY_DATA_URL_PROXY, but in this
-        // method we use an iframe initialized to about:blank and embed the proxy
-        // script before calling loadSVG on the iframe's contentWindow
-        // @NOTE: this is a workaround for the image issue with EMBED_STRATEGY_IFRAME_INNERHTML
-        //        in safari; it also works in firefox
-        EMBED_STRATEGY_IFRAME_PROXY = 7,
-
-        // Embed in an img tag via data:url, downloading stylesheet separately, and
-        // injecting it into the data:url of SVG text before embedding
-        // @NOTE: this method seems to be more performant on IE
-        EMBED_STRATEGY_DATA_URL_IMG = 8;
 
     var browser = scope.getUtility('browser'),
         DOMParser = window.DOMParser;
@@ -5029,30 +5501,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
     }
 
     /**
-     * Creates a global method for loading svg text into the proxy svg object
-     * @NOTE: this function should never be called directly in this context;
-     * it's converted to a string and encoded into the proxy svg data:url
-     * @returns {void}
-     * @private
-     */
-    function proxySVG() {
-        window.loadSVG = function (svgText) {
-            var domParser = new window.DOMParser(),
-                svgDoc = domParser.parseFromString(svgText, 'image/svg+xml'),
-                svgEl = document.importNode(svgDoc.documentElement, true);
-            // make sure the svg width/height are explicity set to 100%
-            svgEl.setAttribute('width', '100%');
-            svgEl.setAttribute('height', '100%');
-
-            if (document.body) {
-                document.body.appendChild(svgEl);
-            } else {
-                document.documentElement.appendChild(svgEl);
-            }
-        };
-    }
-
-    /**
      * handle SVG load success
      * @param   {string} text The SVG text
      * @returns {void}
@@ -5150,7 +5598,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
         load: function () {
             unloaded = false;
             this.preload();
-
             $loadSVGPromise
                 .done(loadSVGSuccess)
                 .fail(loadSVGFail);
@@ -5194,8 +5641,6 @@ Crocodoc.addComponent('page-text', function (scope) {
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
-
-    var CSS_CLASS_PAGE_TEXT = 'crocodoc-page-text';
 
     var browser = scope.getUtility('browser'),
         subpx   = scope.getUtility('subpx');
@@ -5359,13 +5804,6 @@ Crocodoc.addComponent('page', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_PREFIX = 'crocodoc-page-',
-        CSS_CLASS_PAGE_LOADING = CSS_CLASS_PAGE_PREFIX + 'loading',
-        CSS_CLASS_PAGE_ERROR = CSS_CLASS_PAGE_PREFIX + 'error',
-        CSS_CLASS_PAGE_TEXT = CSS_CLASS_PAGE_PREFIX + 'text',
-        CSS_CLASS_PAGE_SVG = CSS_CLASS_PAGE_PREFIX + 'svg',
-        CSS_CLASS_PAGE_LINKS = CSS_CLASS_PAGE_PREFIX + 'links';
-
     var support = scope.getUtility('support'),
         util = scope.getUtility('common');
 
@@ -5393,8 +5831,8 @@ Crocodoc.addComponent('page', function (scope) {
             switch (name) {
                 case 'pageavailable':
                     if (data.page === index + 1 || data.upto > index || data.all === true) {
-                        if (status === Crocodoc.PAGE_STATUS_CONVERTING) {
-                            status = Crocodoc.PAGE_STATUS_NOT_LOADED;
+                        if (status === PAGE_STATUS_CONVERTING) {
+                            status = PAGE_STATUS_NOT_LOADED;
                         }
                     }
                     break;
@@ -5426,7 +5864,7 @@ Crocodoc.addComponent('page', function (scope) {
             $text = $pageEl.find('.' + CSS_CLASS_PAGE_TEXT);
             $links = $pageEl.find('.' + CSS_CLASS_PAGE_LINKS);
 
-            status = config.status || Crocodoc.PAGE_STATUS_NOT_LOADED;
+            status = config.status || PAGE_STATUS_NOT_LOADED;
             index = config.index;
             pageNum = index + 1;
             this.config = config;
@@ -5460,7 +5898,7 @@ Crocodoc.addComponent('page', function (scope) {
          */
         preload: function () {
             pageContent.prepare();
-            if (status === Crocodoc.PAGE_STATUS_NOT_LOADED) {
+            if (status === PAGE_STATUS_NOT_LOADED) {
                 pageContent.preload();
                 pageText.preload();
             }
@@ -5476,26 +5914,26 @@ Crocodoc.addComponent('page', function (scope) {
             loadRequested = true;
 
             // the page has failed to load for good... don't try anymore
-            if (status === Crocodoc.PAGE_STATUS_ERROR) {
+            if (status === PAGE_STATUS_ERROR) {
                 return false;
             }
 
             // don't actually load if the page is converting
-            if (status === Crocodoc.PAGE_STATUS_CONVERTING) {
+            if (status === PAGE_STATUS_CONVERTING) {
                 return false;
             }
 
             // request assets to be loaded... but only ACTUALLY load if it is
             // not loaded already
-            if (status !== Crocodoc.PAGE_STATUS_LOADED) {
-                status = Crocodoc.PAGE_STATUS_LOADING;
+            if (status !== PAGE_STATUS_LOADED) {
+                status = PAGE_STATUS_LOADING;
             }
             return $.when(pageContent.load(), pageText.load())
                 .done(function handleLoadDone() {
                     if (loadRequested) {
-                        if (status !== Crocodoc.PAGE_STATUS_LOADED) {
+                        if (status !== PAGE_STATUS_LOADED) {
                             $el.removeClass(CSS_CLASS_PAGE_LOADING);
-                            status = Crocodoc.PAGE_STATUS_LOADED;
+                            status = PAGE_STATUS_LOADED;
                             scope.broadcast('pageload', { page: pageNum });
                         }
                     } else {
@@ -5503,7 +5941,7 @@ Crocodoc.addComponent('page', function (scope) {
                     }
                 })
                 .fail(function handleLoadFail(error) {
-                    status = Crocodoc.PAGE_STATUS_ERROR;
+                    status = PAGE_STATUS_ERROR;
                     $el.addClass(CSS_CLASS_PAGE_ERROR);
                     scope.broadcast('pagefail', { page: index + 1, error: error });
                 });
@@ -5517,8 +5955,8 @@ Crocodoc.addComponent('page', function (scope) {
             loadRequested = false;
             pageContent.unload();
             pageText.unload();
-            if (status === Crocodoc.PAGE_STATUS_LOADED) {
-                status = Crocodoc.PAGE_STATUS_NOT_LOADED;
+            if (status === PAGE_STATUS_LOADED) {
+                status = PAGE_STATUS_NOT_LOADED;
                 $el.addClass(CSS_CLASS_PAGE_LOADING);
                 $el.removeClass(CSS_CLASS_PAGE_ERROR);
                 scope.broadcast('pageunload', { page: pageNum });
@@ -5864,53 +6302,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PREFIX         = 'crocodoc-',
-        ATTR_SVG_VERSION         = 'data-svg-version',
-        CSS_CLASS_VIEWER         = CSS_CLASS_PREFIX + 'viewer',
-        CSS_CLASS_DOC            = CSS_CLASS_PREFIX + 'doc',
-        CSS_CLASS_VIEWPORT       = CSS_CLASS_PREFIX + 'viewport',
-        CSS_CLASS_LOGO           = CSS_CLASS_PREFIX + 'viewer-logo',
-        CSS_CLASS_DRAGGABLE      = CSS_CLASS_PREFIX + 'draggable',
-        CSS_CLASS_DRAGGING       = CSS_CLASS_PREFIX + 'dragging',
-        CSS_CLASS_TEXT_SELECTED  = CSS_CLASS_PREFIX + 'text-selected',
-        CSS_CLASS_MOBILE         = CSS_CLASS_PREFIX + 'mobile',
-        CSS_CLASS_IELT9          = CSS_CLASS_PREFIX + 'ielt9',
-        CSS_CLASS_SUPPORTS_SVG   = CSS_CLASS_PREFIX + 'supports-svg',
-        CSS_CLASS_WINDOW_AS_VIEWPORT = CSS_CLASS_PREFIX + 'window-as-viewport',
-        CSS_CLASS_PAGE           = CSS_CLASS_PREFIX + 'page',
-        CSS_CLASS_PAGE_INNER     = CSS_CLASS_PAGE + '-inner',
-        CSS_CLASS_PAGE_CONTENT   = CSS_CLASS_PAGE + '-content',
-        CSS_CLASS_PAGE_SVG       = CSS_CLASS_PAGE + '-svg',
-        CSS_CLASS_PAGE_TEXT      = CSS_CLASS_PAGE + '-text',
-        CSS_CLASS_PAGE_LINKS     = CSS_CLASS_PAGE + '-links',
-        CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE + '-autoscale',
-        CSS_CLASS_PAGE_LOADING   = CSS_CLASS_PAGE + '-loading';
-
-    var VIEWER_HTML_TEMPLATE =
-        '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
-            '<div class="' + CSS_CLASS_DOC + '">' +
-            '</div>' +
-        '</div>' +
-        '<div class="' + CSS_CLASS_LOGO + '"></div>';
-
-    var PAGE_HTML_TEMPLATE =
-        '<div class="' + CSS_CLASS_PAGE + ' ' + CSS_CLASS_PAGE_LOADING + '" ' +
-            'style="width:{{w}}px; height:{{h}}px;" data-width="{{w}}" data-height="{{h}}">' +
-            '<div class="' + CSS_CLASS_PAGE_INNER + '">' +
-                '<div class="' + CSS_CLASS_PAGE_CONTENT + '">' +
-                    '<div class="' + CSS_CLASS_PAGE_SVG + '"></div>' +
-                    '<div class="' + CSS_CLASS_PAGE_AUTOSCALE + '">' +
-                        '<div class="' + CSS_CLASS_PAGE_TEXT + '"></div>' +
-                        '<div class="' + CSS_CLASS_PAGE_LINKS + '"></div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
-
-    // the width to consider the 100% zoom level; zoom levels are calculated based
-    // on this width relative to the actual document width
-    var DOCUMENT_100_PERCENT_WIDTH = 1024;
-
     var util = scope.getUtility('common'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support');
@@ -5919,7 +6310,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         config,
         $el,
         stylesheetEl,
-        lazyLoader,
         layout,
         scroller,
         resizer,
@@ -5948,29 +6338,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     }
 
     /**
-     * Validates the config options
-     * @returns {void}
-     * @private
-     */
-    function validateConfig() {
-        var metadata = config.metadata;
-        config.numPages = metadata.numpages;
-        if (!config.pageStart) {
-            config.pageStart = 1;
-        } else if (config.pageStart < 0) {
-            config.pageStart = metadata.numpages + config.pageStart;
-        }
-        config.pageStart = util.clamp(config.pageStart, 1, metadata.numpages);
-        if (!config.pageEnd) {
-            config.pageEnd = metadata.numpages;
-        } else if (config.pageEnd < 0) {
-            config.pageEnd = metadata.numpages + config.pageEnd;
-        }
-        config.pageEnd = util.clamp(config.pageEnd, config.pageStart, metadata.numpages);
-        config.numPages = config.pageEnd - config.pageStart + 1;
-    }
-
-    /**
      * Create and insert basic viewer DOM structure
      * @returns {void}
      * @private
@@ -5985,58 +6352,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             config.$viewport = $el.find('.' + CSS_CLASS_VIEWPORT);
         }
         config.$doc = $el.find('.' + CSS_CLASS_DOC);
-    }
-
-    /**
-     * Create the html skeleton for the viewer and pages
-     * @returns {void}
-     * @private
-     */
-    function prepareDOM() {
-        var i, pageNum,
-            zoomLevel, maxZoom,
-            ptWidth, ptHeight,
-            pxWidth, pxHeight,
-            pt2px = util.calculatePtSize(),
-            dimensions = config.metadata.dimensions,
-            skeleton = '';
-
-        // adjust page scale if the pages are too small/big
-        // it's adjusted so 100% == DOCUMENT_100_PERCENT_WIDTH px;
-        config.pageScale = DOCUMENT_100_PERCENT_WIDTH / (dimensions.width * pt2px);
-
-        // add zoom levels to accomodate the scale
-        zoomLevel = config.zoomLevels[config.zoomLevels.length - 1];
-        maxZoom = 3 / config.pageScale;
-        while (zoomLevel < maxZoom) {
-            zoomLevel += zoomLevel / 2;
-            config.zoomLevels.push(zoomLevel);
-        }
-
-        dimensions.exceptions = dimensions.exceptions || {};
-
-        // create skeleton
-        for (i = config.pageStart - 1; i < config.pageEnd; i++) {
-            pageNum = i + 1;
-            if (pageNum in dimensions.exceptions) {
-                ptWidth = dimensions.exceptions[pageNum].width;
-                ptHeight = dimensions.exceptions[pageNum].height;
-            } else {
-                ptWidth = dimensions.width;
-                ptHeight = dimensions.height;
-            }
-            pxWidth = ptWidth * pt2px;
-            pxHeight = ptHeight * pt2px;
-            pxWidth *= config.pageScale;
-            pxHeight *= config.pageScale;
-            skeleton += util.template(PAGE_HTML_TEMPLATE, {
-                w: pxWidth,
-                h: pxHeight
-            });
-        }
-
-        // insert skeleton and keep a reference to the jq object
-        config.$pages = $(skeleton).appendTo(config.$doc);
     }
 
     /**
@@ -6065,23 +6380,38 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     function completeInit() {
         setCSSFlags();
 
-        // create viewer skeleton
-        prepareDOM();
-
-        // setup pages
-        createPages();
-
-        initHandlers();
-
-        // Setup lazy loader and layout manager
-        lazyLoader = scope.createComponent('lazy-loader');
-        lazyLoader.init(config.pages);
-
         // initialize scroller and resizer components
         scroller = scope.createComponent('scroller');
         scroller.init(config.$viewport);
         resizer = scope.createComponent('resizer');
         resizer.init(config.$viewport);
+
+        var controller;
+        switch (config.metadata.type) {
+            case 'text':
+                // load text-based viewer
+                controller = scope.createComponent('controller-text');
+                // force the text layout only
+                // @TODO: allow overriding the layout eventually
+                config.layout = LAYOUT_TEXT;
+                break;
+
+            case 'paged':
+                /* falls through */
+            default:
+                controller = scope.createComponent('controller-paged');
+                break;
+        }
+        controller.init();
+
+        // disable text selection if necessary
+        if (config.metadata.type === 'text') {
+            if (!config.enableTextSelection) {
+                api.disableTextSelection();
+            }
+        } else if (browser.ielt9) {
+            api.disableTextSelection();
+        }
 
         // disable links if necessary
         // @NOTE: links are disabled in IE < 9
@@ -6102,78 +6432,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     }
 
     /**
-     * Return the expected conversion status of the given page index
-     * @param   {int} pageIndex The page index
-     * @returns {string}        The page status
-     */
-    function getPageStatus(pageIndex) {
-        if (pageIndex === 0 || config.conversionIsComplete) {
-            return Crocodoc.PAGE_STATUS_NOT_LOADED;
-        }
-        return Crocodoc.PAGE_STATUS_CONVERTING;
-    }
-
-    /**
-     * Create and init all necessary page component instances
-     * @returns {void}
-     * @private
-     */
-    function createPages() {
-        var i,
-            pages = [],
-            page,
-            start = config.pageStart - 1,
-            end = config.pageEnd,
-            links = sortPageLinks();
-
-        //initialize pages
-        for (i = start; i < end; i++) {
-            page = scope.createComponent('page');
-            page.init(config.$pages.eq(i - start), {
-                index: i,
-                status: getPageStatus(i),
-                enableLinks: config.enableLinks,
-                links: links[i],
-                pageScale: config.pageScale
-            });
-            pages.push(page);
-        }
-        config.pages = pages;
-    }
-
-    /**
-     * Returns all links associated with the given page
-     * @param  {int} page The page
-     * @returns {Array}   Array of links
-     * @private
-     */
-    function sortPageLinks() {
-        var i, len, link,
-            links = config.metadata.links || [],
-            sorted = [];
-
-        for (i = 0, len = config.metadata.numpages; i < len; ++i) {
-            sorted[i] = [];
-        }
-
-        for (i = 0, len = links.length; i < len; ++i) {
-            link = links[i];
-            sorted[link.pagenum - 1].push(link);
-        }
-
-        return sorted;
-    }
-
-    /**
-     * Init window and document events
-     * @returns {void}
-     * @private
-     */
-    function initHandlers() {
-        $(document).on('mouseup', handleMouseUp);
-    }
-
-    /**
      * Handler for linkclick messages
      * @returns {void}
      * @private
@@ -6186,31 +6444,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             } else if (data.destination) {
                 api.scrollTo(data.destination.pagenum);
             }
-        }
-    }
-
-    /**
-     * Handle mouseup events
-     * @returns {void}
-     * @private
-     */
-    function handleMouseUp() {
-        updateSelectedPages();
-    }
-
-    /**
-     * Check if text is selected on any page, and if so, add a css class to that page
-     * @returns {void}
-     * @TODO(clakenen): this method currently only adds the selected class to one page,
-     * so we should modify it to add the class to all pages with selected text
-     * @private
-     */
-    function updateSelectedPages() {
-        var node = util.getSelectedNode();
-        var $page = $(node).closest('.'+CSS_CLASS_PAGE);
-        $el.find('.'+CSS_CLASS_TEXT_SELECTED).removeClass(CSS_CLASS_TEXT_SELECTED);
-        if (node && $el.has(node)) {
-            $page.addClass(CSS_CLASS_TEXT_SELECTED);
         }
     }
 
@@ -6356,10 +6589,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 throw new Error('no URL given for viewer assets');
             }
 
-            if (browser.ielt9) {
-                api.disableTextSelection();
-            }
-
             // make the url absolute
             config.url = scope.getUtility('url').makeAbsolute(config.url);
 
@@ -6373,9 +6602,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            // remove document event handlers
-            $(document).off('mouseup', handleMouseUp);
-
             // empty container and remove all class names that contain "crocodoc"
             $el.empty().removeClass(function (i, cls) {
                 var match = cls.match(new RegExp('crocodoc\\S+', 'g'));
@@ -6397,17 +6623,19 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {Layout} The layout object
          */
         setLayout: function (layoutMode) {
+            // create a layout component with the new layout config
             var lastPage = config.page,
                 lastZoom = config.zoom || 1,
-                // create a layout component with the new layout config
+                previousLayoutMode = config.layout,
                 newLayout;
 
             // if there is already a layout, save some state
             if (layout) {
                 // ignore this if we already have the specified layout
-                if (layoutMode === config.layout) {
+                if (layoutMode === previousLayoutMode) {
                     return layout;
                 }
+
                 lastPage = layout.state.currentPage;
                 lastZoom = layout.state.zoomState;
             }
@@ -6424,15 +6652,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 scope.destroyComponent(layout);
             }
 
-
-            var previousLayoutMode = config.layout;
             config.layout = layoutMode;
 
             layout = newLayout;
             layout.init();
             layout.setZoom(lastZoom.zoomMode || lastZoom.zoom || lastZoom);
-            layout.scrollTo(lastPage);
-
+            if (util.isFn(layout.scrollTo)) {
+                layout.scrollTo(lastPage);
+            }
             config.currentLayout = layout;
 
             scope.broadcast('layoutchange', {
@@ -6462,7 +6689,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             $loadMetadataPromise = scope.get('metadata');
             $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
                 config.metadata = metadata;
-                validateConfig();
             });
 
             // don't load the stylesheet for IE < 9
