@@ -9,7 +9,7 @@ module('Component - layout-presentation', {
         this.config = {};
         this.scope = Crocodoc.getScopeForTest(this);
         this.mixins = {
-            'layout-base': {
+            'layout-paged': {
                 calculateZoomValue: function () {},
                 init: function () {},
                 updateCurrentPage: function () {},
@@ -28,7 +28,7 @@ module('Component - layout-presentation', {
 });
 
 test('init() should update page margins and classes and init a base layout when called', function () {
-    var initSpy = this.spy(this.mixins['layout-base'], 'init');
+    var initSpy = this.spy(this.mixins['layout-paged'], 'init');
     var mock = this.mock(this.component);
     mock.expects('updatePageMargins');
     mock.expects('updatePageClasses');

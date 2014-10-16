@@ -6,7 +6,7 @@
 /**
  *The presentation layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'], function (scope, base) {
+Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], function (scope, paged) {
 
     'use strict';
 
@@ -14,37 +14,19 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_PREFIX = 'crocodoc-page-',
-        CSS_CLASS_PAGE_PREV = CSS_CLASS_PAGE_PREFIX + 'prev',
-        CSS_CLASS_PAGE_NEXT = CSS_CLASS_PAGE_PREFIX + 'next',
-        CSS_CLASS_PAGE_BEFORE = CSS_CLASS_PAGE_PREFIX + 'before',
-        CSS_CLASS_PAGE_AFTER = CSS_CLASS_PAGE_PREFIX + 'after',
-        CSS_CLASS_PAGE_BEFORE_BUFFER = CSS_CLASS_PAGE_PREFIX + 'before-buffer',
-        CSS_CLASS_PAGE_AFTER_BUFFER = CSS_CLASS_PAGE_PREFIX + 'after-buffer',
-        CSS_CLASS_CURRENT_PAGE = 'crocodoc-current-page',
-        CSS_CLASS_PRECEDING_PAGE = 'crocodoc-preceding-page',
-        PRESENTATION_CSS_CLASSES = [
-            CSS_CLASS_PAGE_NEXT,
-            CSS_CLASS_PAGE_AFTER,
-            CSS_CLASS_PAGE_PREV,
-            CSS_CLASS_PAGE_BEFORE,
-            CSS_CLASS_PAGE_BEFORE_BUFFER,
-            CSS_CLASS_PAGE_AFTER_BUFFER
-        ].join(' ');
-
     var util = scope.getUtility('common');
 
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
 
-    return base.extend({
+    return paged.extend({
         /**
          * Initialize the presentation layout component
          * @returns {void}
          */
         init: function () {
-            base.init.call(this);
+            paged.init.call(this);
             this.updatePageMargins();
             this.updatePageClasses();
         },
@@ -54,7 +36,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
          * @returns {void}
          */
         destroy: function () {
-            base.destroy.call(this);
+            paged.destroy.call(this);
             this.$pages.css({ margin: '', left: '' }).removeClass(PRESENTATION_CSS_CLASSES);
         },
 
@@ -63,8 +45,8 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
          * @returns {float} The zoom value
          */
         calculateZoomAutoValue: function () {
-            var fitWidth = this.calculateZoomValue(Crocodoc.ZOOM_FIT_WIDTH),
-                fitHeight = this.calculateZoomValue(Crocodoc.ZOOM_FIT_HEIGHT);
+            var fitWidth = this.calculateZoomValue(ZOOM_FIT_WIDTH),
+                fitHeight = this.calculateZoomValue(ZOOM_FIT_HEIGHT);
             return Math.min(fitWidth, fitHeight);
         },
 
@@ -121,7 +103,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION, ['layout-base'],
                 $precedingPage,
                 $currentPage;
 
-            base.setCurrentPage.call(this, page);
+            paged.setCurrentPage.call(this, page);
 
             // update CSS classes
             this.$doc.find('.' + CSS_CLASS_PRECEDING_PAGE)

@@ -6,7 +6,7 @@
 /**
  * The vertical-single-column layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN, ['layout-' + Crocodoc.LAYOUT_VERTICAL], function (scope, vertical) {
+Crocodoc.addComponent('layout-' + LAYOUT_VERTICAL_SINGLE_COLUMN, ['layout-' + LAYOUT_VERTICAL], function (scope, vertical) {
 
     'use strict';
 

@@ -23,7 +23,7 @@ module('Framework - Crocodoc.Viewer', {
                 setZoom: function () {},
                 scrollTo: function () {},
                 scrollBy: function () {},
-                updatePageStates: function () {},
+                update: function () {},
                 focus: function () {}
             }
         };
@@ -236,9 +236,7 @@ test('updateLayout() should force a layout update when called', function () {
 
     var mock = this.mock(layout);
 
-    mock.expects('updatePageStates')
-        .withArgs(true); // force update paddings
-    mock.expects('setZoom');
+    mock.expects('update');
 
     viewer.updateLayout();
 });

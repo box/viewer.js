@@ -6,7 +6,7 @@
 /**
  * The vertical layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], function (scope, base) {
+Crocodoc.addComponent('layout-' + LAYOUT_VERTICAL, ['layout-paged'], function (scope, paged) {
 
     'use strict';
 
@@ -21,7 +21,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
     // Public
     //--------------------------------------------------------------------------
 
-    return base.extend({
+    return paged.extend({
 
         /**
          * Calculate the numeric value for zoom 'auto' for this layout mode
@@ -29,8 +29,8 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
          */
         calculateZoomAutoValue: function () {
             var state = this.state,
-                fitWidth = this.calculateZoomValue(Crocodoc.ZOOM_FIT_WIDTH),
-                fitHeight = this.calculateZoomValue(Crocodoc.ZOOM_FIT_HEIGHT);
+                fitWidth = this.calculateZoomValue(ZOOM_FIT_WIDTH),
+                fitHeight = this.calculateZoomValue(ZOOM_FIT_HEIGHT);
 
             if (state.widestPage.actualWidth > state.tallestPage.actualHeight) {
                 // landscape
@@ -103,7 +103,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
          * @returns {void}
          */
         handleResize: function (data) {
-            base.handleResize.call(this, data);
+            paged.handleResize.call(this, data);
             this.updateCurrentPage();
         },
 
@@ -113,7 +113,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_VERTICAL, ['layout-base'], fun
          * @returns {void}
          */
         handleScroll: function (data) {
-            base.handleScroll.call(this, data);
+            paged.handleScroll.call(this, data);
             this.updateCurrentPage();
         },
 

@@ -34,11 +34,6 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
             visiblePages: [1]
         };
 
-    var PAGE_LOAD_INTERVAL = (browser.mobile || browser.ielt10) ? 100 : 50, //ms between initiating page loads
-        MAX_PAGE_LOAD_RANGE = (browser.mobile || browser.ielt10) ? 8 : 32,
-        // the delay in ms to wait before triggering preloading after `ready`
-        READY_TRIGGER_PRELOADING_DELAY = 1000;
-
     /**
      * Create and return a range object (eg., { min: x, max: y })
      * for the current pageLoadRange constrained to the number of pages
@@ -276,7 +271,10 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
         init: function (pageComponents) {
             pages = pageComponents;
             numPages = pages.length;
-            pageLoadRange = Math.min(MAX_PAGE_LOAD_RANGE, numPages);
+            pageLoadRange = (browser.mobile || browser.ielt10) ?
+                MAX_PAGE_LOAD_RANGE_MOBILE :
+                MAX_PAGE_LOAD_RANGE;
+            pageLoadRange = Math.min(pageLoadRange, numPages);
         },
 
         /**

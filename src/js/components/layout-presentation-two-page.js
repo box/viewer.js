@@ -6,7 +6,7 @@
 /**
  * The presentation-two-page layout
  */
-Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE, ['layout-' + Crocodoc.LAYOUT_PRESENTATION], function (scope, presentation) {
+Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION_TWO_PAGE, ['layout-' + LAYOUT_PRESENTATION], function (scope, presentation) {
 
     'use strict';
 
@@ -53,7 +53,7 @@ Crocodoc.addComponent('layout-' + Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE, ['layou
          */
         calculateZoomValue: function (mode) {
             var baseVal = presentation.calculateZoomValue.call(this, mode);
-            if (mode === Crocodoc.ZOOM_FIT_WIDTH) {
+            if (mode === ZOOM_FIT_WIDTH) {
                 baseVal /= 2;
             }
             return baseVal;

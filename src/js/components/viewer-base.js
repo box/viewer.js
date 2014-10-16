@@ -11,53 +11,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PREFIX         = 'crocodoc-',
-        ATTR_SVG_VERSION         = 'data-svg-version',
-        CSS_CLASS_VIEWER         = CSS_CLASS_PREFIX + 'viewer',
-        CSS_CLASS_DOC            = CSS_CLASS_PREFIX + 'doc',
-        CSS_CLASS_VIEWPORT       = CSS_CLASS_PREFIX + 'viewport',
-        CSS_CLASS_LOGO           = CSS_CLASS_PREFIX + 'viewer-logo',
-        CSS_CLASS_DRAGGABLE      = CSS_CLASS_PREFIX + 'draggable',
-        CSS_CLASS_DRAGGING       = CSS_CLASS_PREFIX + 'dragging',
-        CSS_CLASS_TEXT_SELECTED  = CSS_CLASS_PREFIX + 'text-selected',
-        CSS_CLASS_MOBILE         = CSS_CLASS_PREFIX + 'mobile',
-        CSS_CLASS_IELT9          = CSS_CLASS_PREFIX + 'ielt9',
-        CSS_CLASS_SUPPORTS_SVG   = CSS_CLASS_PREFIX + 'supports-svg',
-        CSS_CLASS_WINDOW_AS_VIEWPORT = CSS_CLASS_PREFIX + 'window-as-viewport',
-        CSS_CLASS_PAGE           = CSS_CLASS_PREFIX + 'page',
-        CSS_CLASS_PAGE_INNER     = CSS_CLASS_PAGE + '-inner',
-        CSS_CLASS_PAGE_CONTENT   = CSS_CLASS_PAGE + '-content',
-        CSS_CLASS_PAGE_SVG       = CSS_CLASS_PAGE + '-svg',
-        CSS_CLASS_PAGE_TEXT      = CSS_CLASS_PAGE + '-text',
-        CSS_CLASS_PAGE_LINKS     = CSS_CLASS_PAGE + '-links',
-        CSS_CLASS_PAGE_AUTOSCALE = CSS_CLASS_PAGE + '-autoscale',
-        CSS_CLASS_PAGE_LOADING   = CSS_CLASS_PAGE + '-loading';
-
-    var VIEWER_HTML_TEMPLATE =
-        '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
-            '<div class="' + CSS_CLASS_DOC + '">' +
-            '</div>' +
-        '</div>' +
-        '<div class="' + CSS_CLASS_LOGO + '"></div>';
-
-    var PAGE_HTML_TEMPLATE =
-        '<div class="' + CSS_CLASS_PAGE + ' ' + CSS_CLASS_PAGE_LOADING + '" ' +
-            'style="width:{{w}}px; height:{{h}}px;" data-width="{{w}}" data-height="{{h}}">' +
-            '<div class="' + CSS_CLASS_PAGE_INNER + '">' +
-                '<div class="' + CSS_CLASS_PAGE_CONTENT + '">' +
-                    '<div class="' + CSS_CLASS_PAGE_SVG + '"></div>' +
-                    '<div class="' + CSS_CLASS_PAGE_AUTOSCALE + '">' +
-                        '<div class="' + CSS_CLASS_PAGE_TEXT + '"></div>' +
-                        '<div class="' + CSS_CLASS_PAGE_LINKS + '"></div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
-
-    // the width to consider the 100% zoom level; zoom levels are calculated based
-    // on this width relative to the actual document width
-    var DOCUMENT_100_PERCENT_WIDTH = 1024;
-
     var util = scope.getUtility('common'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support');
@@ -66,7 +19,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         config,
         $el,
         stylesheetEl,
-        lazyLoader,
         layout,
         scroller,
         resizer,
@@ -95,29 +47,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     }
 
     /**
-     * Validates the config options
-     * @returns {void}
-     * @private
-     */
-    function validateConfig() {
-        var metadata = config.metadata;
-        config.numPages = metadata.numpages;
-        if (!config.pageStart) {
-            config.pageStart = 1;
-        } else if (config.pageStart < 0) {
-            config.pageStart = metadata.numpages + config.pageStart;
-        }
-        config.pageStart = util.clamp(config.pageStart, 1, metadata.numpages);
-        if (!config.pageEnd) {
-            config.pageEnd = metadata.numpages;
-        } else if (config.pageEnd < 0) {
-            config.pageEnd = metadata.numpages + config.pageEnd;
-        }
-        config.pageEnd = util.clamp(config.pageEnd, config.pageStart, metadata.numpages);
-        config.numPages = config.pageEnd - config.pageStart + 1;
-    }
-
-    /**
      * Create and insert basic viewer DOM structure
      * @returns {void}
      * @private
@@ -132,58 +61,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             config.$viewport = $el.find('.' + CSS_CLASS_VIEWPORT);
         }
         config.$doc = $el.find('.' + CSS_CLASS_DOC);
-    }
-
-    /**
-     * Create the html skeleton for the viewer and pages
-     * @returns {void}
-     * @private
-     */
-    function prepareDOM() {
-        var i, pageNum,
-            zoomLevel, maxZoom,
-            ptWidth, ptHeight,
-            pxWidth, pxHeight,
-            pt2px = util.calculatePtSize(),
-            dimensions = config.metadata.dimensions,
-            skeleton = '';
-
-        // adjust page scale if the pages are too small/big
-        // it's adjusted so 100% == DOCUMENT_100_PERCENT_WIDTH px;
-        config.pageScale = DOCUMENT_100_PERCENT_WIDTH / (dimensions.width * pt2px);
-
-        // add zoom levels to accomodate the scale
-        zoomLevel = config.zoomLevels[config.zoomLevels.length - 1];
-        maxZoom = 3 / config.pageScale;
-        while (zoomLevel < maxZoom) {
-            zoomLevel += zoomLevel / 2;
-            config.zoomLevels.push(zoomLevel);
-        }
-
-        dimensions.exceptions = dimensions.exceptions || {};
-
-        // create skeleton
-        for (i = config.pageStart - 1; i < config.pageEnd; i++) {
-            pageNum = i + 1;
-            if (pageNum in dimensions.exceptions) {
-                ptWidth = dimensions.exceptions[pageNum].width;
-                ptHeight = dimensions.exceptions[pageNum].height;
-            } else {
-                ptWidth = dimensions.width;
-                ptHeight = dimensions.height;
-            }
-            pxWidth = ptWidth * pt2px;
-            pxHeight = ptHeight * pt2px;
-            pxWidth *= config.pageScale;
-            pxHeight *= config.pageScale;
-            skeleton += util.template(PAGE_HTML_TEMPLATE, {
-                w: pxWidth,
-                h: pxHeight
-            });
-        }
-
-        // insert skeleton and keep a reference to the jq object
-        config.$pages = $(skeleton).appendTo(config.$doc);
     }
 
     /**
@@ -212,23 +89,38 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     function completeInit() {
         setCSSFlags();
 
-        // create viewer skeleton
-        prepareDOM();
-
-        // setup pages
-        createPages();
-
-        initHandlers();
-
-        // Setup lazy loader and layout manager
-        lazyLoader = scope.createComponent('lazy-loader');
-        lazyLoader.init(config.pages);
-
         // initialize scroller and resizer components
         scroller = scope.createComponent('scroller');
         scroller.init(config.$viewport);
         resizer = scope.createComponent('resizer');
         resizer.init(config.$viewport);
+
+        var controller;
+        switch (config.metadata.type) {
+            case 'text':
+                // load text-based viewer
+                controller = scope.createComponent('controller-text');
+                // force the text layout only
+                // @TODO: allow overriding the layout eventually
+                config.layout = LAYOUT_TEXT;
+                break;
+
+            case 'paged':
+                /* falls through */
+            default:
+                controller = scope.createComponent('controller-paged');
+                break;
+        }
+        controller.init();
+
+        // disable text selection if necessary
+        if (config.metadata.type === 'text') {
+            if (!config.enableTextSelection) {
+                api.disableTextSelection();
+            }
+        } else if (browser.ielt9) {
+            api.disableTextSelection();
+        }
 
         // disable links if necessary
         // @NOTE: links are disabled in IE < 9
@@ -249,78 +141,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     }
 
     /**
-     * Return the expected conversion status of the given page index
-     * @param   {int} pageIndex The page index
-     * @returns {string}        The page status
-     */
-    function getPageStatus(pageIndex) {
-        if (pageIndex === 0 || config.conversionIsComplete) {
-            return Crocodoc.PAGE_STATUS_NOT_LOADED;
-        }
-        return Crocodoc.PAGE_STATUS_CONVERTING;
-    }
-
-    /**
-     * Create and init all necessary page component instances
-     * @returns {void}
-     * @private
-     */
-    function createPages() {
-        var i,
-            pages = [],
-            page,
-            start = config.pageStart - 1,
-            end = config.pageEnd,
-            links = sortPageLinks();
-
-        //initialize pages
-        for (i = start; i < end; i++) {
-            page = scope.createComponent('page');
-            page.init(config.$pages.eq(i - start), {
-                index: i,
-                status: getPageStatus(i),
-                enableLinks: config.enableLinks,
-                links: links[i],
-                pageScale: config.pageScale
-            });
-            pages.push(page);
-        }
-        config.pages = pages;
-    }
-
-    /**
-     * Returns all links associated with the given page
-     * @param  {int} page The page
-     * @returns {Array}   Array of links
-     * @private
-     */
-    function sortPageLinks() {
-        var i, len, link,
-            links = config.metadata.links || [],
-            sorted = [];
-
-        for (i = 0, len = config.metadata.numpages; i < len; ++i) {
-            sorted[i] = [];
-        }
-
-        for (i = 0, len = links.length; i < len; ++i) {
-            link = links[i];
-            sorted[link.pagenum - 1].push(link);
-        }
-
-        return sorted;
-    }
-
-    /**
-     * Init window and document events
-     * @returns {void}
-     * @private
-     */
-    function initHandlers() {
-        $(document).on('mouseup', handleMouseUp);
-    }
-
-    /**
      * Handler for linkclick messages
      * @returns {void}
      * @private
@@ -333,31 +153,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             } else if (data.destination) {
                 api.scrollTo(data.destination.pagenum);
             }
-        }
-    }
-
-    /**
-     * Handle mouseup events
-     * @returns {void}
-     * @private
-     */
-    function handleMouseUp() {
-        updateSelectedPages();
-    }
-
-    /**
-     * Check if text is selected on any page, and if so, add a css class to that page
-     * @returns {void}
-     * @TODO(clakenen): this method currently only adds the selected class to one page,
-     * so we should modify it to add the class to all pages with selected text
-     * @private
-     */
-    function updateSelectedPages() {
-        var node = util.getSelectedNode();
-        var $page = $(node).closest('.'+CSS_CLASS_PAGE);
-        $el.find('.'+CSS_CLASS_TEXT_SELECTED).removeClass(CSS_CLASS_TEXT_SELECTED);
-        if (node && $el.has(node)) {
-            $page.addClass(CSS_CLASS_TEXT_SELECTED);
         }
     }
 
@@ -503,10 +298,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 throw new Error('no URL given for viewer assets');
             }
 
-            if (browser.ielt9) {
-                api.disableTextSelection();
-            }
-
             // make the url absolute
             config.url = scope.getUtility('url').makeAbsolute(config.url);
 
@@ -520,9 +311,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {void}
          */
         destroy: function () {
-            // remove document event handlers
-            $(document).off('mouseup', handleMouseUp);
-
             // empty container and remove all class names that contain "crocodoc"
             $el.empty().removeClass(function (i, cls) {
                 var match = cls.match(new RegExp('crocodoc\\S+', 'g'));
@@ -544,17 +332,19 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {Layout} The layout object
          */
         setLayout: function (layoutMode) {
+            // create a layout component with the new layout config
             var lastPage = config.page,
                 lastZoom = config.zoom || 1,
-                // create a layout component with the new layout config
+                previousLayoutMode = config.layout,
                 newLayout;
 
             // if there is already a layout, save some state
             if (layout) {
                 // ignore this if we already have the specified layout
-                if (layoutMode === config.layout) {
+                if (layoutMode === previousLayoutMode) {
                     return layout;
                 }
+
                 lastPage = layout.state.currentPage;
                 lastZoom = layout.state.zoomState;
             }
@@ -571,15 +361,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 scope.destroyComponent(layout);
             }
 
-
-            var previousLayoutMode = config.layout;
             config.layout = layoutMode;
 
             layout = newLayout;
             layout.init();
             layout.setZoom(lastZoom.zoomMode || lastZoom.zoom || lastZoom);
-            layout.scrollTo(lastPage);
-
+            if (util.isFn(layout.scrollTo)) {
+                layout.scrollTo(lastPage);
+            }
             config.currentLayout = layout;
 
             scope.broadcast('layoutchange', {
@@ -609,7 +398,6 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             $loadMetadataPromise = scope.get('metadata');
             $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
                 config.metadata = metadata;
-                validateConfig();
             });
 
             // don't load the stylesheet for IE < 9

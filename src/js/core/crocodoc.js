@@ -41,26 +41,21 @@ var Crocodoc = (function () {
 
     return {
         // Zoom, scroll, page status, layout constants
-        ZOOM_FIT_WIDTH:                 'fitwidth',
-        ZOOM_FIT_HEIGHT:                'fitheight',
-        ZOOM_AUTO:                      'auto',
-        ZOOM_IN:                        'in',
-        ZOOM_OUT:                       'out',
+        ZOOM_FIT_WIDTH:                 ZOOM_FIT_WIDTH,
+        ZOOM_FIT_HEIGHT:                ZOOM_FIT_HEIGHT,
+        ZOOM_AUTO:                      ZOOM_AUTO,
+        ZOOM_IN:                        ZOOM_IN,
+        ZOOM_OUT:                       ZOOM_OUT,
 
-        SCROLL_PREVIOUS:                'previous',
-        SCROLL_NEXT:                    'next',
+        SCROLL_PREVIOUS:                SCROLL_PREVIOUS,
+        SCROLL_NEXT:                    SCROLL_NEXT,
 
-        LAYOUT_VERTICAL:                'vertical',
-        LAYOUT_VERTICAL_SINGLE_COLUMN:  'vertical-single-column',
-        LAYOUT_HORIZONTAL:              'horizontal',
-        LAYOUT_PRESENTATION:            'presentation',
-        LAYOUT_PRESENTATION_TWO_PAGE:   'presentation-two-page',
-
-        PAGE_STATUS_CONVERTING:         'converting',
-        PAGE_STATUS_NOT_LOADED:         'not loaded',
-        PAGE_STATUS_LOADING:            'loading',
-        PAGE_STATUS_LOADED:             'loaded',
-        PAGE_STATUS_ERROR:              'error',
+        LAYOUT_VERTICAL:                LAYOUT_VERTICAL,
+        LAYOUT_VERTICAL_SINGLE_COLUMN:  LAYOUT_VERTICAL_SINGLE_COLUMN,
+        LAYOUT_HORIZONTAL:              LAYOUT_HORIZONTAL,
+        LAYOUT_PRESENTATION:            LAYOUT_PRESENTATION,
+        LAYOUT_PRESENTATION_TWO_PAGE:   LAYOUT_PRESENTATION_TWO_PAGE,
+        LAYOUT_TEXT:                    LAYOUT_TEXT,
 
         // The number of times to retry loading an asset before giving up
         ASSET_REQUEST_RETRIES: 1,

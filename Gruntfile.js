@@ -91,6 +91,7 @@ module.exports = function (grunt) {
                     banner: ''
                 },
                 src: [
+                    'src/js/core/constants.js',
                     'src/js/core/crocodoc.js',
                     'src/js/core/scope.js',
                     'src/js/core/event-target.js',
@@ -105,6 +106,7 @@ module.exports = function (grunt) {
                 src: [
                     'src/css/viewer.css',
                     'src/css/theme.css',
+                    'src/css/text.css',
                     'src/css/logo.css'
                 ],
                 dest: 'build/crocodoc.viewer.css'
@@ -112,7 +114,8 @@ module.exports = function (grunt) {
             'css-no-logo': {
                 src: [
                     'src/css/viewer.css',
-                    'src/css/theme.css'
+                    'src/css/theme.css',
+                    'src/css/text.css'
                 ],
                 dest: 'build/crocodoc.viewer.css'
             },

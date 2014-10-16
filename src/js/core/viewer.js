@@ -10,9 +10,6 @@
 (function () {
     'use strict';
 
-    var CSS_CLASS_TEXT_DISABLED  = 'crocodoc-text-disabled',
-        CSS_CLASS_LINKS_DISABLED = 'crocodoc-links-disabled';
-
     var viewerInstanceCount = 0,
         instances = {};
 
@@ -110,13 +107,15 @@
 
         /**
          * Scroll to the given page
+         * @TODO: rename to scrollToPage when possible (and remove this for non-
+         * page-based viewers)
          * @param  {int|string} page Page number or one of:
          *                           Crocodoc.SCROLL_PREVIOUS
          *                           Crocodoc.SCROLL_NEXT
          * @returns {void}
          */
         this.scrollTo = function (page) {
-            if (layout) {
+            if (layout && util.isFn(layout.scrollTo)) {
                 layout.scrollTo(page);
             }
         };
@@ -148,8 +147,8 @@
          * @returns {void}
          */
         this.enableTextSelection = function () {
+            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, false);
             if (!config.enableTextSelection) {
-                $el.removeClass(CSS_CLASS_TEXT_DISABLED);
                 config.enableTextSelection = true;
                 scope.broadcast('textenabledchange', { enabled: true });
             }
@@ -161,8 +160,8 @@
          * @returns {void}
          */
         this.disableTextSelection = function () {
+            $el.toggleClass(CSS_CLASS_TEXT_DISABLED, true);
             if (config.enableTextSelection) {
-                $el.addClass(CSS_CLASS_TEXT_DISABLED);
                 config.enableTextSelection = false;
                 scope.broadcast('textenabledchange', { enabled: false });
             }
@@ -196,9 +195,7 @@
          */
         this.updateLayout = function () {
             if (layout) {
-                // force update layout (incl. calculating page paddings)
-                layout.updatePageStates(true);
-                layout.setZoom();
+                layout.update();
             }
         };
 
@@ -223,10 +220,10 @@
         url: null,
 
         // document viewer layout
-        layout: Crocodoc.LAYOUT_VERTICAL,
+        layout: LAYOUT_VERTICAL,
 
         // initial zoom level
-        zoom: Crocodoc.ZOOM_AUTO,
+        zoom: ZOOM_AUTO,
 
         // page to start on
         page: 1,

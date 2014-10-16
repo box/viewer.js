@@ -14,8 +14,6 @@ Crocodoc.addComponent('page-links', function (scope) {
     // Private
     //--------------------------------------------------------------------------
 
-    var CSS_CLASS_PAGE_LINK = 'crocodoc-page-link';
-
     var $el,
         browser = scope.getUtility('browser');
 
