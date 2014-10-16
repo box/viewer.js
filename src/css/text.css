@@ -21,7 +21,6 @@
     tab-size: 8;
     border-collapse: collapse;
     border-spacing: 0;
-    font-size: 1em;
 }
 .crocodoc-text tr:last-child {
     height: 100%;
@@ -34,20 +33,9 @@
     padding-bottom: 0.3em;
 }
 
-.crocodoc-l {
-    text-align: left;
-    margin: 0;
-    overflow: hidden;
-    position: relative;
-    padding: 0 10px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: break-all;
-    color: #333;
-    vertical-align: top;
-}
+/* line numbers */
 
-.crocodoc-ln {
+.crocodoc-text td:first-child {
     width: 1%;
     padding-left: 0.5em;
     padding-right: 0.3em;
@@ -67,7 +55,22 @@
     -moz-box-sizing: border-box !important;
     box-sizing: border-box !important;
 }
-.crocodoc-ln:before {
+.crocodoc-text td:first-child:before {
     content: counter(line-numbering);
     counter-increment: line-numbering;
+}
+
+/* line contents */
+.crocodoc-text td:last-child {
+    vertical-align: top;
+    text-align: left;
+    margin: 0;
+    overflow: hidden;
+    position: relative;
+    padding: 0 10px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    color: #333;
+    vertical-align: top;
 }
