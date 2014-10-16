@@ -25,6 +25,8 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
     - [Realtime Page Streaming](#realtime-page-streaming)
     - [Plugins](#plugins)
     - [Data Providers](#data-providers)
+    - [Text Documents](#text-documents)
+        + [Syntax Highlighting](#syntax-highlighting)
 * [Browser Support](#browser-support)
 * [Contributing](#contributing)
 * [Getting Started with the Code](#getting-started-with-the-code)
@@ -499,6 +501,15 @@ var viewer = Crocodoc.createViewer('.viewer', {
 ### Data Providers
 
 See the [JS architecture overview](src/js/README.md#data-providers) for information about data providers.
+
+
+### Text Documents
+
+As of `v0.10.0`, viewer.js supports rendering text-based documents converted by the Box View API. This functionality is in beta until further notice, and many of the page-related API methods, events, and configuration properties in viewer.js will not have any affect on text documents. The viewer will automatically switch into text-based document mode when you provide it with a URL that points to a text document converted with the View API.
+
+#### Syntax Highlighting
+
+Many source code formats will be converted to HTML for use with viewer.js such that you can enable syntax highlighting. To enable syntax highlighting, simply include a [Pygments](http://pygments.org/)-compatible CSS stylesheet in the page with your viewer. The Box View iframe viewer uses a stylesheet similar to [this one](https://github.com/richleland/pygments-css/blob/master/github.css).
 
 
 ## Browser Support
