@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.8.0 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.9.0 | (c) 2014 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -830,6 +830,10 @@ var Crocodoc = (function () {
         pageStart: null,
         pageEnd: null,
 
+        // whether or not to automatically load page one assets immediately (even
+        // if conversion is not yet complete)
+        autoloadFirstPage: true,
+
         // zoom levels are relative to the viewport size,
         // and the dynamic zoom levels (auto, fitwidth, etc) will be added into the mix
         zoomLevels: [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0]
@@ -1566,7 +1570,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                     req.abort();
                 }
             });
-        },
+        }
     };
 });
 
@@ -6476,8 +6480,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 });
             }
 
+
             // load page 1 assets immediately if necessary
-            if (!config.pageStart || config.pageStart === 1) {
+            if (config.autoloadFirstPage &&
+                (!config.pageStart || config.pageStart === 1)) {
                 if (support.svg) {
                     $pageOneContentPromise = scope.get('page-svg', 1);
                 } else if (config.conversionIsComplete) {
