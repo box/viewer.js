@@ -106,3 +106,31 @@ test('init() should init page components with appropriate status when called and
 
     this.component.init();
 });
+
+
+test('init() should init page components with appropriate status when called and the conversion is not complete and loading metadata and stylesheet succeeds and autoloadFirstPage is disabled', function () {
+    var metadata = {
+        numpages: 5,
+        dimensions: {
+            width: 100,
+            height: 100
+        }
+    };
+    this.config.metadata = metadata;
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+
+    this.config.conversionIsComplete = false;
+    this.config.autoloadFirstPage = false;
+
+    var mock = this.mock(this.components.page);
+
+    mock.expects('init')
+        .withArgs(sinon.match.object, sinon.match({
+            status: PAGE_STATUS_CONVERTING
+        }))
+        .exactly(metadata.numpages);
+
+    this.component.init();
+});

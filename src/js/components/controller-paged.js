@@ -97,8 +97,9 @@ Crocodoc.addComponent('controller-paged', function (scope) {
      * @param   {int} pageIndex The page index
      * @returns {string}        The page status
      */
-    function getPageStatus(pageIndex) {
-        if (pageIndex === 0 || config.conversionIsComplete) {
+    function getInitialPageStatus(pageIndex) {
+        if (config.conversionIsComplete ||
+            (pageIndex === 0 && config.autoloadFirstPage)) {
             return PAGE_STATUS_NOT_LOADED;
         }
         return PAGE_STATUS_CONVERTING;
@@ -122,7 +123,7 @@ Crocodoc.addComponent('controller-paged', function (scope) {
             page = scope.createComponent('page');
             page.init(config.$pages.eq(i - start), {
                 index: i,
-                status: getPageStatus(i),
+                status: getInitialPageStatus(i),
                 enableLinks: config.enableLinks,
                 links: links[i],
                 pageScale: config.pageScale
