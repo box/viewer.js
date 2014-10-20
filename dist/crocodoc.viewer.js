@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.0 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.10.1 | (c) 2014 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -2627,7 +2627,8 @@ Crocodoc.addComponent('controller-paged', function (scope) {
      * @returns {string}        The page status
      */
     function getPageStatus(pageIndex) {
-        if (pageIndex === 0 || config.conversionIsComplete) {
+        if (config.conversionIsComplete ||
+            (pageIndex === 0 && config.autoloadFirstPage)) {
             return PAGE_STATUS_NOT_LOADED;
         }
         return PAGE_STATUS_CONVERTING;
