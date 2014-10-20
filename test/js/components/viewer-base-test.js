@@ -292,6 +292,35 @@ test('loadAssets() should init page components with appropriate status when call
     this.component.loadAssets();
 });
 
+test('loadAssets() should init page components with appropriate status when called and the conversion is not complete and loading metadata and stylesheet succeeds and autoloadFirstPage is disabled', function () {
+    var metadata = {
+        numpages: 5,
+        dimensions: {
+            width: 100,
+            height: 100
+        }
+    };
+    this.config.metadata = metadata;
+    var stub = this.stub(this.scope, 'get');
+    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
+    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+
+    this.config.conversionIsComplete = false;
+    this.config.autoloadFirstPage = false;
+    this.component.init();
+
+    var mock = this.mock(this.components.page);
+
+    mock.expects('init')
+        .withArgs(sinon.match.object, sinon.match({
+            status: Crocodoc.PAGE_STATUS_CONVERTING
+        }))
+        .exactly(metadata.numpages);
+
+    this.component.loadAssets();
+});
+
+
 test('loadAssets() should broadcast "ready" when loading metadata and stylesheet succeeds', function () {
     var stub = this.stub(this.scope, 'get');
     stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
