@@ -2,6 +2,8 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+* **0.9.1**
+  * Fix `autoloadFirstPage` option when conversion is not complete
 * **0.9.0**
   * Add option to disable auto-loading of first page assets at `load()`
 * **0.8.0**
