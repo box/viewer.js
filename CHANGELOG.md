@@ -2,6 +2,9 @@
 
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
+----
+* **0.10.2**
+  * Fix unnecessary horizontal scrollbar in IE 9 when using window as viewport
 * **0.10.1**
   * Fix `autoloadFirstPage` option when conversion is not complete
 * **0.10.0**

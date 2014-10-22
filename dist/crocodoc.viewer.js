@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.1 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.10.2 | (c) 2014 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -2626,7 +2626,7 @@ Crocodoc.addComponent('controller-paged', function (scope) {
      * @param   {int} pageIndex The page index
      * @returns {string}        The page status
      */
-    function getPageStatus(pageIndex) {
+    function getInitialPageStatus(pageIndex) {
         if (config.conversionIsComplete ||
             (pageIndex === 0 && config.autoloadFirstPage)) {
             return PAGE_STATUS_NOT_LOADED;
@@ -2652,7 +2652,7 @@ Crocodoc.addComponent('controller-paged', function (scope) {
             page = scope.createComponent('page');
             page.init(config.$pages.eq(i - start), {
                 index: i,
-                status: getPageStatus(i),
+                status: getInitialPageStatus(i),
                 enableLinks: config.enableLinks,
                 links: links[i],
                 pageScale: config.pageScale
