@@ -100,7 +100,7 @@ Crocodoc.addDataProvider('page-manipulator', function (scope) {
                     pagenum: i + 1
                 });
                 // fix link destination (find the first page that matches...)
-                if (link.destination) {
+                if (link.destination && !link.destination.absolute) {
                     link.destination.pagenum = getPageIndex(link.destination.pagenum) + 1;
                 }
                 return link;

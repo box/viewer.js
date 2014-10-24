@@ -66,3 +66,15 @@ The original page number of an existing page to use. For example, this option ca
 
 **pages[].content**
 A string of HTML content to inject into the page.
+
+**pages[].dimensions**
+An object with `width` and `height` properties that specify the width and height of this page in pt.
+
+**pages[].links**
+An array of link objects that contain the following properties:
+
+* **destination** (object) - an optional object that represents the destination of a link
+    - **destination.pagenum** (int) - the page number to link to (this will be adjusted as necessary to point to the location of the first instance of the given page number after manipulations)
+    - **destination.absolute** (bool) -  if true, use this as the absolute destination of the link (don't modify the destination after pages have been manipulated)
+* **bbox** (array) - an array of 4 numbers that represent [x0, y0, x1, y1] of the bounding box for the link
+* **uri** (string) - an optional URL to link to
