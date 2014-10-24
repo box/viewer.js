@@ -24,8 +24,8 @@ var viewer = Crocodoc.createViewer('.viewer', {
                 { remove: 2 },
                 // insert page 2 after page 5
                 { after: 5, page: 2 },
-                // replace page 6 with page 1
-                { replace: 6, page: 1 },
+                // replace the last page with page 1
+                { replace: -1, page: 1 },
                 // resize page 3 and turn it into a big link
                 {
                     replace: 3,
@@ -50,16 +50,16 @@ The following configuration options are available:
 An array of objects representing desired page manipulations.
 
 **pages[].before**
-A page number before which to insert whatever is specified in this manipulator object.
+A page number before which to insert whatever is specified in this manipulator object. If negative, will select the page that many pages from the end.
 
 **pages[].after**
-A page number after which to insert whatever is specified in this manipulator object.
+A page number after which to insert whatever is specified in this manipulator object. If negative, will select the page that many pages from the end.
 
 **pages[].replace**
-A page number to replace with whatever is specified in this manipulator object.
+A page number to replace with whatever is specified in this manipulator object. If negative, will select the page that many pages from the end.
 
 **pages[].remove**
-A page number to remove.
+A page number to remove. If negative, will select the page that many pages from the end.
 
 **pages[].page**
 The original page number of an existing page to use. For example, this option can be used to duplicate a given page multiple times or (in combination with the `remove` option) to re-order a page.
