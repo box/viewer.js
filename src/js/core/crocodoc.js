@@ -60,6 +60,10 @@ var Crocodoc = (function () {
         // The number of times to retry loading an asset before giving up
         ASSET_REQUEST_RETRIES: 1,
 
+        // templates exposed to allow more customization
+        viewerTemplate: VIEWER_HTML_TEMPLATE,
+        pageTemplate: PAGE_HTML_TEMPLATE,
+
         // exposed for testing purposes only
         // should not be accessed directly otherwise
         components: components,

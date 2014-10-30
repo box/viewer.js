@@ -48,8 +48,7 @@ var CSS_CLASS_PREFIX         = 'crocodoc-',
 
 var VIEWER_HTML_TEMPLATE =
     '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
-        '<div class="' + CSS_CLASS_DOC + '">' +
-        '</div>' +
+        '<div class="' + CSS_CLASS_DOC + '"></div>' +
     '</div>' +
     '<div class="' + CSS_CLASS_LOGO + '"></div>';
 

@@ -53,7 +53,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function initViewerHTML() {
         // create viewer HTML
-        $el.html(VIEWER_HTML_TEMPLATE);
+        $el.html(Crocodoc.viewerTemplate);
         if (config.useWindowAsViewport) {
             config.$viewport = $(window);
             $el.addClass(CSS_CLASS_WINDOW_AS_VIEWPORT);
