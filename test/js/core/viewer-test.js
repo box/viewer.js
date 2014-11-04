@@ -1,6 +1,14 @@
 var CSS_CLASS_TEXT_DISABLED  = 'crocodoc-text-disabled',
     CSS_CLASS_LINKS_DISABLED = 'crocodoc-links-disabled';
 
+function hasClass(el, cls) {
+    if (el.classList) {
+        return el.classList.contains(cls);
+    } else {
+        return (el.getAttribute('class') || '').indexOf(cls) > -1;
+    }
+}
+
 module('Framework - Crocodoc.Viewer', {
     setup: function () {
         var self = this;
@@ -34,14 +42,16 @@ module('Framework - Crocodoc.Viewer', {
             },
             url: {
                 makeAbsolute: function () {}
-            }
+            },
+            dom: Crocodoc.getUtilityForTest('dom')
         };
 
         this.scope = Crocodoc.getScopeForTest(this);
-        this.$el = $('<div style="height:100%">').appendTo('body');
+        this.el = this.utilities.dom.create('div');
+        this.utilities.dom.appendTo(document.body, this.el);
     },
     teardown: function () {
-        this.$el.remove();
+        this.utilities.dom.remove(this.el);
     }
 });
 
@@ -49,13 +59,13 @@ test('constructor should create a scope instance when called', function () {
     this.mock(Crocodoc)
         .expects('Scope')
         .returns(this.scope);
-    new Crocodoc.Viewer(this.$el, {});
+    new Crocodoc.Viewer(this.el, {});
 });
 
 test('constructor should create a viewer-base component instance on the scope it created when called', function () {
     this.stub(Crocodoc, 'Scope').returns(this.scope);
     var spy = this.spy(this.scope, 'createComponent');
-    new Crocodoc.Viewer(this.$el, {});
+    new Crocodoc.Viewer(this.el, {});
     ok(spy.calledWith('viewer-base'));
 });
 
@@ -63,13 +73,20 @@ test('constructor should initialize the viewer-base component instance properly 
     this.stub(Crocodoc, 'Scope').returns(this.scope);
     this.mock(this.components['viewer-base'])
         .expects('init');
-    new Crocodoc.Viewer(this.$el, {});
+    new Crocodoc.Viewer(this.el, {});
 });
 
 test('constructor should throw an error when the container element is invalid', function () {
     var self = this;
     throws(function () {
-        new Crocodoc.Viewer($(), {});
+        new Crocodoc.Viewer('.i-dont-exist', {});
+    }, 'init threw when element was invalid');
+});
+
+test('constructor should throw an error when the container element is not in the dom', function () {
+    var self = this;
+    throws(function () {
+        new Crocodoc.Viewer(document.createElement('div'), {});
     }, 'init threw when element was invalid');
 });
 
@@ -176,7 +193,7 @@ test('focus() should focus the viewport when called', function () {
 
 test('enableTextSelection() should enable text selection when called', function () {
     this.stub(Crocodoc, 'Scope').returns(this.scope);
-    var viewer = new Crocodoc.Viewer(this.$el, {
+    var viewer = new Crocodoc.Viewer(this.el, {
         enableTextSelection: false
     });
     var broadcastSpy = this.spy(this.scope, 'broadcast');
@@ -185,12 +202,12 @@ test('enableTextSelection() should enable text selection when called', function 
 
     ok(broadcastSpy.calledWith('textenabledchange', sinon.match({ enabled: true })), 'message was broadcast');
     //also check that the css class is correct
-    ok(!this.$el.hasClass(CSS_CLASS_TEXT_DISABLED), 'css class is correct');
+    ok(!hasClass(this.el, CSS_CLASS_TEXT_DISABLED), 'css class is correct');
 });
 
 test('disableTextSelection() should disable text selection when called', function () {
     this.stub(Crocodoc, 'Scope').returns(this.scope);
-    var viewer = new Crocodoc.Viewer(this.$el, {
+    var viewer = new Crocodoc.Viewer(this.el, {
         enableTextSelection: true
     });
     var broadcastSpy = this.spy(this.scope, 'broadcast');
@@ -199,36 +216,36 @@ test('disableTextSelection() should disable text selection when called', functio
 
     ok(broadcastSpy.calledWith('textenabledchange', sinon.match({ enabled: false })), 'message was broadcast');
     //also check that the css class is correct
-    ok(this.$el.hasClass(CSS_CLASS_TEXT_DISABLED), 'css class is correct');
+    ok(hasClass(this.el, CSS_CLASS_TEXT_DISABLED), 'css class is correct');
 });
 
 test('enableLinks() should enable links when called', function () {
     this.stub(Crocodoc, 'Scope').returns(this.scope);
-    var viewer = new Crocodoc.Viewer(this.$el, {
+    var viewer = new Crocodoc.Viewer(this.el, {
         enableLinks: false
     });
 
     viewer.enableLinks();
 
     //also check that the css class is correct
-    ok(!this.$el.hasClass(CSS_CLASS_LINKS_DISABLED), 'css class is correct');
+    ok(!hasClass(this.el, CSS_CLASS_TEXT_DISABLED), 'css class is correct');
 });
 
 test('disableLinks() should disable links when called', function () {
     this.stub(Crocodoc, 'Scope').returns(this.scope);
-    var viewer = new Crocodoc.Viewer(this.$el, {
+    var viewer = new Crocodoc.Viewer(this.el, {
         enableLinks: true
     });
 
     viewer.disableLinks();
 
     //also check that the css class is correct
-    ok(this.$el.hasClass(CSS_CLASS_LINKS_DISABLED), 'css class is correct');
+    ok(hasClass(this.el, CSS_CLASS_LINKS_DISABLED), 'css class is correct');
 });
 
 test('updateLayout() should force a layout update when called', function () {
     this.stub(Crocodoc, 'Scope').returns(this.scope);
-    var viewer = new Crocodoc.Viewer(this.$el, {});
+    var viewer = new Crocodoc.Viewer(this.el, {});
 
     var layout = this.components['layout'];
     this.stub(this.components['viewer-base'], 'setLayout').returns(layout);
@@ -242,13 +259,13 @@ test('updateLayout() should force a layout update when called', function () {
 });
 
 test('Crocodoc.Viewer.get() should return the viewer instance when called with a valid id', function () {
-    var viewer = new Crocodoc.Viewer(this.$el, { url: 'someurl' });
+    var viewer = new Crocodoc.Viewer(this.el, { url: 'someurl' });
 
     equal(Crocodoc.Viewer.get(viewer.id), viewer, 'should be the same viewer');
 });
 
 test('destroy() should unregister the instance when called', function () {
-    var viewer = new Crocodoc.Viewer(this.$el, { url: 'someurl' });
+    var viewer = new Crocodoc.Viewer(this.el, { url: 'someurl' });
     viewer.destroy();
 
     notEqual(Crocodoc.Viewer.get(viewer.id), viewer, 'should not be the same viewer');

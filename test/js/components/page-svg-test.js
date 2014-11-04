@@ -1,8 +1,10 @@
 module('Component - page-svg', {
     setup: function () {
-        var self = this;
+        var self = this,
+            dom = Crocodoc.getUtilityForTest('dom');
         this.svgText = '<svg></svg>';
         this.utilities = {
+            dom: dom,
             common: {
                 isFn: function () {},
                 ajax: function () {}
@@ -17,10 +19,11 @@ module('Component - page-svg', {
         this.scope = Crocodoc.getScopeForTest(this);
 
         this.component = Crocodoc.getComponentForTest('page-svg', this.scope);
-        this.$el = $('<div>').appendTo(document.documentElement);
+        this.el = dom.create('div');
+        dom.appendTo(document.documentElement, this.el);
     },
     teardown: function () {
-        this.$el.remove();
+        this.utilities.dom.remove(this.el);
     }
 });
 
@@ -28,22 +31,22 @@ test('destroy() should unload the svg and empty the element when called', functi
     this.mock(this.component)
         .expects('unload');
 
-    this.component.init(this.$el, 1);
+    this.component.init(this.el, 1);
     this.component.destroy();
-    ok(this.$el.html() === '', 'the element has been emptied');
+    ok(this.el.innerHTML === '', 'the element has been emptied');
 });
 
 test('preload() should create and insert the SVG object into the container element and make a data provider request when called', function () {
     var pageNum = 3,
-        initalHTML = this.$el.html();
+        initalHTML = this.el.innerHTML;
 
     this.mock(this.scope)
         .expects('get')
         .withArgs('page-svg', pageNum);
 
-    this.component.init(this.$el, pageNum);
+    this.component.init(this.el, pageNum);
     this.component.preload();
-    ok(this.$el.html() !== initalHTML, 'the element has been inserted');
+    ok(this.el.innerHTML !== initalHTML, 'the element has been inserted');
 });
 
 test('load() should embed the SVG when the load succeeds', function () {
@@ -55,9 +58,9 @@ test('load() should embed the SVG when the load succeeds', function () {
         .withArgs('page-svg', pageNum)
         .returns($deferred.promise({ abort: function () {} }));
 
-    this.component.init(this.$el, pageNum);
+    this.component.init(this.el, pageNum);
     this.component.load();
-    ok(this.$el.find('iframe').length > 0, 'the SVG has been embedded');
+    ok(this.utilities.dom.find('iframe', this.el), 'the SVG has been embedded');
 });
 
 test('load() should broadcast an asseterror when the load fails', function () {
@@ -73,7 +76,7 @@ test('load() should broadcast an asseterror when the load fails', function () {
     mock.expects('broadcast')
         .withArgs('asseterror', error);
 
-    this.component.init(this.$el, pageNum);
+    this.component.init(this.el, pageNum);
     this.component.load();
 });
 
@@ -87,7 +90,7 @@ test('unload() should abort the request if there is one when called', function (
         .withArgs('page-svg', pageNum)
         .returns($deferred.promise({ abort: spy }));
 
-    this.component.init(this.$el, pageNum);
+    this.component.init(this.el, pageNum);
     this.component.load();
     this.component.unload();
 

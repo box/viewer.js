@@ -19,7 +19,9 @@ module('Component - controller-paged', {
             }
         };
 
+        var dom = Crocodoc.getUtilityForTest('dom');
         this.utilities = {
+            dom: dom,
             common: {
                 getSelectedNode: function () {},
                 clamp: sinon.stub().returnsArg(0),
@@ -29,7 +31,8 @@ module('Component - controller-paged', {
         };
 
         this.config = $.extend(true, {}, Crocodoc.Viewer.defaults);
-        this.config.$el = $('<div>');
+        this.config.el = dom.create('div');
+        this.config.docEl = dom.create('div');
         this.config.metadata = this.metadata;
 
         this.scope = Crocodoc.getScopeForTest(this);
@@ -59,20 +62,20 @@ test('init() should create and init `numpages` page components with appropriate 
         }
     };
     this.config.metadata = metadata;
-    var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    var getStub = this.stub(this.scope, 'get');
+    getStub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
+    getStub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
     var createComponentSpy = this.spy(this.scope, 'createComponent');
-    this.mock(this.components.page)
-        .expects('init')
-        .withArgs(sinon.match.object, sinon.match({
-            status: PAGE_STATUS_NOT_LOADED
-        }))
-        .exactly(metadata.numpages);
+
+    var stub = this.stub(this.components.page, 'init');
 
     this.component.init();
+
     ok(createComponentSpy.withArgs('page').callCount === metadata.numpages, 'created correct number of page components');
+    ok(stub.args[0][0] instanceof HTMLElement, 'created page with page element');
+    ok(stub.calledWith(sinon.match.any, sinon.match({ status: PAGE_STATUS_NOT_LOADED })), 'created page with correct status');
+    ok(stub.callCount, metadata.numpages, 'created the correct number of pages');
 });
 
 test('init() should init page components with appropriate status when called and the conversion is not complete and loading metadata and stylesheet succeeds', function () {
@@ -93,13 +96,13 @@ test('init() should init page components with appropriate status when called and
     var mock = this.mock(this.components.page);
 
     mock.expects('init')
-        .withArgs(sinon.match.object, sinon.match({
+        .withArgs(sinon.match.any, sinon.match({
             status: PAGE_STATUS_NOT_LOADED
         }))
         .once();
 
     mock.expects('init')
-        .withArgs(sinon.match.object, sinon.match({
+        .withArgs(sinon.match.any, sinon.match({
             status: PAGE_STATUS_CONVERTING
         }))
         .exactly(metadata.numpages - 1);
@@ -127,7 +130,7 @@ test('init() should init page components with appropriate status when called and
     var mock = this.mock(this.components.page);
 
     mock.expects('init')
-        .withArgs(sinon.match.object, sinon.match({
+        .withArgs(sinon.match.any, sinon.match({
             status: PAGE_STATUS_CONVERTING
         }))
         .exactly(metadata.numpages);
@@ -151,7 +154,7 @@ test('links should be sorted properly and passed into the page components when i
 
     this.component.init();
 
-    ok(spy.calledWith(sinon.match.object, sinon.match({
+    ok(spy.calledWith(sinon.match.any, sinon.match({
         index: 0,
         links: sinon.match([
             sinon.match({
@@ -159,7 +162,7 @@ test('links should be sorted properly and passed into the page components when i
             })
         ])
     })), 'page links correct');
-    ok(spy.calledWith(sinon.match.object, sinon.match({
+    ok(spy.calledWith(sinon.match.any, sinon.match({
         index: 1,
         links: sinon.match([
             sinon.match({
@@ -190,10 +193,10 @@ test('links should be sorted properly and passed into the page components when i
 
     this.component.init();
 
-    ok(!spy.calledWith(sinon.match.object, sinon.match({
+    ok(!spy.calledWith(sinon.match.any, sinon.match({
         index: 0,
     })), 'page not initialized');
-    ok(spy.calledWith(sinon.match.object, sinon.match({
+    ok(spy.calledWith(sinon.match.any, sinon.match({
         index: 1,
         links: sinon.match.has('length', 0)
     })), 'page links correctly empty');
@@ -216,11 +219,11 @@ test('links should be sorted properly and passed into the page components when i
 
     this.component.init();
 
-    ok(spy.calledWith(sinon.match.object, sinon.match({
+    ok(spy.calledWith(sinon.match.any, sinon.match({
         index: 4,
         links: sinon.match.has('length', 0)
     })), 'page not initialized');
-    ok(spy.calledWith(sinon.match.object, sinon.match({
+    ok(spy.calledWith(sinon.match.any, sinon.match({
         index: 1,
         links: sinon.match([
             sinon.match({ destination: { pagenum: 4 }})

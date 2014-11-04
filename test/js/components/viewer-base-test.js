@@ -47,6 +47,7 @@ module('Component - viewer-base', {
         };
 
         this.utilities = {
+            dom: Crocodoc.getUtilityForTest('dom'),
             common: {
                 insertCSS: function () { return { sheet: {} }; },
                 isFn: sinon.stub().returns(true),
@@ -73,7 +74,7 @@ module('Component - viewer-base', {
         };
 
         this.config = $.extend(true, {}, Crocodoc.Viewer.defaults);
-        this.config.$el = $('<div>');
+        this.config.el = this.utilities.dom.create('div');
         this.config.api = this.viewerAPI;
         this.config.url = '/some/url';
 
@@ -193,30 +194,28 @@ test('loadAssets() should broadcast a fail message when loading metadata or styl
 });
 
 test('loadAssets() should create and init a scroller component when loading metadata and stylesheet succeeds', function () {
-    var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    var getStub = this.stub(this.scope, 'get');
+    getStub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    getStub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
     this.stub(this.component, 'setLayout');
 
-    this.mock(this.components.scroller)
-        .expects('init')
-        .withArgs(sinon.match.object);
+    var stub = this.stub(this.components.scroller, 'init');
 
     this.component.init();
     this.component.loadAssets();
+    ok(stub.args[0][0] instanceof HTMLElement, 'created with the scroller element');
 });
 
 test('loadAssets() should create and init a resizer component when loading metadata and stylesheet succeeds', function () {
-    var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    var getStub = this.stub(this.scope, 'get');
+    getStub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    getStub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
 
-    this.mock(this.components.resizer)
-        .expects('init')
-        .withArgs(sinon.match.object);
+    var stub = this.stub(this.components.resizer, 'init');
 
     this.component.init();
     this.component.loadAssets();
+    ok(stub.args[0][0] instanceof HTMLElement, 'created with the scroller element');
 });
 
 test('loadAssets() should set the appropriate layout when loading metadata and stylesheet succeeds', function () {
@@ -248,11 +247,11 @@ test('loadAssets() should broadcast "ready" when loading metadata and stylesheet
 });
 
 test('destroy() should remove all Crocodoc-namespaced CSS classes from and empty the container element when called', function () {
-    var $el = this.config.$el;
+    var el = this.config.el;
     this.component.init();
     this.component.destroy();
-    ok($el.html().length === 0, 'HTML was emptied');
-    ok($el.attr('class').indexOf('crocodoc') < 0, 'namespaced CSS classes were removed');
+    ok(el.innerHTML.length === 0, 'HTML was emptied');
+    ok(el.getAttribute('class').indexOf('crocodoc') < 0, 'namespaced CSS classes were removed');
 });
 
 test('destroy() should abort all asset requests when called', function () {

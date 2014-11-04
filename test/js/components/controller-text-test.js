@@ -10,10 +10,11 @@ module('Component - controller-text', {
         };
 
         this.utilities = {
+            dom: Crocodoc.getUtilityForTest('dom')
         };
 
         this.config = $.extend(true, {}, Crocodoc.Viewer.defaults);
-        this.config.$viewport = $('<div>');
+        this.config.viewportEl = this.utilities.dom.create('div');
 
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('controller-text', this.scope);
@@ -27,5 +28,5 @@ test('init() should request the text file and setting it as $doc', function () {
     this.component.init();
 
     ok(stub.called, 'requested page text');
-    equal(this.config.$viewport.find('.crocodoc-text').length, 1, 'inserted page text into viewport');
+    ok(this.utilities.dom.find('.crocodoc-text', this.config.viewportEl), 'inserted page text into viewport');
 });

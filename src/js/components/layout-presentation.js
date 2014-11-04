@@ -38,7 +38,7 @@ Crocodoc.addComponent('layout-' + LAYOUT_PRESENTATION, ['layout-paged'], functio
          */
         destroy: function () {
             paged.destroy.call(this);
-            dom.css(this.pageEls, { margin: '', left: '' })
+            dom.css(this.pageEls, { margin: '', left: '' });
             dom.removeClass(this.pageEls, PRESENTATION_CSS_CLASSES);
         },
 

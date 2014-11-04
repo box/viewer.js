@@ -4,11 +4,12 @@ module('Plugin - fullscreen', {
             fire: function () {}
         };
         this.utilities = {
-            common: Crocodoc.getUtility('common')
+            dom: Crocodoc.getUtilityForTest('dom'),
+            common: Crocodoc.getUtilityForTest('common')
         };
         this.config = {
             api: this.viewerAPI,
-            $el: $('<div>')
+            el: document.body
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.plugin = Crocodoc.getPluginForTest('fullscreen', this.scope);

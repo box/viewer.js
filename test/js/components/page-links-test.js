@@ -6,8 +6,10 @@ module('Component - page-links', {
         this.browser = Crocodoc.getUtilityForTest('browser');
         this.scope = Crocodoc.getScopeForTest(this);
         this.utilities = {
+            dom: Crocodoc.getUtilityForTest('dom'),
             browser: this.browser
         };
+        this.el = this.utilities.dom.create('div');
         this.component = Crocodoc.getComponentForTest('page-links', this.scope);
     }
 });
@@ -17,29 +19,29 @@ test('init() should create links when called', function () {
     this.mock(this.component)
         .expects('createLinks')
         .withArgs(links);
-    this.component.init($(), links);
+    this.component.init(this.el, links);
 });
 
 test('init() should create links with a child span element for IE workaround when called', function () {
-    var $el = $('<div>');
     this.browser.ie = true;
-    this.component.init($el, this.links);
-    ok($el.find('.crocodoc-page-link span').length > 0, 'span element should exist');
+    this.component.init(this.el, this.links);
+    ok(this.utilities.dom.find('.crocodoc-page-link span', this.el), 'span element should exist');
 });
 
 test('module should broadcast `linkclick` event with appropriate data when a link is clicked', function () {
-    var $el = $('<div>'),
-        linkData = this.links[0];
+    var linkData = this.links[0];
 
     this.browser.ie = false;
     this.mock(this.scope)
         .expects('broadcast')
         .withArgs('linkclick', linkData);
-    this.component.init($el, this.links);
+    this.component.init(this.el, this.links);
 
-    var link = $el.find('.crocodoc-page-link').get(0);
+    // TODO: figure out how fire an event that works with event delegation without
+    // whenever we remove jquery.
+    var link = this.utilities.dom.find('.crocodoc-page-link', this.el);
     var ev = $.Event('click');
     ev.target = link;
 
-    $el.trigger(ev);
+    $(this.el).trigger(ev);
 });

@@ -309,7 +309,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          */
         destroy: function () {
             // empty container and remove all class names that contain "crocodoc"
-            dom.empty(viewerEl)
+            dom.empty(viewerEl);
             dom.removeClass(viewerEl, function (i, cls) {
                 var match = cls.match(new RegExp('crocodoc\\S+', 'g'));
                 return match && match.join(' ');

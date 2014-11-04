@@ -40,7 +40,7 @@ Crocodoc.addComponent('page-links', function (scope) {
             // but there is a workaround to add a child element (which triggers
             // the onclick event first)
             var spanEl = dom.create('span');
-            dom.appendTo(linkEl, spanEl)
+            dom.appendTo(linkEl, spanEl);
             dom.on(spanEl, 'click', handleClick);
         }
 
@@ -116,7 +116,7 @@ Crocodoc.addComponent('page-links', function (scope) {
             util.each(spanEls, function (s) {
                 dom.off(s, 'click', handleClick);
             });
-            dom.empty(containerEl)
+            dom.empty(containerEl);
             dom.off(containerEl, 'click', handleClick);
             containerEl = browser = spanEls = linkData = null;
         },

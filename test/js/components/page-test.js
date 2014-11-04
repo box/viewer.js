@@ -25,18 +25,19 @@ module('Component - page', {
         this.utilities = {
             support: {
                 svg: true
-            }
+            },
+            dom: Crocodoc.getUtilityForTest('dom')
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('page', this.scope);
+        var container = this.utilities.dom.create('div');
+        this.utilities.dom.html(container, PAGE_HTML_TEMPLATE);
+        this.el = this.utilities.dom.find('.crocodoc-page', container);
     }
 });
 
 test('init() should create and init PageText, PageSVG, and PageLinks components when called', function () {
     var mockScope = this.mock(this.scope),
-        mockPageText = this.mock(this.components['page-text']),
-        mockPageSVG = this.mock(this.components['page-svg']),
-        mockPageLinks = this.mock(this.components['page-links']),
         config = { links: [{}], enableLinks: true, index: 3 };
 
     mockScope.expects('createComponent')
@@ -49,14 +50,18 @@ test('init() should create and init PageText, PageSVG, and PageLinks components 
         .returns(this.components['page-links'])
         .withArgs('page-links');
 
-    mockPageText.expects('init')
-        .withArgs(sinon.match.object, config.index + 1);
-    mockPageSVG.expects('init')
-        .withArgs(sinon.match.object, config.index + 1);
-    mockPageLinks.expects('init')
-        .withArgs(sinon.match.object, config.links);
+    var stubPageText = this.stub(this.components['page-text'], 'init')
+        .withArgs(sinon.match.any, config.index + 1);
+    var stubPageSVG = this.stub(this.components['page-svg'], 'init')
+        .withArgs(sinon.match.any, config.index + 1);
+    var stubPageLinks = this.stub(this.components['page-links'], 'init')
+        .withArgs(sinon.match.any, config.links);
 
-    this.component.init($(), config);
+    this.component.init(this.el, config);
+
+    ok(stubPageText.args[0][0] instanceof HTMLElement, 'was element');
+    ok(stubPageSVG.args[0][0] instanceof HTMLElement, 'was element');
+    ok(stubPageLinks.args[0][0] instanceof HTMLElement, 'was element');
 });
 
 test('onmessage() should call enableTextSelection() when called with message "textenabledchange", {enabled:true}', function () {
@@ -72,7 +77,7 @@ test('onmessage() should call disableTextSelection() when called with message "t
 });
 
 test('preload() should preload svg and text when status is PAGE_STATUS_NOT_LOADED', function () {
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_NOT_LOADED
     });
 
@@ -84,7 +89,7 @@ test('preload() should preload svg and text when status is PAGE_STATUS_NOT_LOADE
 });
 
 test('preload() should not preload svg and text when status is not PAGE_STATUS_NOT_LOADED', function () {
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_CONVERTING
     });
 
@@ -98,7 +103,7 @@ test('preload() should not preload svg and text when status is not PAGE_STATUS_N
 });
 
 test('load() should not call pageSVG.load() when page is in an error state', function () {
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_ERROR
     });
 
@@ -109,7 +114,7 @@ test('load() should not call pageSVG.load() when page is in an error state', fun
 });
 
 test('load() should not call pageSVG.load() when page is converting', function () {
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_CONVERTING
     });
 
@@ -120,7 +125,7 @@ test('load() should not call pageSVG.load() when page is converting', function (
 });
 
 test('load() should call pageSVG.load() when page is not loaded', function () {
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_NOT_LOADED
     });
 
@@ -130,7 +135,7 @@ test('load() should call pageSVG.load() when page is not loaded', function () {
 });
 
 test('load() should broadcast "pageload" message when page is loaded', function () {
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_NOT_LOADED,
         index: 0
     });
@@ -142,7 +147,7 @@ test('load() should broadcast "pageload" message when page is loaded', function 
 });
 
 test('load() should call pageText.load() when called and the page should be loaded', function () {
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_NOT_LOADED,
         index: 0
     });
@@ -156,7 +161,7 @@ test('load() should broadcast pagefail when the page fails to load', function ()
     var error = { error: 'my error message' },
         index = 4;
 
-    this.component.init($(), {
+    this.component.init(this.el, {
         index: index,
         status: PAGE_STATUS_NOT_LOADED
     });
@@ -175,7 +180,7 @@ test('load() should broadcast pagefail when the page fails to load', function ()
 
 test('unload() should unload svg and text layers only when called when status is PAGE_STATUS_LOADED', function () {
     var mock = this.mock(this.components['page-svg']);
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_LOADED,
         index: 0
     });
@@ -190,7 +195,7 @@ test('unload() should unload svg and text layers only when called when status is
 
 test('unload() should broadcast "pageunload" only when called when status is PAGE_STATUS_LOADED', function () {
     var mock = this.mock(this.scope);
-    this.component.init($(), {
+    this.component.init(this.el, {
         status: PAGE_STATUS_LOADED,
         index: 0
     });
@@ -209,14 +214,14 @@ test('unload() should broadcast "pageunload" only when called when status is PAG
 });
 
 test('enableTextSelection() should call pageText.enable() when called', function () {
-    this.component.init($(), {});
+    this.component.init(this.el, {});
     this.mock(this.components['page-text'])
         .expects('enable');
     this.component.enableTextSelection();
 });
 
 test('enableTextSelection() should call pageText.load() when called and the page is visible', function () {
-    this.component.init($(), { index: 0 });
+    this.component.init(this.el, { index: 0 });
     this.component.onmessage('pagefocus', { page: 1 });
     this.mock(this.components['page-text'])
         .expects('load');
@@ -224,7 +229,7 @@ test('enableTextSelection() should call pageText.load() when called and the page
 });
 
 test('disableTextSelection() should call pageText.disable() when called', function () {
-    this.component.init($(), {});
+    this.component.init(this.el, {});
     this.mock(this.components['page-text'])
         .expects('disable');
     this.component.disableTextSelection();
