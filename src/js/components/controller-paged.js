@@ -82,7 +82,7 @@ Crocodoc.addComponent('controller-paged', function (scope) {
             pxHeight = ptHeight * pt2px;
             pxWidth *= config.pageScale;
             pxHeight *= config.pageScale;
-            skeleton += util.template(PAGE_HTML_TEMPLATE, {
+            skeleton += util.template(Crocodoc.pageTemplate, {
                 w: pxWidth,
                 h: pxHeight
             });
