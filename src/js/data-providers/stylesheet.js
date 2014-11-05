@@ -8,7 +8,7 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
     var ajax = scope.getUtility('ajax'),
         browser = scope.getUtility('browser'),
         config = scope.getConfig(),
-        $cachedPromise;
+        cachedPromise;
 
     /**
      * Process stylesheet text and return the embeddable result
@@ -36,25 +36,25 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
     return {
         /**
          * Retrieve the stylesheet.css asset from the server
-         * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
+         * @returns {promise} A promise with an additional abort() method that will abort the XHR request.
          */
         get: function() {
-            if ($cachedPromise) {
-                return $cachedPromise;
+            if (cachedPromise) {
+                return cachedPromise;
             }
 
-            var $promise = ajax.fetch(this.getURL(), Crocodoc.ASSET_REQUEST_RETRIES);
+            var promise = ajax.fetch(this.getURL(), Crocodoc.ASSET_REQUEST_RETRIES);
 
             // @NOTE: promise.then() creates a new promise, which does not copy
             // custom properties, so we need to create a futher promise and add
             // an object with the abort method as the new target
-            $cachedPromise = $promise.then(processStylesheetContent).promise({
+            cachedPromise = promise.then(processStylesheetContent).promise({
                 abort: function () {
-                    $promise.abort();
-                    $cachedPromise = null;
+                    promise.abort();
+                    cachedPromise = null;
                 }
             });
-            return $cachedPromise;
+            return cachedPromise;
         },
 
         /**
@@ -72,7 +72,7 @@ Crocodoc.addDataProvider('stylesheet', function(scope) {
          */
         destroy: function () {
             ajax = browser = config = null;
-            $cachedPromise = null;
+            cachedPromise = null;
         }
     };
 });

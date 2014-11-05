@@ -1,18 +1,19 @@
 module('Data Provider: metadata', {
     setup: function () {
         var me = this;
-        this.$deferred = $.Deferred();
-        this.promise = {
+        this.promise = Crocodoc.getUtilityForTest('promise');
+        this.deferred = this.promise.deferred();
+        this.fakePromise = {
             abort: function () {},
-            then: function () { return me.$deferred.promise(); },
-            promise: function (x) { return me.$deferred.promise(x); }
+            then: function () { return me.deferred.promise(); },
+            promise: function (x) { return me.deferred.promise(x); }
         };
         this.utilities = {
             ajax: {
                 fetch: function () {}
             },
             common: {
-                parseJSON: $.parseJSON
+                parseJSON: Crocodoc.getUtilityForTest('common').parseJSON
             }
         };
         this.config = {
@@ -35,14 +36,14 @@ test('creator should return an object with a get function', function(){
     equal(typeof this.dataProvider.get, 'function');
 });
 
-test('get() should return a $.Promise with an abort() function', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    propEqual(this.dataProvider.get(), $.Deferred().promise({abort:function(){}}));
+test('get() should return a promise with an abort() function', function() {
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    propEqual(this.dataProvider.get(), this.promise.deferred().promise({abort:function(){}}));
 });
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    this.mock(this.promise).expects('abort').once();
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    this.mock(this.fakePromise).expects('abort').once();
 
     var promise = this.dataProvider.get();
     promise.abort();
@@ -56,9 +57,9 @@ test('getURL() should return the correct URL to the json file when called', func
 test('get() should parse the JSON response when called', function () {
     var json = '{ "numpages": 10, "dimensions": { "width": 100, "height": 100 } }';
 
-    this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
+    this.stub(this.utilities.ajax, 'fetch').returns(this.deferred.promise());
 
-    this.$deferred.resolve(json);
+    this.deferred.resolve(json);
 
     var promise = this.dataProvider.get();
     promise.done(function (data) {

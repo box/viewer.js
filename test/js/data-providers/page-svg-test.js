@@ -1,11 +1,12 @@
 module('Data Provider: page-svg', {
     setup: function () {
         var me = this;
-        this.$deferred = $.Deferred();
-        this.promise = {
+        this.promise = Crocodoc.getUtilityForTest('promise');
+        this.deferred = this.promise.deferred();
+        this.fakePromise = {
             abort: function () {},
-            then: function () { return me.$deferred.promise(); },
-            promise: function (x) { return me.$deferred.promise(x); }
+            then: function () { return me.deferred.promise(); },
+            promise: function (x) { return me.deferred.promise(x); }
         };
         this.utilities = {
             ajax: {
@@ -42,19 +43,19 @@ test('creator should return an object with a get function', function(){
     equal(typeof this.dataProvider.get, 'function');
 });
 
-test('get() should return a $.Promise with an abort() function', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    propEqual(this.dataProvider.get('page-svg', 1), $.Deferred().promise({abort:function(){}}));
+test('get() should return a promise with an abort() function', function() {
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    propEqual(this.dataProvider.get('page-svg', 1), this.promise.deferred().promise({abort:function(){}}));
 });
 
 test('get() should return a cached promise when called a second time', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
     equal(this.dataProvider.get('page-svg', 1), this.dataProvider.get('page-svg', 1));
 });
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    this.mock(this.promise).expects('abort').once();
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    this.mock(this.fakePromise).expects('abort').once();
 
     var promise = this.dataProvider.get('page-svg', 2);
     promise.abort();
@@ -69,13 +70,13 @@ test('getURL() should return the correct URL to the svg file when called', funct
 test('get() should apply the subpx hack if the browser is firefox and subpixel rendering is not supported', function () {
     var svgText = '<svg>\n<xhtml:link href="stylesheet.css" type="text/css" rel="stylesheet" />\n</svg>';
 
-    this.stub(this.scope, 'get').withArgs('stylesheet').returns(this.$deferred.promise());
-    this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
+    this.stub(this.scope, 'get').withArgs('stylesheet').returns(this.deferred.promise());
+    this.stub(this.utilities.ajax, 'fetch').returns(this.deferred.promise());
 
     this.utilities.browser.firefox = true;
     this.stub(this.utilities.subpx, 'isSubpxSupported').returns(false);
 
-    this.$deferred.resolve(svgText);
+    this.deferred.resolve(svgText);
 
     var promise = this.dataProvider.get('page-svg', 3);
     promise.done(function (text) {

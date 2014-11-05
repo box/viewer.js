@@ -21,9 +21,10 @@ module('Component - controller-text', {
     }
 });
 
-test('init() should request the text file and setting it as $doc', function () {
+test('init() should request the text file and setting it as docEl', function () {
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('page-text').returns($.Deferred().resolve('<table class="crocodoc-text"></table>').promise());
+    var promise = Crocodoc.getUtilityForTest('promise');
+    stub.withArgs('page-text').returns(promise.deferred().resolve('<table class="crocodoc-text"></table>').promise());
 
     this.component.init();
 

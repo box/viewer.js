@@ -19,7 +19,7 @@ Crocodoc.addComponent('page-img', function (scope) {
         dom = scope.getUtility('dom');
 
     var imgEl, containerEl,
-        $loadImgPromise,
+        loadImgPromise,
         page,
         imageLoaded = false,
         removeOnUnload = browser.mobile;
@@ -61,19 +61,19 @@ Crocodoc.addComponent('page-img', function (scope) {
          * @returns {void}
          */
         preload: function () {
-            if (!$loadImgPromise) {
-                $loadImgPromise = scope.get('page-img', page);
+            if (!loadImgPromise) {
+                loadImgPromise = scope.get('page-img', page);
             }
         },
 
         /**
          * Load the image
-         * @returns {$.Promise}    A jQuery Promise object
+         * @returns {promise}    A Promise to load the page image
          */
         load: function () {
             this.preload();
 
-            $loadImgPromise.done(function loadImgSuccess(img) {
+            loadImgPromise.done(function loadImgSuccess(img) {
                 if (!imageLoaded) {
                     imageLoaded = true;
                     imgEl = img;
@@ -82,14 +82,14 @@ Crocodoc.addComponent('page-img', function (scope) {
                 dom.show(imgEl);
             });
 
-            $loadImgPromise.fail(function loadImgFail(error) {
+            loadImgPromise.fail(function loadImgFail(error) {
                 imageLoaded = false;
                 if (error) {
                     scope.broadcast('asseterror', error);
                 }
             });
 
-            return $loadImgPromise;
+            return loadImgPromise;
         },
 
         /**
@@ -97,9 +97,9 @@ Crocodoc.addComponent('page-img', function (scope) {
          * @returns {void}
          */
         unload: function () {
-            if ($loadImgPromise) {
-                $loadImgPromise.abort();
-                $loadImgPromise = null;
+            if (loadImgPromise) {
+                loadImgPromise.abort();
+                loadImgPromise = null;
             }
             if (removeOnUnload) {
                 if (imgEl) {

@@ -26,17 +26,17 @@ Crocodoc.addDataProvider('metadata', function(scope) {
     return {
         /**
          * Retrieve the info.json asset from the server
-         * @returns {$.Promise} A promise with an additional abort() method that will abort the XHR request.
+         * @returns {promise} A promise with an additional abort() method that will abort the XHR request.
          */
         get: function() {
             var url = this.getURL(),
-                $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+                p = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
 
-            // @NOTE: promise.then() creates a new promise, which does not copy
+            // @NOTE: Promise.then() creates a new promise, which does not copy
             // custom properties, so we need to create a futher promise and add
             // an object with the abort method as the new target
-            return $promise.then(processJSONContent).promise({
-                abort: $promise.abort
+            return p.then(processJSONContent).promise({
+                abort: p.abort
             });
         },
 

@@ -8,6 +8,7 @@ Crocodoc.addUtility('ajax', function (framework) {
     'use strict';
 
     var util = framework.getUtility('common'),
+        promise = framework.getUtility('promise'),
         support = framework.getUtility('support'),
         urlUtil = framework.getUtility('url');
 
@@ -68,7 +69,7 @@ Crocodoc.addUtility('ajax', function (framework) {
         options.data = options.data || '';
 
         if (typeof options.data !== 'string') {
-            options.data = $.param(options.data);
+            options.data = util.param(options.data);
             if (options.method !== 'GET') {
                 options.data = options.data;
                 options.headers.push(['Content-Type', 'application/x-www-form-urlencoded']);
@@ -237,13 +238,13 @@ Crocodoc.addUtility('ajax', function (framework) {
          * Fetch an asset, retrying if necessary
          * @param {string} url      A url for the desired asset
          * @param {number} retries  The number of times to retry if the request fails
-         * @returns {$.Promise}     A promise with an additional abort() method that will abort the XHR request.
+         * @returns {promise}     A promise with an additional abort() method that will abort the XHR request.
          */
         fetch: function (url, retries) {
             var req,
                 aborted = false,
                 ajax = this,
-                $deferred = $.Deferred();
+                deferred = promise.deferred();
 
             /**
              * If there are retries remaining, make another attempt, otherwise
@@ -259,7 +260,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                     req = request();
                 } else {
                     // finally give up
-                    $deferred.reject(error);
+                    deferred.reject(error);
                 }
             }
 
@@ -273,7 +274,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                     success: function () {
                         if (!aborted) {
                             if (this.responseText) {
-                                $deferred.resolve(this.responseText);
+                                deferred.resolve(this.responseText);
                             } else {
                                 // the response was empty, so consider this a
                                 // failed request
@@ -298,7 +299,7 @@ Crocodoc.addUtility('ajax', function (framework) {
             }
 
             req = request();
-            return $deferred.promise({
+            return deferred.promise({
                 abort: function() {
                     aborted = true;
                     req.abort();

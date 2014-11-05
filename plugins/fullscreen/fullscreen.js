@@ -14,6 +14,7 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
         'MSFullscreenChange';
 
     var el,
+        doc,
         util = scope.getUtility('common'),
         dom = scope.getUtility('dom'),
         viewerConfig = scope.getConfig(),
@@ -29,10 +30,10 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
      * @private
      */
     function isFullscreen() {
-        return document.fullScreenElement ||
-            document.webkitFullscreenElement ||
-            document.mozFullScreenElement ||
-            document.msFullscreenElement ||
+        return doc.fullScreenElement ||
+            doc.webkitFullscreenElement ||
+            doc.mozFullScreenElement ||
+            doc.msFullscreenElement ||
             isFakeFullscreen;
     }
 
@@ -105,7 +106,7 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
      * @private
      */
     function exitFullscreen() {
-        cancelFullscreen.call(document);
+        cancelFullscreen.call(doc);
     }
 
     /**
@@ -128,10 +129,13 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
          * @param {Object} config Config options for the fullscreen plugin
          * @param {Element} config.element The element to use for fullscreen
          * @param {boolen} config.useFakeFullscreen Whether to use fake fullscreen mode
+         * @param {Document} docu The document (dep injection for testing)
          * @returns {void}
          */
-        init: function (config) {
+        init: function (config, docu) {
             config = config || {};
+            doc = docu || document;
+
             if (typeof config.useFakeFullscreen !== 'undefined') {
                 useFakeFullscreen = config.useFakeFullscreen;
             }
@@ -140,7 +144,7 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
                 // fake fullscreen mode is redundant if the window is used as
                 // the viewport, so turn it off
                 useFakeFullscreen = false;
-                el = document.documentElement;
+                el = doc.documentElement;
             } else {
                 if (config.element) {
                     if (typeof config.element === 'string') {
@@ -162,12 +166,15 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
                                 fakeRequestFullscreen;
 
             // fullscreen APIs are completely insane
-            cancelFullscreen =  document.cancelFullScreen ||
-                                document.exitFullscreen ||
-                                document.mozCancelFullScreen ||
-                                document.webkitCancelFullScreen ||
-                                document.msExitFullscreen ||
+            cancelFullscreen =  doc.cancelFullScreen ||
+                                doc.exitFullscreen ||
+                                doc.mozCancelFullScreen ||
+                                doc.webkitCancelFullScreen ||
+                                doc.msExitFullscreen ||
                                 fakeCancelFullscreen;
+
+            // expose the el for testing purposes
+            this.el = el;
 
             // add enter/exit fullscreen methods to the viewer API
             util.extend(viewerAPI, {
@@ -177,7 +184,7 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
                 isFullscreenSupported: isNativeFullscreenSupported
             });
 
-            dom.on(document, FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
+            dom.on(doc, FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
         },
 
         /**
@@ -186,7 +193,7 @@ Crocodoc.addPlugin('fullscreen', function (scope) {
          */
         destroy: function () {
             viewerAPI.exitFullscreen();
-            dom.off(document, FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
+            dom.off(doc, FULLSCREENCHANGE_EVENT, fullscreenchangeHandler);
         }
     };
 });

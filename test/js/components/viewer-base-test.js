@@ -47,7 +47,6 @@ module('Component - viewer-base', {
         };
 
         this.utilities = {
-            dom: Crocodoc.getUtilityForTest('dom'),
             common: {
                 insertCSS: function () { return { sheet: {} }; },
                 isFn: sinon.stub().returns(true),
@@ -62,7 +61,9 @@ module('Component - viewer-base', {
             browser: {},
             support: {
                 svg: true
-            }
+            },
+            dom: Crocodoc.getUtilityForTest('dom'),
+            promise: Crocodoc.getUtilityForTest('promise')
         };
 
         this.viewerAPI = {
@@ -80,6 +81,7 @@ module('Component - viewer-base', {
 
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('viewer-base', this.scope);
+        this.promise = this.utilities.promise;
     }
 });
 
@@ -92,7 +94,7 @@ test('init() should throw an error when called url.config is not defined', funct
 
 test('loadAssets() should disable text selection in IE < 9', function () {
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
+    stub.withArgs('metadata').returns(this.promise.deferred().resolve(this.metadata).promise());
     var spy = this.spy(this.viewerAPI, 'disableTextSelection');
 
     this.utilities.browser.ielt9 = true;
@@ -103,8 +105,8 @@ test('loadAssets() should disable text selection in IE < 9', function () {
 
 test('loadAssets() should not disable text selection in IE < 9 for text files', function () {
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('stylesheet').returns($.Deferred().promise());
-    stub.withArgs('metadata').returns($.Deferred().resolve({ type: 'text' }).promise());
+    stub.withArgs('stylesheet').returns(this.promise.empty());
+    stub.withArgs('metadata').returns(this.promise.deferred().resolve({ type: 'text' }).promise());
     var spy = this.spy(this.viewerAPI, 'disableTextSelection');
 
     this.utilities.browser.ielt9 = true;
@@ -114,7 +116,7 @@ test('loadAssets() should not disable text selection in IE < 9 for text files', 
 });
 
 test('loadAssets() should request metadata when called', function () {
-    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    var spy = this.stub(this.scope, 'get').returns(this.promise.deferred().resolve('').promise());
 
     this.component.init();
     this.component.loadAssets();
@@ -122,7 +124,7 @@ test('loadAssets() should request metadata when called', function () {
 });
 
 test('loadAssets() should request stylesheet when called', function () {
-    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    var spy = this.stub(this.scope, 'get').returns(this.promise.deferred().resolve('').promise());
 
     this.component.init();
     this.component.loadAssets();
@@ -130,7 +132,7 @@ test('loadAssets() should request stylesheet when called', function () {
 });
 
 test('loadAssets() should not request stylesheet when browser is IE < 9', function () {
-    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    var spy = this.stub(this.scope, 'get').returns(this.promise.deferred().resolve('').promise());
 
     this.utilities.browser.ielt9 = true;
     this.component.init();
@@ -139,7 +141,7 @@ test('loadAssets() should not request stylesheet when browser is IE < 9', functi
 });
 
 test('loadAssets() should prefetch correct page 1 assets when called', function () {
-    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    var spy = this.stub(this.scope, 'get').returns(this.promise.deferred().resolve('').promise());
 
     this.component.init();
     this.component.loadAssets();
@@ -149,7 +151,7 @@ test('loadAssets() should prefetch correct page 1 assets when called', function 
 });
 
 test('loadAssets() should prefetch correct page 1 assets when called in non-svg browser', function () {
-    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    var spy = this.stub(this.scope, 'get').returns(this.promise.deferred().resolve('').promise());
 
     this.utilities.support.svg = false;
     this.component.init();
@@ -159,7 +161,7 @@ test('loadAssets() should prefetch correct page 1 assets when called in non-svg 
 });
 
 test('loadAssets() should not prefetch page text when text selection is disabled', function () {
-    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    var spy = this.stub(this.scope, 'get').returns(this.promise.deferred().resolve('').promise());
 
     this.config.enableTextSelection = false;
     this.component.init();
@@ -169,7 +171,7 @@ test('loadAssets() should not prefetch page text when text selection is disabled
 
 test('loadAssets() should broadcast an asseterror message when loading metadata or stylesheet fails', function () {
     var err = '404 not found';
-    this.stub(this.scope, 'get').returns($.Deferred().reject({ error: err }).promise());
+    this.stub(this.scope, 'get').returns(this.promise.deferred().reject({ error: err }).promise());
 
     var broadcastSpy = this.spy(this.scope, 'broadcast');
 
@@ -181,7 +183,7 @@ test('loadAssets() should broadcast an asseterror message when loading metadata 
 
 test('loadAssets() should broadcast a fail message when loading metadata or stylesheet fails', function () {
     var err = '404 not found';
-    this.stub(this.scope, 'get').returns($.Deferred().reject({ error: err }).promise());
+    this.stub(this.scope, 'get').returns(this.promise.deferred().reject({ error: err }).promise());
 
     var readySpy = this.spy(this.scope, 'ready');
     var broadcastSpy = this.spy(this.scope, 'broadcast');
@@ -195,8 +197,8 @@ test('loadAssets() should broadcast a fail message when loading metadata or styl
 
 test('loadAssets() should create and init a scroller component when loading metadata and stylesheet succeeds', function () {
     var getStub = this.stub(this.scope, 'get');
-    getStub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    getStub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    getStub.withArgs('metadata').returns(this.promise.deferred().resolve(this.metadata).promise());
+    getStub.withArgs('stylesheet').returns(this.promise.empty());
     this.stub(this.component, 'setLayout');
 
     var stub = this.stub(this.components.scroller, 'init');
@@ -208,8 +210,8 @@ test('loadAssets() should create and init a scroller component when loading meta
 
 test('loadAssets() should create and init a resizer component when loading metadata and stylesheet succeeds', function () {
     var getStub = this.stub(this.scope, 'get');
-    getStub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    getStub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    getStub.withArgs('metadata').returns(this.promise.deferred().resolve(this.metadata).promise());
+    getStub.withArgs('stylesheet').returns(this.promise.empty());
 
     var stub = this.stub(this.components.resizer, 'init');
 
@@ -220,8 +222,8 @@ test('loadAssets() should create and init a resizer component when loading metad
 
 test('loadAssets() should set the appropriate layout when loading metadata and stylesheet succeeds', function () {
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    stub.withArgs('metadata').returns(this.promise.deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns(this.promise.empty());
 
     this.config.layout = Crocodoc.LAYOUT_PRESENTATION;
 
@@ -235,8 +237,8 @@ test('loadAssets() should set the appropriate layout when loading metadata and s
 
 test('loadAssets() should broadcast "ready" when loading metadata and stylesheet succeeds', function () {
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    stub.withArgs('metadata').returns(this.promise.deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns(this.promise.empty());
 
     this.component.init();
     this.mock(this.scope)
@@ -256,7 +258,7 @@ test('destroy() should remove all Crocodoc-namespaced CSS classes from and empty
 
 test('destroy() should abort all asset requests when called', function () {
     var abortSpy = this.spy();
-    var promiseSpy = this.stub(this.scope, 'get').returns($.Deferred().promise({
+    var promiseSpy = this.stub(this.scope, 'get').returns(this.promise.deferred().promise({
         abort: abortSpy
     }));
 

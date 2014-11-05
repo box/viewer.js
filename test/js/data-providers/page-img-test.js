@@ -1,12 +1,6 @@
 module('Data Provider: page-img', {
     setup: function () {
         var me = this;
-        this.$deferred = $.Deferred();
-        this.promise = {
-            abort: function () {},
-            then: function () { return me.$deferred.promise(); },
-            promise: function (x) { return me.$deferred.promise(x); }
-        };
         this.utilities = {
             ajax: {
                 fetch: function () {}
@@ -18,7 +12,8 @@ module('Data Provider: page-img', {
             browser: {},
             subpx: {
                 isSubpxSupported: function () {}
-            }
+            },
+            promise: Crocodoc.getUtilityForTest('promise')
         };
         this.config = {
             url: '',
@@ -26,6 +21,13 @@ module('Data Provider: page-img', {
                 img: 'page-{{page}}.png'
             },
             queryString: ''
+        };
+        this.promise = this.utilities.promise;
+        this.deferred = this.promise.deferred();
+        this.fakePromise = {
+            abort: function () {},
+            then: function () { return me.deferred.promise(); },
+            promise: function (x) { return me.deferred.promise(x); }
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.dataProvider = Crocodoc.getComponentForTest('data-provider-page-img', this.scope);
@@ -45,13 +47,13 @@ test('getImage() should return a new Image object when called', function() {
     ok(img instanceof Image, 'should return a new image');
 });
 
-test('get() should return a $.Promise with an abort() function', function() {
+test('get() should return a promise with an abort() function', function() {
     var img = {
         setAttribute: this.spy()
     };
     this.stub(this.dataProvider, 'getImage').returns(img);
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    propEqual(this.dataProvider.get('page-img', 1), $.Deferred().promise({abort:function(){}}));
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    propEqual(this.dataProvider.get('page-img', 1), this.promise.deferred().promise({abort:function(){}}));
 });
 
 test('abort() should abort the image load when called on the returned promise', function() {

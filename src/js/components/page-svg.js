@@ -15,12 +15,13 @@ Crocodoc.addComponent('page-svg', function (scope) {
     //--------------------------------------------------------------------------
 
     var browser = scope.getUtility('browser'),
+        promise = scope.getUtility('promise'),
         dom = scope.getUtility('dom'),
         DOMParser = window.DOMParser;
 
     var svgContainerEl,
         containerEl,
-        $loadSVGPromise,
+        loadSVGPromise,
         page,
         destroyed = false,
         unloaded = false,
@@ -36,7 +37,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
 
     /**
      * Create and return a jQuery object for the SVG element
-     * @returns {Object} The SVG $element
+     * @returns {Object} The SVG element
      * @private
      */
     function createSVGEl() {
@@ -93,7 +94,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
 
     /**
      * Load svg text if necessary
-     * @returns {$.Promise}
+     * @returns {promise}
      * @private
      */
     function loadSVGText() {
@@ -103,9 +104,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
             embedStrategy === EMBED_STRATEGY_BASIC_IMG)
         {
             // don't load the SVG text, just return an empty promise
-            return $.Deferred().resolve().promise({
-                abort: function() {}
-            });
+            return promise.empty();
         } else {
             return scope.get('page-svg', page);
         }
@@ -260,8 +259,8 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 if (!removeOnUnload) {
                     // cleanup the promise (abort will remove the svg text from
                     // the in-memory cache as well)
-                    $loadSVGPromise.abort();
-                    $loadSVGPromise = null;
+                    loadSVGPromise.abort();
+                    loadSVGPromise = null;
                 }
             }
             // always insert and show the svg el when load was successful
@@ -280,8 +279,8 @@ Crocodoc.addComponent('page-svg', function (scope) {
     function loadSVGFail(error) {
         scope.broadcast('asseterror', error);
         svgLoaded = false;
-        if ($loadSVGPromise) {
-            $loadSVGPromise.abort();
+        if (loadSVGPromise) {
+            loadSVGPromise.abort();
         }
         // don't set the promise to null, because when it fails it should fail
         // for good...
@@ -331,8 +330,8 @@ Crocodoc.addComponent('page-svg', function (scope) {
         preload: function () {
             this.prepare();
 
-            if (!$loadSVGPromise) {
-                $loadSVGPromise = loadSVGText();
+            if (!loadSVGPromise) {
+                loadSVGPromise = loadSVGText();
             }
         },
 
@@ -340,15 +339,15 @@ Crocodoc.addComponent('page-svg', function (scope) {
          * Load the SVG and call callback when complete.
          * If there was an error, callback's first argument will be
          * an error message, and falsy otherwise.
-         * @returns {$.Promise}    A jQuery promise object
+         * @returns {promise}    A jQuery promise object
          */
         load: function () {
             unloaded = false;
             this.preload();
-            $loadSVGPromise
+            loadSVGPromise
                 .done(loadSVGSuccess)
                 .fail(loadSVGFail);
-            return $loadSVGPromise;
+            return loadSVGPromise;
         },
 
         /**
@@ -358,9 +357,9 @@ Crocodoc.addComponent('page-svg', function (scope) {
         unload: function () {
             unloaded = true;
             // stop loading the page if it hasn't finished yet
-            if ($loadSVGPromise && $loadSVGPromise.state() !== 'resolved') {
-                $loadSVGPromise.abort();
-                $loadSVGPromise = null;
+            if (loadSVGPromise && loadSVGPromise.state() !== 'resolved') {
+                loadSVGPromise.abort();
+                loadSVGPromise = null;
             }
 
             // remove the svg element if necessary

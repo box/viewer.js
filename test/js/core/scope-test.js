@@ -257,8 +257,8 @@ test('get() should call get() on the dp specified in config.dataProviders with t
 
 test('get() should return a rejected promise when called with a data model for which there is no provider', function() {
     var dataProviderName = 'some-awesome-data';
-    var $promise = this.scope.get(dataProviderName, 'testdatadoesnotmatter');
-    $promise.fail(function (err) {
+    var promise = this.scope.get(dataProviderName, 'testdatadoesnotmatter');
+    promise.fail(function (err) {
         equal(err, 'data-provider not found', 'the promise should be rejected');
     });
 });

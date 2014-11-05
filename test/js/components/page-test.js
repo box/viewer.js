@@ -26,13 +26,15 @@ module('Component - page', {
             support: {
                 svg: true
             },
-            dom: Crocodoc.getUtilityForTest('dom')
+            dom: Crocodoc.getUtilityForTest('dom'),
+            promise: Crocodoc.getUtilityForTest('promise')
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('page', this.scope);
         var container = this.utilities.dom.create('div');
         this.utilities.dom.html(container, PAGE_HTML_TEMPLATE);
         this.el = this.utilities.dom.find('.crocodoc-page', container);
+        this.promise = this.utilities.promise;
     }
 });
 
@@ -166,14 +168,13 @@ test('load() should broadcast pagefail when the page fails to load', function ()
         status: PAGE_STATUS_NOT_LOADED
     });
 
-    var $promise = $.Deferred().reject(error).promise();
     this.mock(this.scope)
         .expects('broadcast')
         .withArgs('pagefail', { page: index + 1, error: sinon.match(error) });
 
     this.mock(this.components['page-svg'])
         .expects('load')
-        .returns($promise);
+        .returns(this.promise.deferred().reject(error).promise());
 
     this.component.load();
 });

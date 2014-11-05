@@ -10,6 +10,7 @@ module('Component - page-img', {
         this.component = Crocodoc.getComponentForTest('page-img', this.scope);
         this.el = this.utilities.dom.create('div');
         this.pageNum = 3;
+        this.promise = Crocodoc.getUtilityForTest('promise');
     }
 });
 
@@ -17,7 +18,7 @@ test('preload() should make a request for the image when called', function () {
     this.mock(this.scope)
         .expects('get')
         .withArgs('page-img', this.pageNum)
-        .returns($.when());
+        .returns(this.promise.empty());
 
     this.component.init(this.el, this.pageNum);
     this.component.preload();
@@ -26,7 +27,7 @@ test('preload() should make a request for the image when called', function () {
 test('load() should preload the image when called', function () {
     this.stub(this.scope, 'get')
         .withArgs('page-img', this.pageNum)
-        .returns($.when());
+        .returns(this.promise.empty());
 
     var spy = this.spy(this.component, 'preload');
 
@@ -40,7 +41,7 @@ test('load() should embed the image when the image successfully loads', function
     var img = new Image();
     this.stub(this.scope, 'get')
         .withArgs('page-img', this.pageNum)
-        .returns($.Deferred().resolve(img).promise());
+        .returns(this.promise.deferred().resolve(img).promise());
 
     this.component.init(this.el, this.pageNum);
     this.component.load();
@@ -53,7 +54,7 @@ test('load() should broadcast an asseterror message when the image fails to load
     var mock = this.mock(this.scope);
     mock.expects('get')
         .withArgs('page-img', this.pageNum)
-        .returns($.Deferred().reject(error).promise());
+        .returns(this.promise.deferred().reject(error).promise());
 
     mock.expects('broadcast')
         .withArgs('asseterror', error);
@@ -66,7 +67,7 @@ test('destroy() should unload the img and empty the element when called', functi
     var img = new Image();
     this.stub(this.scope, 'get')
         .withArgs('page-img', this.pageNum)
-        .returns($.Deferred().resolve(img).promise({ abort: function () {} }));
+        .returns(this.promise.deferred().resolve(img).promise({ abort: function () {} }));
 
     var spy = this.spy(this.component, 'unload');
 
@@ -79,14 +80,13 @@ test('destroy() should unload the img and empty the element when called', functi
 });
 
 test('unload() should abort the request if there is one when called', function () {
-    var pageNum = 3,
-        $deferred = $.Deferred().resolve(new Image());
+    var pageNum = 3;
 
     var spy = this.spy();
 
     this.stub(this.scope, 'get')
         .withArgs('page-img', pageNum)
-        .returns($deferred.promise({ abort: spy }));
+        .returns(this.promise.deferred().resolve(new Image()).promise({ abort: spy }));
 
     this.component.init(this.el, pageNum);
     this.component.load();

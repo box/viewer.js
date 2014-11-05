@@ -82,7 +82,7 @@ module('Framework - createViewer', {
 });
 
 test('createViewer() should return a new instance of Crocodoc.Viewer when called', function () {
-    var el = $(), options = {};
+    var el = document.createElement('div'), options = {};
 
     this.mock(Crocodoc)
         .expects('Viewer')
@@ -93,7 +93,7 @@ test('createViewer() should return a new instance of Crocodoc.Viewer when called
 });
 
 test('getViewer() should return the viewer instance when called with a valid id', function () {
-    var el = $(), options = {};
+    var el = document.createElement('div'), options = {};
 
     this.stub(Crocodoc, 'Viewer')
         .withArgs(el, options)

@@ -21,6 +21,7 @@ module('Component - page-svg', {
         this.component = Crocodoc.getComponentForTest('page-svg', this.scope);
         this.el = dom.create('div');
         dom.appendTo(document.documentElement, this.el);
+        this.promise = Crocodoc.getUtilityForTest('promise');
     },
     teardown: function () {
         this.utilities.dom.remove(this.el);
@@ -51,12 +52,12 @@ test('preload() should create and insert the SVG object into the container eleme
 
 test('load() should embed the SVG when the load succeeds', function () {
     var pageNum = 3,
-        $deferred = $.Deferred().resolve(this.svgText);
+        deferred = this.promise.deferred();
 
     this.mock(this.scope)
         .expects('get')
         .withArgs('page-svg', pageNum)
-        .returns($deferred.promise({ abort: function () {} }));
+        .returns(deferred.resolve(this.svgText).promise({ abort: function () {} }));
 
     this.component.init(this.el, pageNum);
     this.component.load();
@@ -66,12 +67,12 @@ test('load() should embed the SVG when the load succeeds', function () {
 test('load() should broadcast an asseterror when the load fails', function () {
     var pageNum = 3,
         error = { error: 'fail' },
-        $deferred = $.Deferred().reject(error),
+        deferred = this.promise.deferred(),
         mock = this.mock(this.scope);
 
     mock.expects('get')
         .withArgs('page-svg', pageNum)
-        .returns($deferred.promise({ abort: function () {} }));
+        .returns(deferred.reject(error).promise({ abort: function () {} }));
 
     mock.expects('broadcast')
         .withArgs('asseterror', error);
@@ -82,13 +83,13 @@ test('load() should broadcast an asseterror when the load fails', function () {
 
 test('unload() should abort the request if there is one when called', function () {
     var pageNum = 3,
-        $deferred = $.Deferred();
+        deferred = this.promise.deferred();
 
     var spy = this.spy();
 
     this.stub(this.scope, 'get')
         .withArgs('page-svg', pageNum)
-        .returns($deferred.promise({ abort: spy }));
+        .returns(deferred.promise({ abort: spy }));
 
     this.component.init(this.el, pageNum);
     this.component.load();

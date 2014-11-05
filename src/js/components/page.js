@@ -15,6 +15,7 @@ Crocodoc.addComponent('page', function (scope) {
     //--------------------------------------------------------------------------
 
     var support = scope.getUtility('support'),
+        promise = scope.getUtility('promise'),
         dom = scope.getUtility('dom'),
         util = scope.getUtility('common');
 
@@ -119,7 +120,7 @@ Crocodoc.addComponent('page', function (scope) {
 
         /**
          * Load and show SVG and text assets for this page
-         * @returns {$.Promise}    jQuery Promise object or false if the page is not loading
+         * @returns {promise}    Promise object or false if the page is not loading
          */
         load: function () {
             var pageComponent = this;
@@ -141,7 +142,7 @@ Crocodoc.addComponent('page', function (scope) {
             if (status !== PAGE_STATUS_LOADED) {
                 status = PAGE_STATUS_LOADING;
             }
-            return $.when(pageContent.load(), pageText.load())
+            return promise.when(pageContent.load(), pageText.load())
                 .done(function handleLoadDone() {
                     if (loadRequested) {
                         if (status !== PAGE_STATUS_LOADED) {

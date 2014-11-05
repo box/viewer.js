@@ -6,6 +6,7 @@ Crocodoc.addDataProvider('page-img', function(scope) {
     'use strict';
 
     var util = scope.getUtility('common'),
+        promise = scope.getUtility('promise'),
         config = scope.getConfig();
 
     //--------------------------------------------------------------------------
@@ -17,14 +18,14 @@ Crocodoc.addDataProvider('page-img', function(scope) {
          * Retrieve the page image asset from the server
          * @param {string} objectType The type of data being requested
          * @param {number} pageNum The page number for which to request the page image
-         * @returns {$.Promise}    A promise with an additional abort() method that will abort the img request.
+         * @returns {promise}    A promise with an additional abort() method that will abort the img request.
          */
         get: function(objectType, pageNum) {
             var img = this.getImage(),
                 retries = Crocodoc.ASSET_REQUEST_RETRIES,
                 loaded = false,
                 url = this.getURL(pageNum),
-                $deferred = $.Deferred();
+                deferred = promise.deferred();
 
             function loadImage() {
                 img.setAttribute('src', url);
@@ -37,7 +38,7 @@ Crocodoc.addDataProvider('page-img', function(scope) {
             // add load and error handlers
             img.onload = function () {
                 loaded = true;
-                $deferred.resolve(img);
+                deferred.resolve(img);
             };
 
             img.onerror = function () {
@@ -48,7 +49,7 @@ Crocodoc.addDataProvider('page-img', function(scope) {
                 } else {
                     img = null;
                     loaded = false;
-                    $deferred.reject({
+                    deferred.reject({
                         error: 'image failed to load',
                         resource: url
                     });
@@ -58,11 +59,11 @@ Crocodoc.addDataProvider('page-img', function(scope) {
             // load the image
             loadImage();
 
-            return $deferred.promise({
+            return deferred.promise({
                 abort: function () {
                     if (!loaded) {
                         abortImage();
-                        $deferred.reject();
+                        deferred.reject();
                     }
                 }
             });

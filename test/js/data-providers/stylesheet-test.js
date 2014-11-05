@@ -1,11 +1,12 @@
 module('Data Provider: stylesheet', {
     setup: function () {
         var me = this;
-        this.$deferred = $.Deferred();
-        this.promise = {
+        this.promise = Crocodoc.getUtilityForTest('promise');
+        this.deferred = this.promise.deferred();
+        this.fakePromise = {
             abort: function () {},
-            then: function () { return me.$deferred.promise(); },
-            promise: function (x) { return me.$deferred.promise(x); }
+            then: function () { return me.deferred.promise(); },
+            promise: function (x) { return me.deferred.promise(x); }
         };
         this.utilities = {
             ajax: {
@@ -35,19 +36,19 @@ test('creator should return an object with a get function', function(){
     equal(typeof this.dataProvider.get, 'function');
 });
 
-test('get() should return a $.Promise with an abort() function', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    propEqual(this.dataProvider.get(), $.Deferred().promise({abort:function(){}}));
+test('get() should return a promise with an abort() function', function() {
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    propEqual(this.dataProvider.get(), this.promise.deferred().promise({abort:function(){}}));
 });
 
 test('get() should return a cached promise when called a second time', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
     equal(this.dataProvider.get(), this.dataProvider.get());
 });
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    this.mock(this.promise).expects('abort').once();
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    this.mock(this.fakePromise).expects('abort').once();
 
     var promise = this.dataProvider.get();
     promise.abort();
@@ -62,8 +63,8 @@ test('get() should apply the IE font hack to the css when called in IE', functio
     var css = '.crocodoc { font-family: crocodoc-font-blah; }';
     this.utilities.browser.ie = true;
 
-    this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
-    this.$deferred.resolve(css);
+    this.stub(this.utilities.ajax, 'fetch').returns(this.deferred.promise());
+    this.deferred.resolve(css);
 
     var promise = this.dataProvider.get();
     var self = this;

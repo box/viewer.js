@@ -1,7 +1,8 @@
 module('Component - lazy-loader', {
     setup: function () {
         this.utilities = {
-            common: Crocodoc.getUtilityForTest('common')
+            common: Crocodoc.getUtilityForTest('common'),
+            promise: Crocodoc.getUtilityForTest('promise')
         };
         this.scope = Crocodoc.getScopeForTest(this);
 
@@ -16,6 +17,7 @@ module('Component - lazy-loader', {
         this.pages = [];
         this.component = Crocodoc.getComponentForTest('lazy-loader', this.scope);
         this.clock = sinon.useFakeTimers();
+        this.promise = this.utilities.promise;
     },
     teardown: function () {
         this.clock.restore();
@@ -87,8 +89,7 @@ test('queuePageToLoad() should not call preload() on a page when called with an 
 });
 
 test('queuePageToLoad() should eventually lead to a call to loadPage() when called with a valid page that should load', function () {
-    var index = 0,
-        $deferred = $.Deferred();
+    var index = 0;
 
     this.pages.push(this.pageComponent);
     this.component.init(this.pages);
@@ -172,13 +173,10 @@ test('unloadUnnecessaryPages() should unload pages outside the page load range r
 
 
 test('loadPage() should be called as many times as queuePageToLoad()', function () {
-    var $deferred = $.Deferred();
-
     this.pages.push(this.pageComponent);
     this.pages.push(this.pageComponent);
     this.component.init(this.pages);
-    this.stub(this.pageComponent, 'load').returns($deferred);
-    $deferred.resolve();
+    this.stub(this.pageComponent, 'load').returns(this.promise.deferred().resolve().promise());
 
     var loadPageSpy = this.spy(this.component, 'loadPage');
     this.component.queuePageToLoad(0);
@@ -191,9 +189,7 @@ test('loadPage() should be called as many times as queuePageToLoad()', function 
 
 test('loadPage() should call the callback function immediately when called with an invalid page', function () {
     var spy = sinon.spy();
-    var $deferred = $.Deferred();
-    this.stub(this.pageComponent, 'load').returns($deferred);
-    $deferred.resolve();
+    this.stub(this.pageComponent, 'load').returns(this.promise.deferred().resolve().promise());
 
     this.pages.push(this.pageComponent);
     this.component.init(this.pages);

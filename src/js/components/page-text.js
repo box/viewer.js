@@ -21,7 +21,7 @@ Crocodoc.addComponent('page-text', function (scope) {
     var destroyed = false,
         loaded = false,
         containerEl,
-        $loadTextPromise,
+        loadTextPromise,
         page,
         viewerConfig = scope.getConfig();
 
@@ -69,22 +69,20 @@ Crocodoc.addComponent('page-text', function (scope) {
 
     /**
      * Load text html if necessary and insert it into the element
-     * @returns {$.Promise}
+     * @returns {promise}
      * @private
      */
     function loadTextLayerHTML() {
         // already load(ed|ing)?
-        if (!$loadTextPromise) {
+        if (!loadTextPromise) {
             if (shouldUseTextLayer()) {
-                $loadTextPromise = scope.get('page-text', page);
+                loadTextPromise = scope.get('page-text', page);
             } else {
-                $loadTextPromise = $.Deferred().resolve().promise({
-                    abort: function () {}
-                });
+                loadTextPromise = promise.empty();
             }
         }
 
-        return $loadTextPromise;
+        return loadTextPromise;
     }
 
     //--------------------------------------------------------------------------
@@ -123,7 +121,7 @@ Crocodoc.addComponent('page-text', function (scope) {
         /**
          * Load the html text for the text layer and insert it into the element
          * if text layer is enabled and is not loading/has not already been loaded
-         * @returns {$.Promise} A promise to load the text layer
+         * @returns {promise} A promise to load the text layer
          */
         load: function () {
             return loadTextLayerHTML()
@@ -136,9 +134,9 @@ Crocodoc.addComponent('page-text', function (scope) {
          * @returns {void}
          */
         unload: function () {
-            if ($loadTextPromise && $loadTextPromise.state() !== 'resolved') {
-                $loadTextPromise.abort();
-                $loadTextPromise = null;
+            if (loadTextPromise && loadTextPromise.state() !== 'resolved') {
+                loadTextPromise.abort();
+                loadTextPromise = null;
             }
         },
 
@@ -151,8 +149,8 @@ Crocodoc.addComponent('page-text', function (scope) {
             // we created an empty promise if text selection was previously disabled,
             // so we can scrap it so a new promise will be created next time this
             // page is requested
-            if ($loadTextPromise && !loaded) {
-                $loadTextPromise = null;
+            if (loadTextPromise && !loaded) {
+                loadTextPromise = null;
             }
         },
 

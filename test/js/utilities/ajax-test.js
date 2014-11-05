@@ -12,6 +12,7 @@ module('Utility - ajax', {
         };
         this.utilities = {
             common: Crocodoc.getUtilityForTest('common'),
+            promise: Crocodoc.getUtilityForTest('promise'),
             url: {
                 isCrossDomain: function () {},
                 parse: function () {},

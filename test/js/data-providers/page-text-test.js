@@ -1,11 +1,12 @@
 module('Data Provider: page-text', {
     setup: function () {
         var me = this;
-        this.$deferred = $.Deferred();
-        this.promise = {
+        this.promise = Crocodoc.getUtilityForTest('promise');
+        this.deferred = this.promise.deferred();
+        this.fakePromise = {
             abort: function () {},
-            then: function () { return me.$deferred.promise(); },
-            promise: function (x) { return me.$deferred.promise(x); }
+            then: function () { return me.deferred.promise(); },
+            promise: function (x) { return me.deferred.promise(x); }
         };
         this.utilities = {
             ajax: {
@@ -37,20 +38,20 @@ test('creator should return an object with a get function', function(){
     equal(typeof this.dataProvider.get, 'function');
 });
 
-test('get() should return a $.Promise with an abort() function', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    propEqual(this.dataProvider.get('page-text', 1), $.Deferred().promise({abort:function(){}}));
+test('get() should return a promise with an abort() function', function() {
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    propEqual(this.dataProvider.get('page-text', 1), this.promise.deferred().promise({abort:function(){}}));
 });
 
 test('get() should return a cached promise when called a second time', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
     equal(this.dataProvider.get('page-text', 1), this.dataProvider.get('page-text', 1));
 });
 
 
 test('abort() should call abort on the promise returned from ajax.fetch when called on the returned promise', function() {
-    this.stub(this.utilities.ajax, 'fetch').returns(this.promise);
-    this.mock(this.promise).expects('abort').once();
+    this.stub(this.utilities.ajax, 'fetch').returns(this.fakePromise);
+    this.mock(this.fakePromise).expects('abort').once();
 
     var promise = this.dataProvider.get('page-text', 2);
     promise.abort();
@@ -65,9 +66,9 @@ test('getURL() should return the correct URL to the svg file when called', funct
 test('get() should return a promise that resolves the correct html text when called', function () {
     var htmlText = '<html></html>';
 
-    this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
+    this.stub(this.utilities.ajax, 'fetch').returns(this.deferred.promise());
 
-    this.$deferred.resolve(htmlText);
+    this.deferred.resolve(htmlText);
 
     var promise = this.dataProvider.get('page-text', 5);
     promise.done(function (text) {
@@ -79,9 +80,9 @@ test('get() should result in an empty string when there are too many text boxes'
     var htmlText = '<html></html>';
 
     this.stub(this.utilities.common, 'countInStr').returns(1000);
-    this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
+    this.stub(this.utilities.ajax, 'fetch').returns(this.deferred.promise());
 
-    this.$deferred.resolve(htmlText);
+    this.deferred.resolve(htmlText);
 
     var promise = this.dataProvider.get('page-text', 5);
     promise.done(function (text) {

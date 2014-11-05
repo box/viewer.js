@@ -14,6 +14,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
     var util = scope.getUtility('common'),
         browser = scope.getUtility('browser'),
         support = scope.getUtility('support'),
+        promise = scope.getUtility('promise'),
         dom = scope.getUtility('dom');
 
     var api, // the viewer API object
@@ -24,7 +25,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         scroller,
         resizer,
         dragger,
-        $assetsPromise;
+        assetsPromise;
 
     /**
      * Add CSS classes to the element for necessary feature/support flags
@@ -168,7 +169,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             if (!dragger) {
                 dom.addClass(viewerEl, CSS_CLASS_DRAGGABLE);
                 dragger = scope.createComponent('dragger');
-                dragger.init(config.$viewport);
+                dragger.init(config.viewportEl);
             }
         } else {
             if (dragger) {
@@ -318,8 +319,8 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // remove the stylesheet
             dom.remove(stylesheetEl);
 
-            if ($assetsPromise) {
-                $assetsPromise.abort();
+            if (assetsPromise) {
+                assetsPromise.abort();
             }
         },
 
@@ -384,17 +385,17 @@ Crocodoc.addComponent('viewer-base', function (scope) {
          * @returns {void}
          */
         loadAssets: function () {
-            var $loadStylesheetPromise,
-                $loadMetadataPromise,
-                $pageOneContentPromise,
-                $pageOneTextPromise;
+            var loadStylesheetPromise,
+                loadMetadataPromise,
+                pageOneContentPromise,
+                pageOneTextPromise;
 
-            if ($assetsPromise) {
+            if (assetsPromise) {
                 return;
             }
 
-            $loadMetadataPromise = scope.get('metadata');
-            $loadMetadataPromise.then(function handleMetadataResponse(metadata) {
+            loadMetadataPromise = scope.get('metadata');
+            loadMetadataPromise.then(function handleMetadataResponse(metadata) {
                 config.metadata = metadata;
             });
 
@@ -402,12 +403,10 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             if (browser.ielt9) {
                 stylesheetEl = util.insertCSS('');
                 config.stylesheet = stylesheetEl.styleSheet;
-                $loadStylesheetPromise = $.when('').promise({
-                    abort: function () {}
-                });
+                loadStylesheetPromise = promise.empty();
             } else {
-                $loadStylesheetPromise = scope.get('stylesheet');
-                $loadStylesheetPromise.then(function handleStylesheetResponse(cssText) {
+                loadStylesheetPromise = scope.get('stylesheet');
+                loadStylesheetPromise.then(function handleStylesheetResponse(cssText) {
                     stylesheetEl = util.insertCSS(cssText);
                     config.stylesheet = stylesheetEl.sheet;
                 });
@@ -418,23 +417,23 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             if (config.autoloadFirstPage &&
                 (!config.pageStart || config.pageStart === 1)) {
                 if (support.svg) {
-                    $pageOneContentPromise = scope.get('page-svg', 1);
+                    pageOneContentPromise = scope.get('page-svg', 1);
                 } else if (config.conversionIsComplete) {
                     // unfortunately, page-1.png is not necessarily available
                     // on View API's document.viewable event, so we can only
                     // prefetch page-1.png if conversion is complete
-                    $pageOneContentPromise = scope.get('page-img', 1);
+                    pageOneContentPromise = scope.get('page-img', 1);
                 }
                 if (config.enableTextSelection) {
-                    $pageOneTextPromise = scope.get('page-text', 1);
+                    pageOneTextPromise = scope.get('page-text', 1);
                 }
             }
 
             // when both metatadata and stylesheet are done or if either fails...
-            $assetsPromise = $.when($loadMetadataPromise, $loadStylesheetPromise)
+            assetsPromise = promise.when(loadMetadataPromise, loadStylesheetPromise)
                 .fail(function (error) {
-                    if ($assetsPromise) {
-                        $assetsPromise.abort();
+                    if (assetsPromise) {
+                        assetsPromise.abort();
                     }
                     scope.ready();
                     scope.broadcast('asseterror', error);
@@ -443,14 +442,14 @@ Crocodoc.addComponent('viewer-base', function (scope) {
                 .then(completeInit)
                 .promise({
                     abort: function () {
-                        $assetsPromise = null;
-                        $loadMetadataPromise.abort();
-                        $loadStylesheetPromise.abort();
-                        if ($pageOneContentPromise) {
-                            $pageOneContentPromise.abort();
+                        assetsPromise = null;
+                        loadMetadataPromise.abort();
+                        loadStylesheetPromise.abort();
+                        if (pageOneContentPromise) {
+                            pageOneContentPromise.abort();
                         }
-                        if ($pageOneTextPromise) {
-                            $pageOneTextPromise.abort();
+                        if (pageOneTextPromise) {
+                            pageOneTextPromise.abort();
                         }
                     }
                 });

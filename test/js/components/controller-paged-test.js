@@ -37,13 +37,15 @@ module('Component - controller-paged', {
 
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('controller-paged', this.scope);
+        this.promise = Crocodoc.getUtilityForTest('promise');
     }
 });
 
 test('init() should create and init a lazy-loader component when loading metadata and stylesheet succeeds', function () {
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(this.metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    var promise = this.promise;
+    stub.withArgs('metadata').returns(promise.deferred().resolve(this.metadata).promise());
+    stub.withArgs('stylesheet').returns(promise.empty());
 
     this.mock(this.components['lazy-loader'])
         .expects('init')
@@ -88,23 +90,30 @@ test('init() should init page components with appropriate status when called and
     };
     this.config.metadata = metadata;
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    var promise = this.promise;
+    stub.withArgs('metadata').returns(promise.deferred().resolve(metadata).promise());
+    stub.withArgs('stylesheet').returns(promise.empty());
 
     this.config.conversionIsComplete = false;
 
     var mock = this.mock(this.components.page);
 
+    var pageDataNotLoaded = {
+        status: PAGE_STATUS_NOT_LOADED
+    };
     mock.expects('init')
-        .withArgs(sinon.match.any, sinon.match({
-            status: PAGE_STATUS_NOT_LOADED
-        }))
+        // @TODO: fix this when (https://github.com/cjohansen/Sinon.JS/issues/594) is resolved
+        // .withArgs(sinon.match.instanceOf(Element), sinon.match(pageDataNotLoaded))
+        .withArgs(sinon.match.any, sinon.match(pageDataNotLoaded))
         .once();
 
+    var pageDataConverting = {
+        status: PAGE_STATUS_CONVERTING
+    };
     mock.expects('init')
-        .withArgs(sinon.match.any, sinon.match({
-            status: PAGE_STATUS_CONVERTING
-        }))
+        // @TODO: fix this when (https://github.com/cjohansen/Sinon.JS/issues/594) is resolved
+        // .withArgs(sinon.match.instanceOf(Element), sinon.match(pageDataConverting))
+        .withArgs(sinon.match.any, sinon.match(pageDataConverting))
         .exactly(metadata.numpages - 1);
 
     this.component.init();
@@ -121,18 +130,22 @@ test('init() should init page components with appropriate status when called and
     };
     this.config.metadata = metadata;
     var stub = this.stub(this.scope, 'get');
-    stub.withArgs('metadata').returns($.Deferred().resolve(metadata).promise());
-    stub.withArgs('stylesheet').returns($.Deferred().resolve('').promise());
+    var promise = this.promise;
+    stub.withArgs('metadata').returns(promise.deferred().resolve(metadata).promise());
+    stub.withArgs('stylesheet').returns(promise.empty());
 
     this.config.conversionIsComplete = false;
     this.config.autoloadFirstPage = false;
 
     var mock = this.mock(this.components.page);
 
+    var pageData = {
+        status: PAGE_STATUS_CONVERTING
+    };
     mock.expects('init')
-        .withArgs(sinon.match.any, sinon.match({
-            status: PAGE_STATUS_CONVERTING
-        }))
+        // @TODO: fix this when (https://github.com/cjohansen/Sinon.JS/issues/594) is resolved
+        // .withArgs(sinon.match.instanceOf(Element), sinon.match(pageData))
+        .withArgs(sinon.match.any, sinon.match(pageData))
         .exactly(metadata.numpages);
 
     this.component.init();

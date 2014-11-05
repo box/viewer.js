@@ -38,7 +38,7 @@ module('Framework - Crocodoc.Viewer', {
 
         this.utilities = {
             common: {
-                extend: $.extend
+                extend: Crocodoc.getUtilityForTest('common').extend
             },
             url: {
                 makeAbsolute: function () {}

@@ -18,6 +18,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
 
     var util = scope.getUtility('common'),
         browser = scope.getUtility('browser'),
+        promise = scope.getUtility('promise'),
         api = {},
         pages,
         numPages,
@@ -386,7 +387,7 @@ Crocodoc.addComponent('lazy-loader', function (scope) {
          * @returns {void}
          */
         loadPage: function (index, callback) {
-            $.when(pages[index] && pages[index].load())
+            promise.when(pages[index] && pages[index].load())
                 .always(callback);
         },
 

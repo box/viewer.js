@@ -4,12 +4,12 @@ module('Plugin - fullscreen', {
             fire: function () {}
         };
         this.utilities = {
-            dom: Crocodoc.getUtilityForTest('dom'),
-            common: Crocodoc.getUtilityForTest('common')
+            common: Crocodoc.getUtilityForTest('common'),
+            dom: Crocodoc.getUtilityForTest('dom')
         };
         this.config = {
             api: this.viewerAPI,
-            el: document.body
+            el: this.utilities.dom.create('div')
         };
         this.scope = Crocodoc.getScopeForTest(this);
         this.plugin = Crocodoc.getPluginForTest('fullscreen', this.scope);
@@ -25,7 +25,6 @@ test('init() should extend the viewer API with the proper methods when called', 
 });
 
 test('init() should use documentElement as the fullscreen element when viewer is using window as viewport', function () {
-    var spy = this.spy(window, '$');
     this.config.useWindowAsViewport = true;
     this.plugin.init({
         useFakeFullscreen: true
@@ -33,7 +32,7 @@ test('init() should use documentElement as the fullscreen element when viewer is
 
     this.viewerAPI.enterFullscreen();
     this.viewerAPI.exitFullscreen();
-    ok(spy.calledWith(document.documentElement), 'documentElement should be used');
+    equal(this.plugin.el, document.documentElement, 'documentElement should be used');
 });
 
 test('enterFullscreen() should call the proper function on the context of the element when called', function () {
@@ -57,49 +56,30 @@ test('exitFullscreen() should call the proper function on the context of the doc
 });
 
 test('enterFullscreen should enter fake fullscreen mode when called and native fullscreen is not supported', function () {
-    var el = {},
-        spy = this.spy();
-    this.stub(window, '$').returns({
-        addClass: spy,
-        on: this.stub(),
-        off: this.stub(),
-        0: el
-    });
+    var spy = this.spy(this.utilities.dom, 'addClass');
+    // fake el
+    var el = {};
     this.plugin.init({
         element: el,
         useFakeFullscreen: true
-    });
+    }, { /* fake document object */ });
 
     this.viewerAPI.enterFullscreen();
-    ok(spy.calledWith('crocodoc-fakefullscreen'), 'should add class .crocodoc-fakefullscreen');
+    ok(spy.calledWith(el, 'crocodoc-fakefullscreen'), 'should add class .crocodoc-fakefullscreen');
 });
 
 test('exitFullscreen should exit fake fullscreen mode when called and native fullscreen is not supported', function () {
-    var el = {},
-        spy = this.spy();
-    this.stub(window, '$').returns({
-        addClass: function () {},
-        removeClass: spy,
-        on: this.stub(),
-        off: this.stub(),
-        0: el
-    });
-
-    // all these properties are tested against before falling into fake fullscreen mode
-    document.cancelFullScreen =
-    document.exitFullscreen =
-    document.mozCancelFullScreen =
-    document.webkitCancelFullScreen =
-    document.msExitFullscreen = null;
-
+    var spy = this.spy(this.utilities.dom, 'removeClass');
+    // fake el
+    var el = {};
     this.plugin.init({
         element: el,
         useFakeFullscreen: true
-    });
+    }, { /* fake document object */ });
 
     this.viewerAPI.enterFullscreen();
     this.viewerAPI.exitFullscreen();
-    ok(spy.calledWith('crocodoc-fakefullscreen'), 'should remove class .crocodoc-fakefullscreen');
+    ok(spy.calledWith(el, 'crocodoc-fakefullscreen'), 'should remove class .crocodoc-fakefullscreen');
 });
 
 test('destroy() should exit fullscreen mode when called', function () {

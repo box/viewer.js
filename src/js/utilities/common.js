@@ -28,6 +28,12 @@ Crocodoc.addUtility('common', function () {
     return $.extend(util, {
 
         /**
+         * A noop function
+         * @returns {void}
+         */
+        noop: function () {},
+
+        /**
          * Left bistect of list, optionally of property of objects in list
          * @param   {Array} list List of items to bisect
          * @param   {number} x    The number to bisect against

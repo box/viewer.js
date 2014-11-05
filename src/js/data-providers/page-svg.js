@@ -82,24 +82,24 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
          * Retrieve a SVG asset from the server
          * @param {string} objectType The type of data being requested
          * @param {number} pageNum The page number for which to request the SVG
-         * @returns {$.Promise}    A promise with an additional abort() method that will abort the XHR request.
+         * @returns {promise}    A promise with an additional abort() method that will abort the XHR request.
          */
         get: function(objectType, pageNum) {
             var url = this.getURL(pageNum),
-                $promise;
+                p;
 
             if (cache[pageNum]) {
                 return cache[pageNum];
             }
 
-            $promise = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
+            p = ajax.fetch(url, Crocodoc.ASSET_REQUEST_RETRIES);
 
             // @NOTE: promise.then() creates a new promise, which does not copy
             // custom properties, so we need to create a futher promise and add
             // an object with the abort method as the new target
-            cache[pageNum] = $promise.then(processSVGContent).promise({
+            cache[pageNum] = p.then(processSVGContent).promise({
                 abort: function () {
-                    $promise.abort();
+                    p.abort();
                     if (cache) {
                         delete cache[pageNum];
                     }
