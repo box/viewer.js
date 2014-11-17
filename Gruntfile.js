@@ -17,6 +17,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-git');
     grunt.loadNpmTasks('grunt-publish');
     grunt.loadNpmTasks('grunt-text-replace');
+    grunt.loadNpmTasks('grunt-editor');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -227,6 +228,11 @@ module.exports = function (grunt) {
                     'realtime-example'
                 ]
             }
+        },
+        editor: {
+            changelog: {
+                src: ['CHANGELOG.md']
+            }
         }
     });
 
@@ -274,10 +280,11 @@ module.exports = function (grunt) {
             'bump:' + type,
             'changelog',
             'replace:changelog',
+            'editor:changelog',
             'build',
             'copy:dist',
-            // 'gitcommit',
-            // 'gittag',
+            'gitcommit',
+            'gittag',
             // 'publish'
         ]);
     });
