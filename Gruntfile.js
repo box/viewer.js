@@ -237,12 +237,14 @@ module.exports = function (grunt) {
     });
 
     var useLogo = !grunt.option('no-logo');
-    var defaultTasks = ['test', 'concat:js', 'concat:wrapjs'];
+    var buildTasks = ['concat:js', 'concat:wrapjs'];
     if (useLogo) {
-        defaultTasks.push('concat:css', 'imageEmbed');
+        buildTasks.push('concat:css', 'imageEmbed');
     } else {
-        defaultTasks.push('concat:css-no-logo');
+        buildTasks.push('concat:css-no-logo');
     }
+
+    grunt.registerTask('build-setup', buildTasks);
 
     // task to run the realtime example sse server
     grunt.registerTask('realtime-example', function () {
@@ -252,8 +254,9 @@ module.exports = function (grunt) {
 
     grunt.registerTask('test', ['jshint', 'qunit']);
     grunt.registerTask('doc', ['test', 'jsdoc']);
-    grunt.registerTask('default', defaultTasks);
-    grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
+    grunt.registerTask('default', ['test', 'build-setup']);
+    grunt.registerTask('build-minify', ['build-setup', 'cssmin', 'uglify']);
+    grunt.registerTask('build', ['default', 'build-minify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'parallel:examples']);
 
     grunt.registerTask('changelog', function () {
@@ -266,6 +269,15 @@ module.exports = function (grunt) {
         grunt.config('changelog.formatted', formatted + '\n');
     });
 
+    grunt.registerTask('publish-reminder', function () {
+        grunt.log.writeln('');
+        grunt.log.writeln(
+            'Release '.green + ('v' + grunt.config('pkg.version')).yellow +
+            ' committed and tagged.'.green
+        );
+        grunt.log.writeln('Don\'t forget to review and publish on github and npm!'.yellow.bold);
+    });
+
     grunt.registerTask('release', function () {
         var type = grunt.option('type') || 'patch',
             types = ['patch', 'minor', 'major'];
@@ -276,15 +288,17 @@ module.exports = function (grunt) {
         }
 
         grunt.task.run([
+            'test',
             'gitlog:changelog',
             'bump:' + type,
             'changelog',
             'replace:changelog',
             'editor:changelog',
-            'build',
+            'build-minify',
             'copy:dist',
             'gitcommit',
             'gittag',
+            'publish-reminder'
             // 'publish'
         ]);
     });
