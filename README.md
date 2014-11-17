@@ -44,7 +44,7 @@ A viewer for documents converted with the [Box View API](http://developers.box.c
 
 You can find the pre-built development and production source files in the `dist/` directory in this repository.
 
-Viewer.js is also available on [npm](http://npmjs.org) and [Bower](http://bower.io):
+Viewer.js is available on [npm](http://npmjs.org) and [Bower](http://bower.io):
 
 ```
 npm install viewer
@@ -54,6 +54,27 @@ npm install viewer
 bower install viewer
 ```
 
+All stable versions of viewer.js are hosted on [CloudFlare's CDN, cdnjs](https://cdnjs.com/libraries/viewer.js). The unminified versions are available through the following URLs:
+
+```
+//cdnjs.cloudflare.com/ajax/libs/viewer.js/<VERSION>/crocodoc.viewer.css
+```
+
+```
+//cdnjs.cloudflare.com/ajax/libs/viewer.js/<VERSION>/crocodoc.viewer.js
+```
+
+and the minified versions through:
+
+```
+//cdnjs.cloudflare.com/ajax/libs/viewer.js/<VERSION>/crocodoc.viewer.min.css
+```
+
+```
+//cdnjs.cloudflare.com/ajax/libs/viewer.js/<VERSION>/crocodoc.viewer.min.js
+```
+
+For additional information, [please see the cdnjs website](https://cdnjs.com/libraries/viewer.js).
 
 ### Loading a Simple Viewer
 
