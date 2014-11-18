@@ -4,8 +4,11 @@
 function getFileInfoString(i) {
     return '* [{{= filename(src[' + i + ']) }}]' +
            '({{= config("file_info.all.srcPrefix") }}/{{= src[' + i + '] }}) ' +
-           '{{= sizeText(size(src[' + i + '])) }} ' +
-           '({{= sizeText(gzipSize(src[' + i + '])) }} gzipped)';
+           '{{= sizeText(size(src[' + i + '])) }}' +
+           // kinda hacky, but don't gzip unminified versions...
+           (i > 1 ?
+                ' ({{= sizeText(gzipSize(src[' + i + '])) }} gzipped)' :
+                '');
 }
 
 module.exports = function (grunt) {
@@ -223,8 +226,7 @@ module.exports = function (grunt) {
                 }]
             }
         },
-        /*jshint camelcase:false*/
-        file_info: {
+        'file_info': {
             all: {
                 srcPrefix: 'https://raw.githubusercontent.com/box/viewer.js/v<%= pkg.version %>',
                 src: [
@@ -265,9 +267,6 @@ module.exports = function (grunt) {
         editor: {
             changelog: {
                 src: ['CHANGELOG.md']
-            },
-            readme: {
-                src: ['README.md']
             }
         }
     });
@@ -333,11 +332,9 @@ module.exports = function (grunt) {
             'build-minify',
             'copy:dist',
             'file_info',
-            'editor:readme',
             'gitcommit',
             'gittag',
             'publish-reminder'
-            // 'publish'
         ]);
     });
 };

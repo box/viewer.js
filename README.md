@@ -80,8 +80,8 @@ For additional information, [please see the cdnjs website](https://cdnjs.com/lib
 
 **Development**
 
-* [crocodoc.viewer.js](https://raw.githubusercontent.com/box/viewer.js/v0.10.2/dist/crocodoc.viewer.js) 227.6 kB (32.2 kB gzipped)
-* [crocodoc.viewer.css](https://raw.githubusercontent.com/box/viewer.js/v0.10.2/dist/crocodoc.viewer.css) 14.8 kB (3.1 kB gzipped)
+* [crocodoc.viewer.js](https://raw.githubusercontent.com/box/viewer.js/v0.10.2/dist/crocodoc.viewer.js) 227.6 kB
+* [crocodoc.viewer.css](https://raw.githubusercontent.com/box/viewer.js/v0.10.2/dist/crocodoc.viewer.css) 14.8 kB
 
 **Production**
 
