@@ -42,7 +42,7 @@
                 messages = instance.messages || [];
 
                 if (util.inArray(messageName, messages) !== -1) {
-                    if (typeof instance.onmessage === 'function') {
+                    if (util.isFn(instance.onmessage)) {
                         instance.onmessage.call(instance, messageName, data);
                     }
                 }
@@ -62,6 +62,19 @@
                 broadcast(message.name, message.data);
             }
             messageQueue = null;
+        }
+
+        /**
+         * Call the destroy method on a component instance if it exists and the
+         * instance has not already been destroyed
+         * @param   {Object} instance The component instance
+         * @returns {void}
+         */
+        function destroyComponent(instance) {
+            if (util.isFn(instance.destroy) && !instance._destroyed) {
+                instance.destroy();
+                instance._destroyed = true;
+            }
         }
 
         //----------------------------------------------------------------------
@@ -95,9 +108,7 @@
 
             for (i = 0, len = instances.length; i < len; ++i) {
                 if (instance === instances[i]) {
-                    if (typeof instance.destroy === 'function') {
-                        instance.destroy();
-                    }
+                    destroyComponent(instance);
                     instances.splice(i, 1);
                     break;
                 }
@@ -109,13 +120,12 @@
          * @returns {void}
          */
         this.destroy = function () {
-            var i, len, instance;
+            var i, len, instance,
+                components = instances.slice();
 
-            for (i = 0, len = instances.length; i < len; ++i) {
-                instance = instances[i];
-                if (typeof instance.destroy === 'function') {
-                    instance.destroy();
-                }
+            for (i = 0, len = components.length; i < len; ++i) {
+                instance = components[i];
+                destroyComponent(instance);
             }
             instances = [];
             dataProviders = {};

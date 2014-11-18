@@ -61,6 +61,40 @@ test('destroy() should call the destroy() method on any component instance that 
     this.scope.destroy();
 });
 
+test('destroy() should only destroy components that have not already been destroyed', function () {
+    var count = 5,
+        component1, component2,
+        componentName1 = 'component 1',
+        componentName2 = 'component 2',
+        c1spy = this.spy(),
+        testComponent1 = function () {
+            return {
+                destroy: c1spy
+            };
+        },
+        testComponent2 = function (scope) {
+            var components = [], i;
+            for (i = 0; i < count; ++i) {
+                components.push(scope.createComponent('component 1'));
+            }
+            return {
+                destroy: function () {
+                    for (i = 0; i < count; ++i) {
+                        scope.destroyComponent(components[i]);
+                    }
+                }
+            };
+        };
+
+    this.framework.addComponent(componentName1, testComponent1);
+    this.framework.addComponent(componentName2, testComponent2);
+    component2 = this.scope.createComponent(componentName2);
+    var c2spy = this.spy(component2, 'destroy');
+    this.scope.destroy();
+    ok(c2spy.called, 'component 2 was destroyed');
+    equal(c1spy.callCount, count, 'nested component 1 destroyed the correct number of times');
+});
+
 test('broadcast() should only call the onmessage() method on component instance when called with a message that the component has registered interest in', function () {
     var component, componentMock,
         data = { some: 'data' },
