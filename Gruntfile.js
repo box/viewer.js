@@ -15,7 +15,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-parallel');
     grunt.loadNpmTasks('grunt-bump');
     grunt.loadNpmTasks('grunt-git');
-    grunt.loadNpmTasks('grunt-publish');
     grunt.loadNpmTasks('grunt-text-replace');
     grunt.loadNpmTasks('grunt-editor');
 
@@ -204,9 +203,6 @@ module.exports = function (grunt) {
                     message: 'Crocodoc Viewer v<%= pkg.version %>'
                 }
             }
-        },
-        publish: {
-            src: ['./']
         },
         copy: {
             dist: {
