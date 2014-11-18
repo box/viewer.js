@@ -13,6 +13,10 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-image-embed');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-parallel');
+    grunt.loadNpmTasks('grunt-bump');
+    grunt.loadNpmTasks('grunt-git');
+    grunt.loadNpmTasks('grunt-text-replace');
+    grunt.loadNpmTasks('grunt-editor');
 
     var rewriteRulesSnippet = require('grunt-connect-rewrite/lib/utils').rewriteRequest;
 
@@ -158,6 +162,48 @@ module.exports = function (grunt) {
                 }
             }
         },
+        bump: {
+            options: {
+                files: ['package.json', 'bower.json'],
+                updateConfigs: ['pkg'],
+                commit: false,
+                createTag: false,
+                push: false
+            }
+        },
+        gitlog: {
+            changelog: {
+                options: {
+                    from: 'v<%= pkg.version %>'
+                }
+            }
+        },
+        replace: {
+            changelog: {
+                src: ['CHANGELOG.md'],
+                overwrite: true,
+                replacements: [{ from: '----\n', to: '----\n<%= changelog.formatted %>' }]
+            }
+        },
+        gitcommit: {
+            release: {
+                options: {
+                    message: 'v<%= pkg.version %>',
+                    // the tests will be run already in the release task, so no
+                    // need to run them again in the git pre-commit hook
+                    noVerify: true
+                },
+                files: [{ src: ['.'] }]
+            }
+        },
+        gittag: {
+            release: {
+                options: {
+                    tag: 'v<%= pkg.version %>',
+                    message: 'Crocodoc Viewer v<%= pkg.version %>'
+                }
+            }
+        },
         copy: {
             dist: {
                 files: [{
@@ -178,16 +224,23 @@ module.exports = function (grunt) {
                     'realtime-example'
                 ]
             }
+        },
+        editor: {
+            changelog: {
+                src: ['CHANGELOG.md']
+            }
         }
     });
 
     var useLogo = !grunt.option('no-logo');
-    var defaultTasks = ['test', 'concat:js', 'concat:wrapjs'];
+    var buildTasks = ['concat:js', 'concat:wrapjs'];
     if (useLogo) {
-        defaultTasks.push('concat:css', 'imageEmbed');
+        buildTasks.push('concat:css', 'imageEmbed');
     } else {
-        defaultTasks.push('concat:css-no-logo');
+        buildTasks.push('concat:css-no-logo');
     }
+
+    grunt.registerTask('build-setup', buildTasks);
 
     // task to run the realtime example sse server
     grunt.registerTask('realtime-example', function () {
@@ -197,8 +250,52 @@ module.exports = function (grunt) {
 
     grunt.registerTask('test', ['jshint', 'qunit']);
     grunt.registerTask('doc', ['test', 'jsdoc']);
-    grunt.registerTask('default', defaultTasks);
-    grunt.registerTask('build', ['default', 'cssmin', 'uglify']);
+    grunt.registerTask('default', ['test', 'build-setup']);
+    grunt.registerTask('build-minify', ['build-setup', 'cssmin', 'uglify']);
+    grunt.registerTask('build', ['default', 'build-minify']);
     grunt.registerTask('serve', ['default', 'configureRewriteRules', 'parallel:examples']);
-    grunt.registerTask('release', ['build', 'copy:dist']);
+
+    grunt.registerTask('changelog', function () {
+        var logs = grunt.config('gitlog.changelog.result');
+        var formatted = '* **' + grunt.config('pkg.version') + '**\n';
+        var issuesURL = grunt.config('pkg.bugs.url');
+        formatted += logs.map(function (l) {
+            return '  * ' + l.subject.replace(/#(\d+)/, '[#$1](' + issuesURL + '/$1)');
+        }).join('\n');
+        grunt.config('changelog.formatted', formatted + '\n');
+    });
+
+    grunt.registerTask('publish-reminder', function () {
+        grunt.log.writeln('');
+        grunt.log.writeln(
+            'Release '.green + ('v' + grunt.config('pkg.version')).yellow +
+            ' committed and tagged.'.green
+        );
+        grunt.log.writeln('Don\'t forget to review and publish on github and npm!'.yellow.bold);
+    });
+
+    grunt.registerTask('release', function () {
+        var type = grunt.option('type') || 'patch',
+            types = ['patch', 'minor', 'major'];
+
+        if (types.indexOf(type) === -1) {
+            grunt.fail.fatal(type + ' not a valid release type');
+            return;
+        }
+
+        grunt.task.run([
+            'test',
+            'gitlog:changelog',
+            'bump:' + type,
+            'changelog',
+            'replace:changelog',
+            'editor:changelog',
+            'build-minify',
+            'copy:dist',
+            'gitcommit',
+            'gittag',
+            'publish-reminder'
+            // 'publish'
+        ]);
+    });
 };
