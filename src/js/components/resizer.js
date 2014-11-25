@@ -11,8 +11,6 @@ Crocodoc.addComponent('resizer', function (scope) {
 
     'use strict';
 
-    var support = scope.getUtility('support');
-
     // shorter way of defining
     // 'fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange'
     var FULLSCREENCHANGE_EVENT = ['', ' webkit', ' moz', ' ']
@@ -28,7 +26,6 @@ Crocodoc.addComponent('resizer', function (scope) {
         currentClientHeight,
         currentOffsetWidth,
         currentOffsetHeight,
-        resizeFrameID,
         inIframe = (function () {
             try {
                 return window.self !== window.top;
@@ -58,14 +55,25 @@ Crocodoc.addComponent('resizer', function (scope) {
     }
 
     /**
-     * Check if the element has resized every animation frame
+     * Initialize an iframe to fire events on resize
      * @returns {void}
      * @private
      */
-    function loop() {
-        support.cancelAnimationFrame(resizeFrameID);
-        checkResize();
-        resizeFrameID = support.requestAnimationFrame(loop, element);
+    function initResizer() {
+        var $iframe = $('<iframe>'),
+            $div = $('<div>');
+        $iframe.add($div).css({
+            visiblility: 'hidden',
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            top: 0,
+            left: 0,
+            border: 0
+        });
+        $iframe.prependTo($div.prependTo(element));
+        $window = $($iframe[0].contentWindow);
+        $window.on('resize', checkResize);
     }
 
     /**
@@ -73,7 +81,7 @@ Crocodoc.addComponent('resizer', function (scope) {
      * @returns {void}
      * @private
      */
-    function checkResize () {
+    function checkResize() {
         var newOffsetHeight = element.offsetHeight,
             newOffsetWidth = element.offsetWidth;
 
@@ -133,15 +141,13 @@ Crocodoc.addComponent('resizer', function (scope) {
             if (element === window) {
                 element = document.documentElement;
                 $window.on('resize', checkResize);
-                // @NOTE: we don't need to loop with
-                // requestAnimationFrame in this case,
-                // because we can rely on window.resize
-                // events if the window is our viewport
-                checkResize();
             } else {
-                loop();
+                initResizer();
             }
+
            $document.on(FULLSCREENCHANGE_EVENT, checkResize);
+
+            checkResize();
         },
 
         /**
@@ -151,7 +157,6 @@ Crocodoc.addComponent('resizer', function (scope) {
         destroy: function () {
             $document.off(FULLSCREENCHANGE_EVENT, checkResize);
             $window.off('resize', checkResize);
-            support.cancelAnimationFrame(resizeFrameID);
         }
     };
 });
