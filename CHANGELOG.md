@@ -3,6 +3,14 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.3**
+  * Fix [#152](https://github.com/box/viewer.js/issues/152) - calculateVisiblePages bug when viewer is display:none
+  * Add better resize-checking and remove polling/requestAnimationFrame
+  * Add file size and dist links in readme
+  * Fix bug with destroyComponent in a component's destroy method (see [#150](https://github.com/box/viewer.js/pull/150))
+  * Update grunt release command for better release automation
+  * Updated README.me with cdnjs information
+  * Add configurable viewer and page templates
 * **0.10.2**
   * Fix unnecessary horizontal scrollbar in IE 9 when using window as viewport
 * **0.10.1**

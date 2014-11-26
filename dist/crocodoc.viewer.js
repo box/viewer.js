@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.2 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.10.3 | (c) 2014 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -62,8 +62,7 @@ var CSS_CLASS_PREFIX         = 'crocodoc-',
 
 var VIEWER_HTML_TEMPLATE =
     '<div tabindex="-1" class="' + CSS_CLASS_VIEWPORT + '">' +
-        '<div class="' + CSS_CLASS_DOC + '">' +
-        '</div>' +
+        '<div class="' + CSS_CLASS_DOC + '"></div>' +
     '</div>' +
     '<div class="' + CSS_CLASS_LOGO + '"></div>';
 
@@ -261,6 +260,10 @@ var Crocodoc = (function () {
         // The number of times to retry loading an asset before giving up
         ASSET_REQUEST_RETRIES: 1,
 
+        // templates exposed to allow more customization
+        viewerTemplate: VIEWER_HTML_TEMPLATE,
+        pageTemplate: PAGE_HTML_TEMPLATE,
+
         // exposed for testing purposes only
         // should not be accessed directly otherwise
         components: components,
@@ -418,7 +421,7 @@ var Crocodoc = (function () {
                 messages = instance.messages || [];
 
                 if (util.inArray(messageName, messages) !== -1) {
-                    if (typeof instance.onmessage === 'function') {
+                    if (util.isFn(instance.onmessage)) {
                         instance.onmessage.call(instance, messageName, data);
                     }
                 }
@@ -438,6 +441,19 @@ var Crocodoc = (function () {
                 broadcast(message.name, message.data);
             }
             messageQueue = null;
+        }
+
+        /**
+         * Call the destroy method on a component instance if it exists and the
+         * instance has not already been destroyed
+         * @param   {Object} instance The component instance
+         * @returns {void}
+         */
+        function destroyComponent(instance) {
+            if (util.isFn(instance.destroy) && !instance._destroyed) {
+                instance.destroy();
+                instance._destroyed = true;
+            }
         }
 
         //----------------------------------------------------------------------
@@ -471,9 +487,7 @@ var Crocodoc = (function () {
 
             for (i = 0, len = instances.length; i < len; ++i) {
                 if (instance === instances[i]) {
-                    if (typeof instance.destroy === 'function') {
-                        instance.destroy();
-                    }
+                    destroyComponent(instance);
                     instances.splice(i, 1);
                     break;
                 }
@@ -485,13 +499,12 @@ var Crocodoc = (function () {
          * @returns {void}
          */
         this.destroy = function () {
-            var i, len, instance;
+            var i, len, instance,
+                components = instances.slice();
 
-            for (i = 0, len = instances.length; i < len; ++i) {
-                instance = instances[i];
-                if (typeof instance.destroy === 'function') {
-                    instance.destroy();
-                }
+            for (i = 0, len = components.length; i < len; ++i) {
+                instance = components[i];
+                destroyComponent(instance);
             }
             instances = [];
             dataProviders = {};
@@ -1928,6 +1941,14 @@ Crocodoc.addUtility('common', function () {
          */
         constrainRange: function (low, high, max) {
             var length = high - low;
+
+            if (length < 0) {
+                return {
+                    min: -1,
+                    max: -1
+                };
+            }
+
             low = util.clamp(low, 0, max);
             high = util.clamp(low + length, 0, max);
             if (high - low < length) {
@@ -2314,35 +2335,6 @@ Crocodoc.addUtility('support', function () {
         return str.replace(/([A-Z])/g, function(letter) { return '-' + letter.toLowerCase(); });
     }
 
-    // requestAnimationFrame based on:
-    // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-    // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
-    var raf, caf;
-    (function() {
-        var lastTime = 0;
-        var vendors = ['ms', 'moz', 'webkit', 'o'];
-        raf = window.requestAnimationFrame;
-        caf = window.cancelAnimationFrame;
-        for (var x = 0; x < vendors.length && !raf; ++x) {
-            raf = window[vendors[x] + 'RequestAnimationFrame'];
-            caf = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
-        }
-        if (!raf) {
-            raf = function(callback) {
-                var currTime = new Date().getTime();
-                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-                  timeToCall);
-                lastTime = currTime + timeToCall;
-                return id;
-            };
-            caf = function(id) {
-                clearTimeout(id);
-            };
-        }
-    }());
-
-
     return {
         svg: document.implementation.hasFeature('http://www.w3.org/TR/SVG11/feature#BasicStructure', '1.1'),
         csstransform: getVendorCSSPropertyName('transform'),
@@ -2406,22 +2398,6 @@ Crocodoc.addUtility('support', function () {
                 return new window.XDomainRequest();
             }
             return null;
-        },
-
-        /**
-         * Request an animation frame with the given arguments
-         * @returns {int} The frame id
-         */
-        requestAnimationFrame: function () {
-            return raf.apply(window, arguments);
-        },
-
-        /**
-         * Cancel the animation frame with the given id
-         * @returns {void}
-         */
-        cancelAnimationFrame: function () {
-            caf.apply(window, arguments);
         }
     };
 });
@@ -2611,7 +2587,7 @@ Crocodoc.addComponent('controller-paged', function (scope) {
             pxHeight = ptHeight * pt2px;
             pxWidth *= config.pageScale;
             pxHeight *= config.pageScale;
-            skeleton += util.template(PAGE_HTML_TEMPLATE, {
+            skeleton += util.template(Crocodoc.pageTemplate, {
                 w: pxWidth,
                 h: pxHeight
             });
@@ -3670,35 +3646,67 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
          */
         calculateVisibleRange: function () {
             var state = this.state,
-                viewportY0 = state.scrollTop,
-                viewportY1 = viewportY0 + state.viewportDimensions.clientHeight,
+                pages = state.pages,
+                viewportHeight = state.viewportDimensions.clientHeight,
+                viewportWidth = state.viewportDimensions.clientWidth;
+
+            // no pages are visible, but this case breaks the logic below,
+            // becasue page widths/heights will also be 0
+            if (viewportWidth === 0 || viewportHeight === 0) {
+                return {
+                    min: -1,
+                    max: -1
+                };
+            }
+
+            var viewportY0 = state.scrollTop,
+                viewportY1 = viewportY0 + viewportHeight,
                 viewportX0 = state.scrollLeft,
-                viewportX1 = viewportX0 + state.viewportDimensions.clientWidth,
-                lowY = util.bisectLeft(state.pages, viewportY0, 'y1'),
-                highY = util.bisectRight(state.pages, viewportY1, 'y0') - 1,
-                lowX = util.bisectLeft(state.pages, viewportX0, 'x1'),
-                highX = util.bisectRight(state.pages, viewportX1, 'x0') - 1,
+                viewportX1 = viewportX0 + viewportWidth,
+                lowY = util.bisectLeft(pages, viewportY0, 'y1'),
+                highY = util.bisectRight(pages, viewportY1, 'y0') - 1,
+                lowX = util.bisectLeft(pages, viewportX0, 'x1'),
+                highX = util.bisectRight(pages, viewportX1, 'x0') - 1,
                 low = Math.max(lowX, lowY),
                 high = Math.min(highX, highY);
+
             return util.constrainRange(low, high, this.numPages - 1);
         },
 
         /**
          * Calculates the current range of pages that are fully visible
          * @returns {Object} Range object with min and max values
+         * @NOTE: the only difference between this and calculateVisibleRange is
+         * the bisectLeft/Right section below uses the opposite fields in the
+         * page objects to test against. (TODO) Consider refactoring this to
+         * make it a little simpler...
          */
         calculateFullyVisibleRange: function () {
             var state = this.state,
-                viewportY0 = state.scrollTop,
-                viewportY1 = viewportY0 + state.viewportDimensions.clientHeight,
+                pages = state.pages,
+                viewportHeight = state.viewportDimensions.clientHeight,
+                viewportWidth = state.viewportDimensions.clientWidth;
+
+            // no pages are visible, but this case breaks the logic below
+            // becasue page widths/heights will also be 0
+            if (viewportWidth === 0 || viewportHeight === 0) {
+                return {
+                    min: -1,
+                    max: -1
+                };
+            }
+
+            var viewportY0 = state.scrollTop,
+                viewportY1 = viewportY0 + viewportHeight,
                 viewportX0 = state.scrollLeft,
-                viewportX1 = viewportX0 + state.viewportDimensions.clientWidth,
-                lowY = util.bisectLeft(state.pages, viewportY0, 'y0'),
-                highY = util.bisectRight(state.pages, viewportY1, 'y1') - 1,
-                lowX = util.bisectLeft(state.pages, viewportX0, 'x0'),
-                highX = util.bisectRight(state.pages, viewportX1, 'x1') - 1,
+                viewportX1 = viewportX0 + viewportWidth,
+                lowY = util.bisectLeft(pages, viewportY0, 'y0'),
+                highY = util.bisectRight(pages, viewportY1, 'y1') - 1,
+                lowX = util.bisectLeft(pages, viewportX0, 'x0'),
+                highX = util.bisectRight(pages, viewportX1, 'x1') - 1,
                 low = Math.max(lowX, lowY),
                 high = Math.min(highX, highY);
+
             return util.constrainRange(low, high, this.numPages - 1);
         },
 
@@ -5994,7 +6002,7 @@ Crocodoc.addComponent('resizer', function (scope) {
 
     'use strict';
 
-    var support = scope.getUtility('support');
+    var util = scope.getUtility('common');
 
     // shorter way of defining
     // 'fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange'
@@ -6011,7 +6019,6 @@ Crocodoc.addComponent('resizer', function (scope) {
         currentClientHeight,
         currentOffsetWidth,
         currentOffsetHeight,
-        resizeFrameID,
         inIframe = (function () {
             try {
                 return window.self !== window.top;
@@ -6041,14 +6048,28 @@ Crocodoc.addComponent('resizer', function (scope) {
     }
 
     /**
-     * Check if the element has resized every animation frame
+     * Initialize an iframe to fire events on resize
      * @returns {void}
      * @private
      */
-    function loop() {
-        support.cancelAnimationFrame(resizeFrameID);
-        checkResize();
-        resizeFrameID = support.requestAnimationFrame(loop, element);
+    function initResizer() {
+        var $iframe = $('<iframe>'),
+            $div = $('<div>');
+        $iframe.add($div).css({
+            visiblility: 'hidden',
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            top: 0,
+            left: 0,
+            border: 0
+        });
+        $iframe.prependTo($div.prependTo(element));
+        if (util.getComputedStyle(element).position === 'static') {
+            $(element).css({ position: 'relative' });
+        }
+        $window = $($iframe[0].contentWindow);
+        $window.on('resize', checkResize);
     }
 
     /**
@@ -6056,7 +6077,7 @@ Crocodoc.addComponent('resizer', function (scope) {
      * @returns {void}
      * @private
      */
-    function checkResize () {
+    function checkResize() {
         var newOffsetHeight = element.offsetHeight,
             newOffsetWidth = element.offsetWidth;
 
@@ -6116,15 +6137,13 @@ Crocodoc.addComponent('resizer', function (scope) {
             if (element === window) {
                 element = document.documentElement;
                 $window.on('resize', checkResize);
-                // @NOTE: we don't need to loop with
-                // requestAnimationFrame in this case,
-                // because we can rely on window.resize
-                // events if the window is our viewport
-                checkResize();
             } else {
-                loop();
+                initResizer();
             }
+
            $document.on(FULLSCREENCHANGE_EVENT, checkResize);
+
+            checkResize();
         },
 
         /**
@@ -6134,7 +6153,6 @@ Crocodoc.addComponent('resizer', function (scope) {
         destroy: function () {
             $document.off(FULLSCREENCHANGE_EVENT, checkResize);
             $window.off('resize', checkResize);
-            support.cancelAnimationFrame(resizeFrameID);
         }
     };
 });
@@ -6345,7 +6363,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
      */
     function initViewerHTML() {
         // create viewer HTML
-        $el.html(VIEWER_HTML_TEMPLATE);
+        $el.html(Crocodoc.viewerTemplate);
         if (config.useWindowAsViewport) {
             config.$viewport = $(window);
             $el.addClass(CSS_CLASS_WINDOW_AS_VIEWPORT);
