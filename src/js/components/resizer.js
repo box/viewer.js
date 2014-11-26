@@ -11,6 +11,8 @@ Crocodoc.addComponent('resizer', function (scope) {
 
     'use strict';
 
+    var util = scope.getUtility('common');
+
     // shorter way of defining
     // 'fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange'
     var FULLSCREENCHANGE_EVENT = ['', ' webkit', ' moz', ' ']
@@ -72,6 +74,9 @@ Crocodoc.addComponent('resizer', function (scope) {
             border: 0
         });
         $iframe.prependTo($div.prependTo(element));
+        if (util.getComputedStyle(element).position === 'static') {
+            $(element).css({ position: 'relative' });
+        }
         $window = $($iframe[0].contentWindow);
         $window.on('resize', checkResize);
     }

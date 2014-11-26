@@ -1,7 +1,9 @@
 module('Component - resizer', {
     setup: function () {
         var self = this;
-        this.utilities = {};
+        this.utilities = {
+            common: Crocodoc.getUtilityForTest('common')
+        };
         this.scope = Crocodoc.getScopeForTest(this);
         this.component = Crocodoc.getComponentForTest('resizer', this.scope);
     },
