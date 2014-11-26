@@ -54,35 +54,6 @@ Crocodoc.addUtility('support', function () {
         return str.replace(/([A-Z])/g, function(letter) { return '-' + letter.toLowerCase(); });
     }
 
-    // requestAnimationFrame based on:
-    // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-    // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
-    var raf, caf;
-    (function() {
-        var lastTime = 0;
-        var vendors = ['ms', 'moz', 'webkit', 'o'];
-        raf = window.requestAnimationFrame;
-        caf = window.cancelAnimationFrame;
-        for (var x = 0; x < vendors.length && !raf; ++x) {
-            raf = window[vendors[x] + 'RequestAnimationFrame'];
-            caf = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
-        }
-        if (!raf) {
-            raf = function(callback) {
-                var currTime = new Date().getTime();
-                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-                  timeToCall);
-                lastTime = currTime + timeToCall;
-                return id;
-            };
-            caf = function(id) {
-                clearTimeout(id);
-            };
-        }
-    }());
-
-
     return {
         svg: document.implementation.hasFeature('http://www.w3.org/TR/SVG11/feature#BasicStructure', '1.1'),
         csstransform: getVendorCSSPropertyName('transform'),
@@ -146,22 +117,6 @@ Crocodoc.addUtility('support', function () {
                 return new window.XDomainRequest();
             }
             return null;
-        },
-
-        /**
-         * Request an animation frame with the given arguments
-         * @returns {int} The frame id
-         */
-        requestAnimationFrame: function () {
-            return raf.apply(window, arguments);
-        },
-
-        /**
-         * Cancel the animation frame with the given id
-         * @returns {void}
-         */
-        cancelAnimationFrame: function () {
-            caf.apply(window, arguments);
         }
     };
 });
