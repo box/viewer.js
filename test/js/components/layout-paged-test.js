@@ -350,6 +350,91 @@ test('updateVisiblePages() should update the fully visible pages appropriately w
     deepEqual(this.component.state.fullyVisiblePages, [3, 4, 5], 'fully visible pages are correct');
 });
 
+test('calculateVisibleRange() should return the correct range when called', function () {
+    this.component.init(this.config);
+
+    this.component.state.pages = [
+        { x0: 0, y0: 0, x1: 100, y1: 100 },
+        { x0: 0, y0: 100, x1: 100, y1: 200 }
+    ];
+    this.component.numPages = 2;
+    this.component.state.scrollTop = 10;
+    this.component.state.scrollLeft = 10;
+    this.component.state.viewportDimensions.clientWidth = 80;
+    this.component.state.viewportDimensions.clientHeight = 80;
+    var range = this.component.calculateVisibleRange();
+    deepEqual(range, { min: 0, max: 0 }, 'range is correct');
+});
+
+test('calculateVisibleRange() should return the correct range when called', function () {
+    this.component.init(this.config);
+
+    this.component.state.pages = [
+        { x0: 0, y0: 0, x1: 100, y1: 100 },
+        { x0: 0, y0: 100, x1: 100, y1: 200 },
+        { x0: 0, y0: 200, x1: 100, y1: 300 }
+    ];
+    this.component.numPages = 3;
+    this.component.state.scrollTop = 101;
+    this.component.state.scrollLeft = 0;
+    this.component.state.viewportDimensions.clientWidth = 100;
+    this.component.state.viewportDimensions.clientHeight = 200;
+    var range = this.component.calculateVisibleRange();
+    deepEqual(range, { min: 1, max: 2 }, 'range is correct');
+});
+
+test('calculateFullyVisibleRange() should return the correct range when called', function () {
+    this.component.init(this.config);
+
+    this.component.state.pages = [
+        { x0: 0, y0: 0, x1: 100, y1: 100 },
+        { x0: 0, y0: 100, x1: 100, y1: 200 }
+    ];
+    this.component.numPages = 2;
+    this.component.state.scrollTop = 10;
+    this.component.state.scrollLeft = 10;
+    this.component.state.viewportDimensions.clientWidth = 80;
+    this.component.state.viewportDimensions.clientHeight = 80;
+    var range = this.component.calculateFullyVisibleRange();
+    // no page is fully visible
+    deepEqual(range, { min: -1, max: -1 }, 'range is correct');
+});
+
+test('calculateFullyVisibleRange() should return the correct range when called', function () {
+    this.component.init(this.config);
+
+    this.component.state.pages = [
+        { x0: 0, y0: 0, x1: 100, y1: 100 },
+        { x0: 0, y0: 100, x1: 100, y1: 200 },
+        { x0: 0, y0: 200, x1: 100, y1: 300 }
+    ];
+    this.component.numPages = 3;
+    this.component.state.scrollTop = 101;
+    this.component.state.scrollLeft = 0;
+    this.component.state.viewportDimensions.clientWidth = 100;
+    this.component.state.viewportDimensions.clientHeight = 200;
+    var range = this.component.calculateFullyVisibleRange();
+    deepEqual(range, { min: 2, max: 2 }, 'range is correct');
+});
+
+test('calculateVisibleRange() should return an empty range when the viewport width/height is 0', function () {
+    this.component.init(this.config);
+
+    this.component.state.viewportDimensions.clientWidth = 0;
+    this.component.state.viewportDimensions.clientHeight = 0;
+    var range = this.component.calculateVisibleRange();
+    deepEqual(range, { min: -1, max: -1 }, 'range is empty');
+});
+
+test('calculateFullyVisibleRange() should return an empty range when the viewport width/height is 0', function () {
+    this.component.init(this.config);
+
+    this.component.state.viewportDimensions.clientWidth = 0;
+    this.component.state.viewportDimensions.clientHeight = 0;
+    var range = this.component.calculateFullyVisibleRange();
+    deepEqual(range, { min: -1, max: -1 }, 'range is empty');
+});
+
 test('updateVisiblePages() should update the css classes appropriately when called with updateClasses===true', function () {
     var CSS_CLASS_PAGE_VISIBLE = 'crocodoc-page-visible';
     var range = { min: 2, max: 4 };
