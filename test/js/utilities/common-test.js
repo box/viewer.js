@@ -62,6 +62,7 @@ QUnit.cases([
     { low: 10, high: 50, max: 20, result: { min: 0, max: 20 } },
     { low: 10, high: 50, max: 60, result: { min: 10, max: 50 } },
     { low: -10, high: 50, max: 60, result: { min: 0, max: 60 } },
+    { low: 0, high: -1, max: 60, result: { min: -1, max: -1 } },
 ]).test('constrainRange() should return the expected range object when called', function (params) {
     deepEqual(this.util.constrainRange(params.low, params.high, params.max), params.result);
 });

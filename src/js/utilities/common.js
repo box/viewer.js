@@ -130,6 +130,14 @@ Crocodoc.addUtility('common', function () {
          */
         constrainRange: function (low, high, max) {
             var length = high - low;
+
+            if (length < 0) {
+                return {
+                    min: -1,
+                    max: -1
+                };
+            }
+
             low = util.clamp(low, 0, max);
             high = util.clamp(low + length, 0, max);
             if (high - low < length) {

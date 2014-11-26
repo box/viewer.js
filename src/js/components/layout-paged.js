@@ -460,35 +460,67 @@ Crocodoc.addComponent('layout-paged', ['layout-base'], function (scope, base) {
          */
         calculateVisibleRange: function () {
             var state = this.state,
-                viewportY0 = state.scrollTop,
-                viewportY1 = viewportY0 + state.viewportDimensions.clientHeight,
+                pages = state.pages,
+                viewportHeight = state.viewportDimensions.clientHeight,
+                viewportWidth = state.viewportDimensions.clientWidth;
+
+            // no pages are visible, but this case breaks the logic below,
+            // becasue page widths/heights will also be 0
+            if (viewportWidth === 0 || viewportHeight === 0) {
+                return {
+                    min: -1,
+                    max: -1
+                };
+            }
+
+            var viewportY0 = state.scrollTop,
+                viewportY1 = viewportY0 + viewportHeight,
                 viewportX0 = state.scrollLeft,
-                viewportX1 = viewportX0 + state.viewportDimensions.clientWidth,
-                lowY = util.bisectLeft(state.pages, viewportY0, 'y1'),
-                highY = util.bisectRight(state.pages, viewportY1, 'y0') - 1,
-                lowX = util.bisectLeft(state.pages, viewportX0, 'x1'),
-                highX = util.bisectRight(state.pages, viewportX1, 'x0') - 1,
+                viewportX1 = viewportX0 + viewportWidth,
+                lowY = util.bisectLeft(pages, viewportY0, 'y1'),
+                highY = util.bisectRight(pages, viewportY1, 'y0') - 1,
+                lowX = util.bisectLeft(pages, viewportX0, 'x1'),
+                highX = util.bisectRight(pages, viewportX1, 'x0') - 1,
                 low = Math.max(lowX, lowY),
                 high = Math.min(highX, highY);
+
             return util.constrainRange(low, high, this.numPages - 1);
         },
 
         /**
          * Calculates the current range of pages that are fully visible
          * @returns {Object} Range object with min and max values
+         * @NOTE: the only difference between this and calculateVisibleRange is
+         * the bisectLeft/Right section below uses the opposite fields in the
+         * page objects to test against. (TODO) Consider refactoring this to
+         * make it a little simpler...
          */
         calculateFullyVisibleRange: function () {
             var state = this.state,
-                viewportY0 = state.scrollTop,
-                viewportY1 = viewportY0 + state.viewportDimensions.clientHeight,
+                pages = state.pages,
+                viewportHeight = state.viewportDimensions.clientHeight,
+                viewportWidth = state.viewportDimensions.clientWidth;
+
+            // no pages are visible, but this case breaks the logic below
+            // becasue page widths/heights will also be 0
+            if (viewportWidth === 0 || viewportHeight === 0) {
+                return {
+                    min: -1,
+                    max: -1
+                };
+            }
+
+            var viewportY0 = state.scrollTop,
+                viewportY1 = viewportY0 + viewportHeight,
                 viewportX0 = state.scrollLeft,
-                viewportX1 = viewportX0 + state.viewportDimensions.clientWidth,
-                lowY = util.bisectLeft(state.pages, viewportY0, 'y0'),
-                highY = util.bisectRight(state.pages, viewportY1, 'y1') - 1,
-                lowX = util.bisectLeft(state.pages, viewportX0, 'x0'),
-                highX = util.bisectRight(state.pages, viewportX1, 'x1') - 1,
+                viewportX1 = viewportX0 + viewportWidth,
+                lowY = util.bisectLeft(pages, viewportY0, 'y0'),
+                highY = util.bisectRight(pages, viewportY1, 'y1') - 1,
+                lowX = util.bisectLeft(pages, viewportX0, 'x0'),
+                highX = util.bisectRight(pages, viewportX1, 'x1') - 1,
                 low = Math.max(lowX, lowY),
                 high = Math.min(highX, highY);
+
             return util.constrainRange(low, high, this.numPages - 1);
         },
 
