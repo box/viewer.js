@@ -27,9 +27,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
         removeOnUnload = browser.mobile || browser.ielt10,
         // * IE 9-10 and firefox perform better with <img> elements
         // * IE 11 crashes when using img elements for some reason
+        // * Chrome can handle inline svg well if it's pre-parsed in the XHR
         // * Everything else is happy with iframe + innerhtml
         embedStrategy = browser.ielt11 || browser.firefox ?
                         EMBED_STRATEGY_DATA_URL_IMG :
+                        browser.chrome ?
+                        EMBED_STRATEGY_PREPARSED_INLINE_SVG :
                         EMBED_STRATEGY_IFRAME_INNERHTML;
 
     /**
@@ -50,6 +53,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     data: 'data:'+SVG_MIME_TYPE+';base64,' + window.btoa(SVG_CONTAINER_TEMPLATE)
                 });
 
+            case EMBED_STRATEGY_PREPARSED_INLINE_SVG:
             case EMBED_STRATEGY_INLINE_SVG:
                 return $('<div>');
 
@@ -96,6 +100,9 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 abort: function() {}
             });
         } else {
+            if (embedStrategy === EMBED_STRATEGY_PREPARSED_INLINE_SVG) {
+                return scope.get('page-svg-parsed', page);
+            }
             return scope.get('page-svg', page);
         }
     }
@@ -205,6 +212,12 @@ Crocodoc.addComponent('page-svg', function (scope) {
                 $svg.append(svgEl);
                 break;
 
+            case EMBED_STRATEGY_PREPARSED_INLINE_SVG:
+                svgDoc = svgText;
+                svgEl = document.importNode(svgDoc.documentElement, true);
+                $svg.append(svgEl);
+                break;
+
             case EMBED_STRATEGY_BASIC_OBJECT:
                 $svg.attr({
                     type: SVG_MIME_TYPE,
@@ -243,14 +256,18 @@ Crocodoc.addComponent('page-svg', function (scope) {
      */
     function loadSVGSuccess(text) {
         if (!destroyed && !unloaded) {
-            if (!svgLoaded && text) {
-                embedSVG(text);
-                svgLoaded = true;
-                if (!removeOnUnload) {
-                    // cleanup the promise (abort will remove the svg text from
-                    // the in-memory cache as well)
-                    $loadSVGPromise.abort();
-                    $loadSVGPromise = null;
+            if (!svgLoaded) {
+                if (text ||
+                    (embedStrategy === EMBED_STRATEGY_BASIC_IMG ||
+                     embedStrategy === EMBED_STRATEGY_BASIC_OBJECT)) {
+                    embedSVG(text);
+                    svgLoaded = true;
+                    if (!removeOnUnload) {
+                        // cleanup the promise (abort will remove the svg text from
+                        // the in-memory cache as well)
+                        $loadSVGPromise.abort();
+                        $loadSVGPromise = null;
+                    }
                 }
             }
             // always insert and show the svg el when load was successful

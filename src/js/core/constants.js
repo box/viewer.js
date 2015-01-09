@@ -187,4 +187,6 @@ var SVG_MIME_TYPE = 'image/svg+xml',
     // Embed in an img tag via data:url, downloading stylesheet separately, and
     // injecting it into the data:url of SVG text before embedding
     // @NOTE: this method seems to be more performant on IE
-    EMBED_STRATEGY_DATA_URL_IMG = 8;
+    EMBED_STRATEGY_DATA_URL_IMG = 8,
+
+    EMBED_STRATEGY_PREPARSED_INLINE_SVG = 9;

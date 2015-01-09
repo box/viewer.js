@@ -71,7 +71,10 @@ Crocodoc.addComponent('resizer', function (scope) {
             height: '100%',
             top: 0,
             left: 0,
-            border: 0
+            border: 0,
+            // this div's presence in the viewport can cause repaints on scroll
+            // so we promote it to be composited so it doesn't repaint
+            transform: 'translateZ(0)'
         });
         $iframe.prependTo($div.prependTo(element));
         if (util.getComputedStyle(element).position === 'static') {

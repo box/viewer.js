@@ -66,6 +66,7 @@ Crocodoc.addUtility('ajax', function (framework) {
         options.method = options.method || 'GET';
         options.headers = options.headers || [];
         options.data = options.data || '';
+        options.responseType = options.responseType || 'text';
 
         if (typeof options.data !== 'string') {
             options.data = $.param(options.data);
@@ -95,12 +96,13 @@ Crocodoc.addUtility('ajax', function (framework) {
      * @param   {string}   method  request method
      * @param   {*}        data    request data to send
      * @param   {Array}    headers request headers
+     * @param   {string}   responseType request response type
      * @param   {Function} success success callback function
      * @param   {Function} fail    fail callback function
      * @returns {XMLHttpRequest}   Request object
      * @private
      */
-    function doXHR(url, method, data, headers, success, fail) {
+    function doXHR(url, method, data, headers, responseType, success, fail) {
         var req = support.getXHR();
         req.open(method, url, true);
         req.onreadystatechange = function () {
@@ -134,6 +136,7 @@ Crocodoc.addUtility('ajax', function (framework) {
             }
         };
         setHeaders(req, headers);
+        req.responseType = responseType;
         req.send(data);
         return req;
     }
@@ -175,6 +178,7 @@ Crocodoc.addUtility('ajax', function (framework) {
          * @param   {Object}     [options]         AJAX request options
          * @param   {string}     [options.method]  request method, eg. 'GET', 'POST' (defaults to 'GET')
          * @param   {Array}      [options.headers] request headers (defaults to [])
+         * @param   {string}     [options.responseType] request response type (defaults to 'text')
          * @param   {*}          [options.data]    request data to send (defaults to null)
          * @param   {Function}   [options.success] success callback function
          * @param   {Function}   [options.fail]    fail callback function
@@ -184,7 +188,8 @@ Crocodoc.addUtility('ajax', function (framework) {
             var opt = parseOptions(options),
                 method = opt.method,
                 data = opt.data,
-                headers = opt.headers;
+                headers = opt.headers,
+                responseType = opt.responseType;
 
             if (method === 'GET' && data) {
                 url = urlUtil.appendQueryParams(url, data);
@@ -229,7 +234,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                 return doXDR(url, method, data, ajaxSuccess, ajaxFail);
             } else {
                 // the browser supports XHR and XHR+CORS, so just do a regular XHR
-                return doXHR(url, method, data, headers, ajaxSuccess, ajaxFail);
+                return doXHR(url, method, data, headers, responseType, ajaxSuccess, ajaxFail);
             }
         },
 
