@@ -82,7 +82,7 @@ Crocodoc.addUtility('subpx', function (framework) {
             if (!subpixelRenderingIsSupported) {
                 if (document.body.style.zoom !== undefined) {
                     var $wrap = $('<div>').addClass(CSS_CLASS_SUBPX_FIX);
-                    $(el).children().wrapAll($wrap);
+                    $(el).wrap($wrap);
                 }
             }
             return el;
