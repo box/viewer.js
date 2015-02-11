@@ -3,6 +3,8 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.4**
+  * Fix [#157](https://github.com/box/viewer.js/issues/157)
 * **0.10.3**
   * Fix [#152](https://github.com/box/viewer.js/issues/152) - calculateVisiblePages bug when viewer is display:none
   * Add better resize-checking and remove polling/requestAnimationFrame

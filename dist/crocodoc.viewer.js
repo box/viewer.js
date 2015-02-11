@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.3 | (c) 2014 Box */
+/*! Crocodoc Viewer - v0.10.4 | (c) 2015 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -2646,8 +2646,16 @@ Crocodoc.addComponent('controller-paged', function (scope) {
      */
     function sortPageLinks() {
         var i, len, link,
+            destination,
+            // the starting and ending page *numbers* (not indexes)
+            start = config.pageStart,
+            end = config.pageEnd,
             links = config.metadata.links || [],
             sorted = [];
+
+        // NOTE:
+        // link.pagenum is the page the link resides on
+        // link.destination.pagenum is the page the link links to
 
         for (i = 0, len = config.metadata.numpages; i < len; ++i) {
             sorted[i] = [];
@@ -2655,6 +2663,24 @@ Crocodoc.addComponent('controller-paged', function (scope) {
 
         for (i = 0, len = links.length; i < len; ++i) {
             link = links[i];
+
+            if (link.pagenum < start || link.pagenum > end) {
+                // link page is outside the enabled page range
+                continue;
+            }
+
+            if (link.destination) {
+                destination = link.destination.pagenum;
+
+                if (destination < start || destination > end) {
+                    // destination is outside the enabled page range
+                    continue;
+                } else {
+                    // subtract the number of pages cut off from the beginning
+                    link.destination.pagenum = destination - (start - 1);
+                }
+            }
+
             sorted[link.pagenum - 1].push(link);
         }
 
