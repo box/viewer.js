@@ -3,7 +3,7 @@ module('Component - controller-paged', {
         var self = this;
 
         this.metadata = {
-            numPages: 1,
+            numpages: 1,
             dimensions: {
                 width: 100,
                 height: 100
@@ -133,4 +133,97 @@ test('init() should init page components with appropriate status when called and
         .exactly(metadata.numpages);
 
     this.component.init();
+});
+
+test('links should be sorted properly and passed into the page components when initialized', function () {
+    var metadata = {
+        numpages: 5,
+        links: [
+            { pagenum: 1, destination: { pagenum: 2 } },
+            { pagenum: 2, destination: { pagenum: 1 } },
+            { pagenum: 2, destination: { pagenum: 5 } }
+        ],
+        dimensions: { width: 100, height: 100 }
+    };
+    this.config.metadata = metadata;
+
+    var spy = this.spy(this.components.page, 'init');
+
+    this.component.init();
+
+    ok(spy.calledWith(sinon.match.object, sinon.match({
+        index: 0,
+        links: sinon.match([
+            sinon.match({
+                destination: { pagenum: 2 }
+            })
+        ])
+    })), 'page links correct');
+    ok(spy.calledWith(sinon.match.object, sinon.match({
+        index: 1,
+        links: sinon.match([
+            sinon.match({
+                destination: { pagenum: 1 }
+            }),
+            sinon.match({
+                destination: { pagenum: 5 }
+            })
+        ])
+    })), 'page links correct');
+});
+
+test('links should be sorted properly and passed into the page components when initialized and pageStart/pageEnd are used', function () {
+    var metadata = {
+        numpages: 5,
+        links: [
+            { pagenum: 1, destination: { pagenum: 2 } },
+            { pagenum: 2, destination: { pagenum: 1 } },
+            { pagenum: 2, destination: { pagenum: 5 } }
+        ],
+        dimensions: { width: 100, height: 100 }
+    };
+    this.config.metadata = metadata;
+    this.config.pageStart = 2;
+    this.config.pageEnd = 2;
+
+    var spy = this.spy(this.components.page, 'init');
+
+    this.component.init();
+
+    ok(!spy.calledWith(sinon.match.object, sinon.match({
+        index: 0,
+    })), 'page not initialized');
+    ok(spy.calledWith(sinon.match.object, sinon.match({
+        index: 1,
+        links: sinon.match.has('length', 0)
+    })), 'page links correctly empty');
+});
+
+test('links should be sorted properly and passed into the page components when initialized and pageStart/pageEnd are used', function () {
+    var metadata = {
+        numpages: 5,
+        links: [
+            { pagenum: 2, destination: { pagenum: 5 } },
+            { pagenum: 5, destination: { pagenum: 1 } }
+        ],
+        dimensions: { width: 100, height: 100 }
+    };
+    this.config.metadata = metadata;
+    this.config.pageStart = 2;
+    this.config.pageEnd = 5;
+
+    var spy = this.spy(this.components.page, 'init');
+
+    this.component.init();
+
+    ok(spy.calledWith(sinon.match.object, sinon.match({
+        index: 4,
+        links: sinon.match.has('length', 0)
+    })), 'page not initialized');
+    ok(spy.calledWith(sinon.match.object, sinon.match({
+        index: 1,
+        links: sinon.match([
+            sinon.match({ destination: { pagenum: 4 }})
+        ])
+    })), 'page links correctly adjusted');
 });
