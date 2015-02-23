@@ -77,8 +77,6 @@ Crocodoc.addComponent('page-img', function (scope) {
                     imageLoaded = true;
                     $img = $(img).appendTo($el);
                 }
-                // always show the image
-                $img.show();
             });
 
             $loadImgPromise.fail(function loadImgFail(error) {
@@ -92,7 +90,7 @@ Crocodoc.addComponent('page-img', function (scope) {
         },
 
         /**
-         * Unload (or hide) the img
+         * Unload the img if necessary
          * @returns {void}
          */
         unload: function () {
@@ -106,8 +104,6 @@ Crocodoc.addComponent('page-img', function (scope) {
                     $img = null;
                 }
                 imageLoaded = false;
-            } else if ($img) {
-                $img.hide();
             }
         }
     };

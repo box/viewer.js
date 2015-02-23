@@ -253,11 +253,10 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     $loadSVGPromise = null;
                 }
             }
-            // always insert and show the svg el when load was successful
+            // always insert the svg el when load was successful
             if ($svg.parent().length === 0) {
                 $svg.appendTo($svgLayer);
             }
-            $svg.show();
         }
     }
 
@@ -341,7 +340,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
         },
 
         /**
-         * Unload (or hide) the SVG object
+         * Unload the SVG object if necessary
          * @returns {void}
          */
         unload: function () {
@@ -359,9 +358,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     $svg = null;
                 }
                 svgLoaded = false;
-            } else if ($svg) {
-                // just hide the svg element
-                $svg.hide();
             }
         }
     };
