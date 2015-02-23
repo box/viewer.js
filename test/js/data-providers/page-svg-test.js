@@ -82,3 +82,33 @@ test('get() should apply the subpx hack if the browser is firefox and subpixel r
         ok(text.indexOf('<style>text { text-rendering: geometricPrecision; }</style>') > -1, 'should have subpx hack');
     });
 });
+
+test('get() should replace the link tag with the stylesheet correctly for a self-closing tag', function () {
+    var svgText = '<svg><xhtml:link href="stylesheet.css" type="text/css" rel="stylesheet" /></svg>',
+        cssText = '.this-is-css { color: red; }';
+
+    this.stub(this.scope, 'get').withArgs('stylesheet').returns($.Deferred().resolve(cssText).promise());
+    this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
+
+    this.$deferred.resolve(svgText);
+
+    var promise = this.dataProvider.get('page-svg', 3);
+    promise.done(function (text) {
+        ok(text.indexOf('<style>' + cssText + '</style>') > -1, 'should have cssText');
+    });
+});
+
+test('get() should replace the link tag with the stylesheet correctly for a non-self-closing tag', function () {
+    var svgText = '<svg><xhtml:link href="stylesheet.css" type="text/css" rel="stylesheet"></xhtml:link></svg>',
+        cssText = '.this-is-css { color: red; }';
+
+    this.stub(this.scope, 'get').withArgs('stylesheet').returns($.Deferred().resolve(cssText).promise());
+    this.stub(this.utilities.ajax, 'fetch').returns(this.$deferred.promise());
+
+    this.$deferred.resolve(svgText);
+
+    var promise = this.dataProvider.get('page-svg', 3);
+    promise.done(function (text) {
+        ok(text.indexOf('<style>' + cssText + '</style>') > -1, 'should have cssText');
+    });
+});
