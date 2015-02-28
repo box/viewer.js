@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.4 | (c) 2015 Box */
+/*! Crocodoc Viewer - v0.10.5 | (c) 2015 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -1182,7 +1182,10 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
         subpx = scope.getUtility('subpx'),
         config = scope.getConfig(),
         destroyed = false,
-        cache = {};
+        cache = {},
+        // NOTE: there are cases where the stylesheet link tag will be self-
+        // closing, so check for both cases
+        inlineCSSRegExp = /<xhtml:link[^>]*>(\s*<\/xhtml:link>)?/i;
 
     /**
      * Interpolate CSS text into the SVG text
@@ -1204,7 +1207,7 @@ Crocodoc.addDataProvider('page-svg', function(scope) {
         }
 
         // inline the CSS!
-        text = text.replace(/<xhtml:link[^>]*>/, stylesheetHTML);
+        text = text.replace(inlineCSSRegExp, stylesheetHTML);
 
         return text;
     }

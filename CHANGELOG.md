@@ -3,6 +3,10 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.5**
+  * Ignore npm-debug.log
+  * Update dev dependencies
+  * (internal) Fix CSS link replacement in SVG data provider
 * **0.10.4**
   * Fix [#157](https://github.com/box/viewer.js/issues/157)
 * **0.10.3**
