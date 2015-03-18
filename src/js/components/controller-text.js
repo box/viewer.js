@@ -29,8 +29,11 @@ Crocodoc.addComponent('controller-text', function (scope) {
 
             // we can just load the text immediately
             $promise = scope.get('page-text', 1).then(function (html) {
+                // the viewport could be window in useWindowAsViewport, so get
+                // the real viewport div
+                var $viewport = config.$doc.parent();
                 config.$doc = $(html);
-                config.$viewport.html(config.$doc);
+                $viewport.html(config.$doc);
             });
         },
 
