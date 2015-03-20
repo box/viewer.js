@@ -62,9 +62,10 @@ Crocodoc.addComponent('resizer', function (scope) {
      * @private
      */
     function initResizer() {
-        var $iframe = $('<iframe>'),
+        var $iframe = $('<iframe frameborder="0">'),
             $div = $('<div>');
         $iframe.add($div).css({
+            opacity: 0,
             visiblility: 'hidden',
             position: 'absolute',
             width: '100%',
