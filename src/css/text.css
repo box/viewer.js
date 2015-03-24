@@ -7,7 +7,7 @@
     user-select: none;
 }
 
-.crocodoc-text {
+.crocodoc-doc.crocodoc-text {
     margin: 0;
     padding: 0;
     opacity: 1;
