@@ -8,13 +8,14 @@
 /**
  * Wrapper around the EventSource object for simple event subscription
  * @param {string} url The realtime URL to connect to
+ * @param {Function} EventSource EventSource constructor to use
  * @constructor
  */
-function Realtime(url) {
-    if (!window.EventSource) {
+function Realtime(url, EventSource) {
+    if (!EventSource) {
         throw new Error('Realtime plugin requires EventSource support');
     }
-    this.eventSource = new window.EventSource(url);
+    this.eventSource = new EventSource(url);
 }
 
 Realtime.prototype = {
@@ -170,12 +171,13 @@ Crocodoc.addPlugin('realtime', function (scope) {
          * Initialize the realtime plugin
          * @param   {Object} config     The config object
          * @param   {string} config.url The URL to connect to for realtime events
+         * @param {Function} [EventSource] EventSource constructor to use (for testing purposes)
          * @returns {void}
          */
-        init: function (config) {
+        init: function (config, EventSource) {
             var url = config.url;
             if (url) {
-                realtime = new Crocodoc.Realtime(url);
+                realtime = new Crocodoc.Realtime(url, EventSource || window.EventSource);
 
                 // force the viewer to think conversion is not complete
                 // @TODO: ideally this wouldn't have to make an extra trip to
