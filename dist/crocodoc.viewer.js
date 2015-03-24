@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.5 | (c) 2015 Box */
+/*! Crocodoc Viewer - v0.10.6 | (c) 2015 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -2270,7 +2270,7 @@ Crocodoc.addUtility('subpx', function (framework) {
             if (!subpixelRenderingIsSupported) {
                 if (document.body.style.zoom !== undefined) {
                     var $wrap = $('<div>').addClass(CSS_CLASS_SUBPX_FIX);
-                    $(el).children().wrapAll($wrap);
+                    $(el).wrap($wrap);
                 }
             }
             return el;
@@ -2778,8 +2778,11 @@ Crocodoc.addComponent('controller-text', function (scope) {
 
             // we can just load the text immediately
             $promise = scope.get('page-text', 1).then(function (html) {
+                // the viewport could be window in useWindowAsViewport, so get
+                // the real viewport div
+                var $viewport = config.$doc.parent();
                 config.$doc = $(html);
-                config.$viewport.html(config.$doc);
+                $viewport.html(config.$doc);
             });
         },
 
@@ -5146,8 +5149,6 @@ Crocodoc.addComponent('page-img', function (scope) {
                     imageLoaded = true;
                     $img = $(img).appendTo($el);
                 }
-                // always show the image
-                $img.show();
             });
 
             $loadImgPromise.fail(function loadImgFail(error) {
@@ -5161,7 +5162,7 @@ Crocodoc.addComponent('page-img', function (scope) {
         },
 
         /**
-         * Unload (or hide) the img
+         * Unload the img if necessary
          * @returns {void}
          */
         unload: function () {
@@ -5175,8 +5176,6 @@ Crocodoc.addComponent('page-img', function (scope) {
                     $img = null;
                 }
                 imageLoaded = false;
-            } else if ($img) {
-                $img.hide();
             }
         }
     };
@@ -5555,11 +5554,10 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     $loadSVGPromise = null;
                 }
             }
-            // always insert and show the svg el when load was successful
+            // always insert the svg el when load was successful
             if ($svg.parent().length === 0) {
                 $svg.appendTo($svgLayer);
             }
-            $svg.show();
         }
     }
 
@@ -5643,7 +5641,7 @@ Crocodoc.addComponent('page-svg', function (scope) {
         },
 
         /**
-         * Unload (or hide) the SVG object
+         * Unload the SVG object if necessary
          * @returns {void}
          */
         unload: function () {
@@ -5661,9 +5659,6 @@ Crocodoc.addComponent('page-svg', function (scope) {
                     $svg = null;
                 }
                 svgLoaded = false;
-            } else if ($svg) {
-                // just hide the svg element
-                $svg.hide();
             }
         }
     };
@@ -6082,9 +6077,10 @@ Crocodoc.addComponent('resizer', function (scope) {
      * @private
      */
     function initResizer() {
-        var $iframe = $('<iframe>'),
+        var $iframe = $('<iframe frameborder="0">'),
             $div = $('<div>');
         $iframe.add($div).css({
+            opacity: 0,
             visiblility: 'hidden',
             position: 'absolute',
             width: '100%',

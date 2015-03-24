@@ -76,17 +76,17 @@ and the minified versions through:
 
 For additional information, [please see the cdnjs website](https://cdnjs.com/libraries/viewer.js).
 
-#### v0.10.5
+#### v0.10.6
 
 **Development**
 
-* [crocodoc.viewer.js](https://raw.githubusercontent.com/box/viewer.js/v0.10.5/dist/crocodoc.viewer.js) 229 kB
-* [crocodoc.viewer.css](https://raw.githubusercontent.com/box/viewer.js/v0.10.5/dist/crocodoc.viewer.css) 14.8 kB
+* [crocodoc.viewer.js](https://raw.githubusercontent.com/box/viewer.js/v0.10.6/dist/crocodoc.viewer.js) 229 kB
+* [crocodoc.viewer.css](https://raw.githubusercontent.com/box/viewer.js/v0.10.6/dist/crocodoc.viewer.css) 14.8 kB
 
 **Production**
 
-* [crocodoc.viewer.min.js](https://raw.githubusercontent.com/box/viewer.js/v0.10.5/dist/crocodoc.viewer.min.js) 51.8 kB (10.7 kB gzipped)
-* [crocodoc.viewer.min.css](https://raw.githubusercontent.com/box/viewer.js/v0.10.5/dist/crocodoc.viewer.min.css) 11.4 kB (2.5 kB gzipped)
+* [crocodoc.viewer.min.js](https://raw.githubusercontent.com/box/viewer.js/v0.10.6/dist/crocodoc.viewer.min.js) 51.7 kB (10.7 kB gzipped)
+* [crocodoc.viewer.min.css](https://raw.githubusercontent.com/box/viewer.js/v0.10.6/dist/crocodoc.viewer.min.css) 11.4 kB (2.5 kB gzipped)
 
 
 ### Loading a Simple Viewer

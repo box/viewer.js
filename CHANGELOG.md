@@ -3,6 +3,12 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.6**
+  * Modify the subpx util to wrap around text layer instead of inside
+  * Fix [#165](https://github.com/box/viewer.js/issues/165)
+  * Fix [#174](https://github.com/box/viewer.js/issues/174)
+  * Fix [#171](https://github.com/box/viewer.js/issues/171)
+  * Fix realtime tests on travis CI
 * **0.10.5**
   * Ignore npm-debug.log
   * Update dev dependencies
