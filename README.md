@@ -625,7 +625,7 @@ For more information about the code, see the [JS architecture overview](src/js/R
 
 2. Are you loading assets from a `file://` URL? Many browsers' security policies block these requests, so viewer.js is unable to load assets. To resolve this issue, you can run a local server using `grunt serve` (see [Getting Started with the Code](#getting-started-with-the-code)) or save your assets to some remote server for testing.
 
-3. If you are loading the assets from your own server, and it is not the same server which is hosting your copy of viewer.js, then you must include a [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) HTTP header with the served asset files. The quickest fix is to add the HTTP response header `Access-Control-Allow-Origin: *` (but you will almost certainly want to be more specific than `*`, or else to restrict access to your asset files in some other way).
+3. If you are loading the assets from your own server, but the viewer is on a different origin (hostname), then you must include a [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) HTTP header with the served asset files. The quickest fix is to add the HTTP response header `Access-Control-Allow-Origin: *` (but you will almost certainly want to be more specific than `*`, or else to restrict access to your asset files in some other way).
 
 4. IE 8 and 9 have a bug in the XHR/XDR implementation that causes requests to HTTPS domains to fail if they originate from an HTTP domain (with the error: "Access Denied"). If your domain is running on HTTP, Box View API URLs will fail on IE 8 and 9. At the moment, the View API only responds on HTTPS, so we have no workaround for this issue other than to recommend that you use SSL on your site.
 
