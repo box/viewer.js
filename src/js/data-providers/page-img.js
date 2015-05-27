@@ -31,7 +31,9 @@ Crocodoc.addDataProvider('page-img', function(scope) {
             }
 
             function abortImage() {
-                img.removeAttribute('src');
+                if (img) {
+                    img.removeAttribute('src');
+                }
             }
 
             // add load and error handlers
