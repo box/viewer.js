@@ -57,6 +57,21 @@ Crocodoc.addComponent('resizer', function (scope) {
     }
 
     /**
+     * Apply `position: relative` style to the element if necessary
+     * @returns {void}
+     * @private
+     */
+    function fixElementPosition() {
+        var style = util.getComputedStyle(element);
+
+        // if the element is not positioned, add position relative so the
+        // iframe can be positioned properly
+        if (style && style.position === 'static') {
+            $(element).css({ position: 'relative' });
+        }
+    }
+
+    /**
      * Initialize an iframe to fire events on resize
      * @returns {void}
      * @private
@@ -75,9 +90,7 @@ Crocodoc.addComponent('resizer', function (scope) {
             border: 0
         });
         $iframe.prependTo($div.prependTo(element));
-        if (util.getComputedStyle(element).position === 'static') {
-            $(element).css({ position: 'relative' });
-        }
+        fixElementPosition();
         $window = $($iframe[0].contentWindow);
         $window.on('resize', checkResize);
     }
@@ -98,6 +111,8 @@ Crocodoc.addComponent('resizer', function (scope) {
             // layoutchange event
             if (frameWidth === 0 && window.innerWidth !== 0) {
                 frameWidth = window.innerWidth;
+                // fix the element position again if necessary
+                fixElementPosition();
                 scope.broadcast('layoutchange');
                 return;
             }
