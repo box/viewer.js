@@ -3,6 +3,10 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.7**
+  * Fix [#185](https://github.com/box/viewer.js/issues/185)
+  * Fix [#178](https://github.com/box/viewer.js/issues/178)
+  * Added CORS info to the 'Common Issues' section of docs
 * **0.10.6**
   * Modify the subpx util to wrap around text layer instead of inside
   * Fix [#165](https://github.com/box/viewer.js/issues/165)
