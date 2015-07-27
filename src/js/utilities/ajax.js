@@ -271,7 +271,20 @@ Crocodoc.addUtility('ajax', function (framework) {
             function request() {
                 return ajax.request(url, {
                     success: function () {
+                        var retryAfter,
+                            req;
+
                         if (!aborted) {
+                            req = this.rawRequest;
+                            // check status code for 202
+                            if (this.status === 202 && util.isFn(req.getResponseHeader)) {
+                                // retry the request
+                                retryAfter = parseInt(req.getResponseHeader('retry-after'));
+                                if (retryAfter > 0) {
+                                    setTimeout(request, retryAfter * 1000);
+                                    return;
+                                }
+                            }
                             if (this.responseText) {
                                 $deferred.resolve(this.responseText);
                             } else {

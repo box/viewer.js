@@ -4,7 +4,8 @@ module('Utility - ajax', {
         this.xhr = {
             open: function () {},
             setRequestHeader: function () {},
-            send: function () {}
+            send: function () {},
+            getResponseHeader: function () {}
         };
         this.xdr = {
             open: function () {},
@@ -256,4 +257,38 @@ test('request() should send urlencoded data as the body if the request method is
     this.stub(this.utilities.support, 'isXHRSupported').returns(true);
     this.util.request(url, options);
     ok(sendSpy.calledWith(paramed), 'urlencoded data should be sent');
+});
+
+test('request() should retry when response is 202 and retry-after is set', function () {
+    var url = 'some url',
+        options = {
+            success: this.spy(),
+            fail: this.spy()
+        };
+
+    this.clock = sinon.useFakeTimers();
+    this.stub(this.utilities.url, 'isCrossDomain').returns(false);
+    this.stub(this.utilities.url, 'parse').returns({ protocol: 'http' });
+    this.stub(this.utilities.support, 'isXHRSupported').returns(true);
+    this.stub(this.xhr, 'getResponseHeader').withArgs('retry-after').returns('2');
+
+    var responseObject = { status: 202, rawRequest: this.xhr };
+    var reqstub = this.stub(this.util, 'request').yieldsToOn('success', responseObject);
+
+    this.xhr.readyState = 4;
+    this.xhr.status = 202;
+
+    var promise = this.util.fetch('someurl', 0);
+    equal(reqstub.callCount, 1, 'request should be called');
+    this.xhr.status = responseObject.status = 200;
+    responseObject.responseText = 'some response';
+    this.clock.tick(2000);
+    equal(reqstub.callCount, 2, 'request should retry');
+    this.clock.tick(2000);
+    equal(reqstub.callCount, 2, 'request should not be called again');
+
+    this.clock.restore();
+    promise.done(function(){
+        ok(true, 'promise should be resolved');
+    });
 });
