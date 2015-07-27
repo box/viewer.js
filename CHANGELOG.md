@@ -3,6 +3,8 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.8**
+  * Handle 202s/retry-after header in ajax utility
 * **0.10.7**
   * Fix [#185](https://github.com/box/viewer.js/issues/185)
   * Fix [#178](https://github.com/box/viewer.js/issues/178)
