@@ -157,6 +157,29 @@ test('loadAssets() should prefetch correct page 1 assets when called in non-svg 
     ok(spy.calledWith('page-img', 1), 'page img should be requested');
 });
 
+//should prefetch the correct page one img when useSVG is false
+test('loadAssets() should prefetch correct page 1 assets when called', function () {
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    this.config.useSVG = false;
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.calledWith('page-img', 1), 'page img should be requested');
+    ok(spy.calledWith('page-text', 1), 'page html should be requested');
+    ok(spy.withArgs('page-svg', 1).notCalled, 'page svg should not be requested');
+});
+
+//should prefetch the correct page one img when SVGs are not supported and useSVG is false
+test('loadAssets() should prefetch correct page 1 assets when called', function () {
+    this.utilities.support.svg = false;
+    var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
+    this.config.useSVG = false;
+    this.component.init();
+    this.component.loadAssets();
+    ok(spy.calledWith('page-img', 1), 'page img should be requested');
+    ok(spy.calledWith('page-text', 1), 'page html should be requested');
+    ok(spy.withArgs('page-svg', 1).notCalled, 'page svg should not be requested');
+});
+
 test('loadAssets() should not prefetch page text when text selection is disabled', function () {
     var spy = this.stub(this.scope, 'get').returns($.Deferred().promise());
 

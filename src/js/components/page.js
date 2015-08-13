@@ -81,7 +81,10 @@ Crocodoc.addComponent('page', function (scope) {
 
             config.url = config.url || '';
             pageText = scope.createComponent('page-text');
-            pageContent = support.svg ?
+            if (config.useSVG === undefined) {
+                config.useSVG = true;
+            }
+            pageContent = support.svg && config.useSVG ?
                     scope.createComponent('page-svg') :
                     scope.createComponent('page-img');
 

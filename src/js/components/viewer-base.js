@@ -41,7 +41,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
         if (browser.ielt9) {
             $el.addClass(CSS_CLASS_IELT9);       //IE7 or IE8?
         }
-        if (support.svg) {
+        if (support.svg && config.useSVG) {
             $el.addClass(CSS_CLASS_SUPPORTS_SVG);
         }
     }
@@ -301,6 +301,11 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // make the url absolute
             config.url = scope.getUtility('url').makeAbsolute(config.url);
 
+            //if useSVG hasn't been set, default to true
+            if (config.useSVG === undefined) {
+                config.useSVG = true;
+            }
+
             validateQueryParams();
             initViewerHTML();
             initPlugins();
@@ -419,7 +424,7 @@ Crocodoc.addComponent('viewer-base', function (scope) {
             // load page 1 assets immediately if necessary
             if (config.autoloadFirstPage &&
                 (!config.pageStart || config.pageStart === 1)) {
-                if (support.svg) {
+                if (support.svg && config.useSVG) {
                     $pageOneContentPromise = scope.get('page-svg', 1);
                 } else if (config.conversionIsComplete) {
                     // unfortunately, page-1.png is not necessarily available
