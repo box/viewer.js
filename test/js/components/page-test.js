@@ -43,7 +43,7 @@ test('init() should create and init PageText, PageSVG, and PageLinks components 
         mockPageText = this.mock(this.components['page-text']),
         mockPageSVG = this.mock(this.components['page-svg']),
         mockPageLinks = this.mock(this.components['page-links']),
-        config = { links: [{}], enableLinks: true, index: 3 };
+        config = { links: [{}], enableLinks: true, index: 3, useSVG: true};
 
     mockScope.expects('createComponent')
         .returns(this.components['page-text'])
