@@ -3,6 +3,8 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.9**
+  * Add experimental useSVG option
 * **0.10.8**
   * Handle 202s/retry-after header in ajax utility
 * **0.10.7**

@@ -331,7 +331,7 @@ module.exports = function (grunt) {
             'editor:changelog',
             'build-minify',
             'copy:dist',
-            'file_info',
+            // 'file_info',
             'gitcommit',
             'gittag',
             'publish-reminder'
