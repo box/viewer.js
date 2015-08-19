@@ -126,7 +126,8 @@ Crocodoc.addComponent('controller-paged', function (scope) {
                 status: getInitialPageStatus(i),
                 enableLinks: config.enableLinks,
                 links: links[i],
-                pageScale: config.pageScale
+                pageScale: config.pageScale,
+                useSVG: config.useSVG
             });
             pages.push(page);
         }
