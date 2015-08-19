@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.9 | (c) 2015 Box */
+/*! Crocodoc Viewer - v0.10.10 | (c) 2015 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -2649,7 +2649,8 @@ Crocodoc.addComponent('controller-paged', function (scope) {
                 status: getInitialPageStatus(i),
                 enableLinks: config.enableLinks,
                 links: links[i],
-                pageScale: config.pageScale
+                pageScale: config.pageScale,
+                useSVG: config.useSVG
             });
             pages.push(page);
         }
