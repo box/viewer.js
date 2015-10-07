@@ -118,6 +118,16 @@ test('request() should make an XHR when called with cross domain URL and CORS is
     ok(sendSpy.calledWith(''), 'send should be called with correct params');
 });
 
+test('request() should add withCredentials on the XHR request when specified in the options', function () {
+    var url = 'some url';
+
+    this.stub(this.utilities.url, 'isCrossDomain').returns(true);
+    this.stub(this.utilities.support, 'isXHRSupported').returns(true);
+    this.stub(this.utilities.support, 'isCORSSupported').returns(true);
+    this.util.request(url, { withCredentials: true });
+    ok(this.xhr.withCredentials === true, 'with credentials should be enabled');
+});
+
 test('request() should make an XDR when called with cross domain URL and CORS is not supported, but XDR is supported', function () {
     var url = 'some url',
         openSpy = this.spy(this.xdr, 'open'),
