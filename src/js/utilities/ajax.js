@@ -91,16 +91,17 @@ Crocodoc.addUtility('ajax', function (framework) {
 
     /**
      * Make an XHR request
-     * @param   {string}   url     request URL
-     * @param   {string}   method  request method
-     * @param   {*}        data    request data to send
-     * @param   {Array}    headers request headers
-     * @param   {Function} success success callback function
-     * @param   {Function} fail    fail callback function
+     * @param   {string}   url              request URL
+     * @param   {string}   method           request method
+     * @param   {*}        data             request data to send
+     * @param   {Array}    headers          request headers
+     * @param   {boolean}  withCredentials  request withCredentials option
+     * @param   {Function} success          success callback function
+     * @param   {Function} fail             fail callback function
      * @returns {XMLHttpRequest}   Request object
      * @private
      */
-    function doXHR(url, method, data, headers, success, fail) {
+    function doXHR(url, method, data, headers, withCredentials,  success, fail) {
         var req = support.getXHR();
         req.open(method, url, true);
         req.onreadystatechange = function () {
@@ -134,6 +135,11 @@ Crocodoc.addUtility('ajax', function (framework) {
             }
         };
         setHeaders(req, headers);
+
+        if (withCredentials === true) {
+            req.withCredentials = true;
+        }
+
         req.send(data);
         return req;
     }
@@ -229,7 +235,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                 return doXDR(url, method, data, ajaxSuccess, ajaxFail);
             } else {
                 // the browser supports XHR and XHR+CORS, so just do a regular XHR
-                return doXHR(url, method, data, headers, ajaxSuccess, ajaxFail);
+                return doXHR(url, method, data, headers, opt.withCredentials === true, ajaxSuccess, ajaxFail);
             }
         },
 
