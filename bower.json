@@ -7,7 +7,7 @@
     "Nicholas Silva <nes@box.com>"
   ],
   "description": "A viewer for documents converted with the Box View API",
-  "main": "dist/crocodoc.viewer.js",
+  "main": ["dist/crocodoc.viewer.js", "dist/crocodoc.viewer.css"],
   "keywords": [
     "box",
     "box",
