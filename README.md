@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/box/viewer.js.png?branch=master)](https://travis-ci.org/box/viewer.js)
-[![Project Status](http://opensource.box.com/badges/active.svg)](http://opensource.box.com/badges)
+[![Project Status](http://opensource.box.com/badges/stable.svg)](http://opensource.box.com/badges)
 
 # Viewer.js
 
