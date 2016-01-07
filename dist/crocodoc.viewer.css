@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.10 | (c) 2015 Box */
+/*! Crocodoc Viewer - v0.10.11 | (c) 2016 Box */
 
 .crocodoc-viewer {
     padding:0;
@@ -126,6 +126,7 @@
     top: 0;
     left: 0;
     position: absolute;
+    transform: translateZ(0);
 }
 
 .crocodoc-page-autoscale {
