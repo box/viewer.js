@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.10 | (c) 2015 Box */
+/*! Crocodoc Viewer - v0.10.11 | (c) 2016 Box */
 
 (function (window) {
     /*global jQuery*/

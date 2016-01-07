@@ -3,6 +3,8 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.10.11**
+  * Improve chrome rendering issue
 * **0.10.10**
   * Fix a bug with useSVG option
 * **0.10.9**
