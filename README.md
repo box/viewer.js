@@ -3,7 +3,7 @@
 
 # Viewer.js
 
-A viewer for documents converted with the [Box View API](http://developers.box.com/view/).
+A viewer for documents converted with the [Box View API](https://box-view.readme.io/reference).
 
 ## Contents
 * [Quick Start](#quick-start)
