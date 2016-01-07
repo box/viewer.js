@@ -190,7 +190,8 @@ Crocodoc.addUtility('ajax', function (framework) {
             var opt = parseOptions(options),
                 method = opt.method,
                 data = opt.data,
-                headers = opt.headers;
+                headers = opt.headers,
+                withCredentials = !!opt.withCredentials;
 
             if (method === 'GET' && data) {
                 url = urlUtil.appendQueryParams(url, data);
@@ -235,7 +236,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                 return doXDR(url, method, data, ajaxSuccess, ajaxFail);
             } else {
                 // the browser supports XHR and XHR+CORS, so just do a regular XHR
-                return doXHR(url, method, data, headers, opt.withCredentials === true, ajaxSuccess, ajaxFail);
+                return doXHR(url, method, data, headers, withCredentials, ajaxSuccess, ajaxFail);
             }
         },
 
