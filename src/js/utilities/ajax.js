@@ -66,6 +66,7 @@ Crocodoc.addUtility('ajax', function (framework) {
         options.method = options.method || 'GET';
         options.headers = options.headers || [];
         options.data = options.data || '';
+        options.withCredentials = !!options.withCredentials;
 
         if (typeof options.data !== 'string') {
             options.data = $.param(options.data);
@@ -101,7 +102,7 @@ Crocodoc.addUtility('ajax', function (framework) {
      * @returns {XMLHttpRequest}   Request object
      * @private
      */
-    function doXHR(url, method, data, headers, withCredentials,  success, fail) {
+    function doXHR(url, method, data, headers, withCredentials, success, fail) {
         var req = support.getXHR();
         req.open(method, url, true);
         req.onreadystatechange = function () {
@@ -136,9 +137,8 @@ Crocodoc.addUtility('ajax', function (framework) {
         };
         setHeaders(req, headers);
 
-        if (withCredentials === true) {
-            req.withCredentials = true;
-        }
+        // this needs to be after the open call and before the send call
+        req.withCredentials = withCredentials;
 
         req.send(data);
         return req;
@@ -191,7 +191,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                 method = opt.method,
                 data = opt.data,
                 headers = opt.headers,
-                withCredentials = !!opt.withCredentials;
+                withCredentials = opt.withCredentials;
 
             if (method === 'GET' && data) {
                 url = urlUtil.appendQueryParams(url, data);
