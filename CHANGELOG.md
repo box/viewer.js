@@ -3,6 +3,15 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.11.0**
+  * Updating grunt conf.
+  * Strip referrer from links by adding rel="noreferrer".
+  * Add with credentials
+  * Update remarks
+  * Updated box API URL (the old URL is deprecated)
+  * Added crocodoc.viewer.css to "main" property in bower.json
+  * Move variable
+  * Reverting unnecessary updates to package.json
 * **0.10.11**
   * Improve chrome rendering issue
 * **0.10.10**
@@ -86,7 +95,7 @@ Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers
 * **0.5.0**
   * Add realtime plugin
   * Add data providers
-  * Fixed some browser warnings 
+  * Fixed some browser warnings
 * **0.4.5**
   * Fix [#49](https://github.com/box/viewer.js/issues/49) - Centering broken if Bootstrap css loaded
   * Fix [#40](https://github.com/box/viewer.js/issues/40) - Hidden document viewer does not load pages in Firefox

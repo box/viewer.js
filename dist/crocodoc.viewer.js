@@ -1,4 +1,4 @@
-/*! Crocodoc Viewer - v0.10.11 | (c) 2016 Box */
+/*! Crocodoc Viewer - v0.11.0 | (c) 2016 Box */
 
 (function (window) {
     /*global jQuery*/
@@ -1532,6 +1532,7 @@ Crocodoc.addUtility('ajax', function (framework) {
         options.method = options.method || 'GET';
         options.headers = options.headers || [];
         options.data = options.data || '';
+        options.withCredentials = !!options.withCredentials;
 
         if (typeof options.data !== 'string') {
             options.data = $.param(options.data);
@@ -1557,16 +1558,17 @@ Crocodoc.addUtility('ajax', function (framework) {
 
     /**
      * Make an XHR request
-     * @param   {string}   url     request URL
-     * @param   {string}   method  request method
-     * @param   {*}        data    request data to send
-     * @param   {Array}    headers request headers
-     * @param   {Function} success success callback function
-     * @param   {Function} fail    fail callback function
+     * @param   {string}   url              request URL
+     * @param   {string}   method           request method
+     * @param   {*}        data             request data to send
+     * @param   {Array}    headers          request headers
+     * @param   {boolean}  withCredentials  request withCredentials option
+     * @param   {Function} success          success callback function
+     * @param   {Function} fail             fail callback function
      * @returns {XMLHttpRequest}   Request object
      * @private
      */
-    function doXHR(url, method, data, headers, success, fail) {
+    function doXHR(url, method, data, headers, withCredentials, success, fail) {
         var req = support.getXHR();
         req.open(method, url, true);
         req.onreadystatechange = function () {
@@ -1600,6 +1602,10 @@ Crocodoc.addUtility('ajax', function (framework) {
             }
         };
         setHeaders(req, headers);
+
+        // this needs to be after the open call and before the send call
+        req.withCredentials = withCredentials;
+
         req.send(data);
         return req;
     }
@@ -1650,7 +1656,8 @@ Crocodoc.addUtility('ajax', function (framework) {
             var opt = parseOptions(options),
                 method = opt.method,
                 data = opt.data,
-                headers = opt.headers;
+                headers = opt.headers,
+                withCredentials = opt.withCredentials;
 
             if (method === 'GET' && data) {
                 url = urlUtil.appendQueryParams(url, data);
@@ -1695,7 +1702,7 @@ Crocodoc.addUtility('ajax', function (framework) {
                 return doXDR(url, method, data, ajaxSuccess, ajaxFail);
             } else {
                 // the browser supports XHR and XHR+CORS, so just do a regular XHR
-                return doXHR(url, method, data, headers, ajaxSuccess, ajaxFail);
+                return doXHR(url, method, data, headers, withCredentials, ajaxSuccess, ajaxFail);
             }
         },
 
@@ -5243,6 +5250,7 @@ Crocodoc.addComponent('page-links', function (scope) {
             if (/^http|^mailto/.test(link.uri)) {
                 attr.href = encodeURI(link.uri);
                 attr.target = '_blank';
+                attr.rel = 'noreferrer'; // strip referrer for privacy
             } else {
                 // don't embed this link... we don't trust the protocol
                 return;
