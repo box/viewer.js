@@ -49,6 +49,7 @@ Crocodoc.addComponent('page-links', function (scope) {
             if (/^http|^mailto/.test(link.uri)) {
                 attr.href = encodeURI(link.uri);
                 attr.target = '_blank';
+                attr.rel = 'noreferrer'; // strip referrer for privacy
             } else {
                 // don't embed this link... we don't trust the protocol
                 return;
