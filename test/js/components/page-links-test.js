@@ -27,6 +27,12 @@ test('init() should create links with a child span element for IE workaround whe
     ok($el.find('.crocodoc-page-link span').length > 0, 'span element should exist');
 });
 
+test('init() should create links with rel="noreferrer" when called', function () {
+    var $el = $('<div>');
+    this.component.init($el, this.links);
+    ok($el.find('.crocodoc-page-link').attr('rel') === 'noreferrer', 'link should have rel=noreferrer');
+});
+
 test('module should broadcast `linkclick` event with appropriate data when a link is clicked', function () {
     var $el = $('<div>'),
         linkData = this.links[0];
