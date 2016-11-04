@@ -139,7 +139,7 @@ function PROXY_SVG() {
 // @NOTE: MAX_DATA_URLS is the maximum allowed number of data-urls in svg
 // content before we give up and stop rendering them
 var SVG_MIME_TYPE = 'image/svg+xml',
-    HTML_TEMPLATE = '<style>html,body{width:100%;height:100%;margin:0;overflow:hidden;}</style>',
+    HTML_TEMPLATE = '<style>html,body{width:100%;height:100%;margin:0;overflow:hidden;-webkit-text-size-adjust:none;}</style>',
     SVG_CONTAINER_TEMPLATE = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"><script><![CDATA[('+PROXY_SVG+')()]]></script></svg>',
 
     // Embed the svg in an iframe (initialized to about:blank), and inject
