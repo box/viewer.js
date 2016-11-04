@@ -3,6 +3,8 @@
 Viewer.js uses [semantic versioning](http://semver.org/) for its version numbers.
 
 ----
+* **0.11.1**
+  * Fix Safari Mobile text-rendering issue in iOS 10
 * **0.11.0**
   * Updating grunt conf.
   * Strip referrer from links by adding rel="noreferrer".
